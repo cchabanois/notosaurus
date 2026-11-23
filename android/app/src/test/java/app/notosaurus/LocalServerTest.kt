@@ -22,6 +22,8 @@ import io.ktor.http.contentType
 import io.ktor.http.encodeURLParameter
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -29,6 +31,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.io.readByteArray
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -108,6 +111,57 @@ class LocalServerTest : LocalServerTestBase() {
         client.delete("/api/draft") { page() }
         assertEquals("{}", client.get("/api/draft") { page() }.bodyAsText())
         assertEquals(HttpStatusCode.Unauthorized, client.get("/api/draft").status) // never without the WebView's cookie
+    }
+
+    @Test
+    fun theDraftsPhotosRefusedBeforeTheyFillMemory() = runBlocking {
+        // Too many: the one too many refused before a byte of it is read
+        val more = ByteReadChannel("photo".toByteArray())
+        val tooMany = runCatching { Draft.readPhoto(LocalServer.MAX_PHOTOS, more) }.exceptionOrNull()
+        assertEquals("draft.too_large", (tooMany as BadRequest).code)
+        assertEquals(5, more.readRemaining().readByteArray().size)
+        // Too heavy: read no further than its cap
+        val extra = 1024 * 1024
+        val heavy = ByteReadChannel(ByteArray(Draft.MAX_PHOTO_BYTES + extra))
+        val tooHeavy = runCatching { Draft.readPhoto(0, heavy) }.exceptionOrNull()
+        assertEquals("draft.too_large", (tooHeavy as BadRequest).code)
+        assertEquals(extra - 1, heavy.readRemaining().readByteArray().size)
+        // The last a lesson has, whole
+        assertEquals("photo", Draft.readPhoto(LocalServer.MAX_PHOTOS - 1, ByteReadChannel("photo".toByteArray())).decodeToString())
+    }
+
+    @Test
+    fun tooManyPhotosForTheDraftRefused() = app { client ->
+        val refused = client.submitFormWithBinaryData(
+            "/api/draft",
+            formData {
+                append("draft", "{}")
+                append("photos_sent", "true")
+                repeat(LocalServer.MAX_PHOTOS + 1) { i ->
+                    append("photos", "photo".toByteArray(), Headers.build {
+                        append(HttpHeaders.ContentType, "image/jpeg")
+                        append(HttpHeaders.ContentDisposition, "filename=\"photo-${i + 1}.jpg\"")
+                    })
+                }
+            },
+        ) { method = HttpMethod.Put; page() }
+        assertEquals(HttpStatusCode.BadRequest, refused.status)
+        assertEquals("draft.too_large", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals("{}", client.get("/api/draft") { page() }.bodyAsText())
+        // One too heavy, read no further than its cap, a field after it: refused all the same
+        val heavy = client.submitFormWithBinaryData(
+            "/api/draft",
+            formData {
+                append("photos_sent", "true")
+                append("photos", ByteArray(Draft.MAX_PHOTO_BYTES + 1), Headers.build {
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                    append(HttpHeaders.ContentDisposition, "filename=\"photo-1.jpg\"")
+                })
+                append("draft", "{}")
+            },
+        ) { method = HttpMethod.Put; page() }
+        assertEquals("draft.too_large", heavy.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals("{}", client.get("/api/draft") { page() }.bodyAsText())
     }
 
     @Test

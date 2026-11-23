@@ -121,6 +121,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Gemini unreachable: said as such ("Can't reach the Gemini API"), and the relay tries its other routes and fallback models instead of stopping on a generic error.
 - Something shared to the app while Notosaurus is busy (a lesson being made or corrected, a card open) is no longer lost or added in the wrong place: it is added once the current task is done or the card closed.
 - Starting a new lesson from elsewhere (an Anki profile switched, the open lesson deleted) no longer leaves the previous lesson's card open over it.
 - The offer to draw pictures with the AI no longer follows you to another lesson.

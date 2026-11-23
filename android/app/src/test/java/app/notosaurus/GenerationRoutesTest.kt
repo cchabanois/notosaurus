@@ -22,6 +22,8 @@ import io.ktor.http.contentType
 import io.ktor.http.encodeURLParameter
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -29,6 +31,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.io.readByteArray
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -60,6 +63,43 @@ import java.util.concurrent.TimeUnit
 
 /** The local server: GenerationRoutes.kt's routes. */
 class GenerationRoutesTest : LocalServerTestBase() {
+    @Test
+    fun aLessonsPhotosRefusedBeforeTheyFillMemory() = runBlocking {
+        // More than one call takes: the one too many refused before a byte of it is read
+        val more = ByteReadChannel("page".toByteArray())
+        val tooMany = runCatching { LocalServer.readImage(LocalServer.MAX_PER_CALL, more) }.exceptionOrNull() as BadRequest
+        assertEquals("extract.too_many" to LocalServer.MAX_PER_CALL, tooMany.code to tooMany.params["max"]!!.jsonPrimitive.int)
+        assertEquals(4, more.readRemaining().readByteArray().size)
+        // Heavier than the relay takes: read no further than its cap
+        val extra = 1024 * 1024
+        val heavy = ByteReadChannel(ByteArray(LocalServer.MAX_IMAGE_BYTES + extra))
+        val tooHeavy = runCatching { LocalServer.readImage(0, heavy) }.exceptionOrNull() as BadRequest
+        assertEquals("extract.too_large" to 4, tooHeavy.code to tooHeavy.params["max"]!!.jsonPrimitive.int)
+        assertEquals(extra - 1, heavy.readRemaining().readByteArray().size)
+        // The last of a call, whole
+        assertEquals("page", LocalServer.readImage(LocalServer.MAX_PER_CALL - 1, ByteReadChannel("page".toByteArray())).decodeToString())
+    }
+
+    @Test
+    fun aLessonsPhotosTooManyOrTooHeavyNeverSent() = app { client ->
+        suspend fun extract(vararg images: ByteArray) = client.submitFormWithBinaryData("/api/extract", formData {
+            images.forEachIndexed { i, image ->
+                append("images", image, Headers.build {
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                    append(HttpHeaders.ContentDisposition, "filename=\"page-${i + 1}.jpg\"")
+                })
+            }
+            append("prompt", "p")
+        }) { page() }
+        val heavy = extract(ByteArray(LocalServer.MAX_IMAGE_BYTES + 1))
+        assertEquals(HttpStatusCode.BadRequest, heavy.status)
+        val error = heavy.json().jsonObject["detail"]!!.jsonObject
+        assertEquals("extract.too_large" to 4, error.string("code") to error["params"]!!.jsonObject["max"]!!.jsonPrimitive.int)
+        val many = extract(*Array(LocalServer.MAX_PER_CALL + 1) { "page".toByteArray() })
+        assertEquals("extract.too_many", many.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(0, relay.requestCount)
+    }
+
     @Test
     fun cancelledWhileTheRelayWorks() = app { client ->
         coroutineScope { cancelled(client) }
