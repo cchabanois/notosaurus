@@ -178,6 +178,12 @@ class ReviseRequest(BaseModel):
     language: str = Language
     instructions: str = Instructions
     quick: bool = Field(default=False, description='The model thinking little (the page\'s "Quick"): faster.')
+    photos_sent: PhotosSent = Field(
+        default="all",
+        description='What the "images" are of the lesson\'s photos (llm.revise_photos): "all"; "none", a '
+        "lesson that has photos, none sent (more than a call takes): corrected from its cards, the AI "
+        "saying in its summary what it could not do without the pages.",
+    )
 
 
 class FixCardRequest(BaseModel):

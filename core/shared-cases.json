@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by its number of photos: their numbers, and what they are (none: a lesson that has photos, none sent). figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -901,6 +901,13 @@
   {"name": "negative: as unknown", "page": -1, "photos": 2, "out": [1, 2], "sent": "all"},
   {"name": "no photo", "page": 0, "photos": 0, "out": [], "sent": "all"},
   {"name": "a page, no photo", "page": 1, "photos": 0, "out": [], "sent": "all"}
+  ],
+ "revise_photos": [
+  {"name": "a lesson of 3 pages: all", "photos": 3, "out": [1, 2, 3], "sent": "all"},
+  {"name": "as many as a call takes: all", "photos": 10, "out": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "sent": "all"},
+  {"name": "one more than a call takes: none", "photos": 11, "out": [], "sent": "none"},
+  {"name": "a lesson of 30 pages: none", "photos": 30, "out": [], "sent": "none"},
+  {"name": "made without photos: none to send, nor any not shown", "photos": 0, "out": [], "sent": "all"}
   ],
  "figure_source_files": [
   {

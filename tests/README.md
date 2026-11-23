@@ -30,7 +30,7 @@ memory). Two need more and are skipped without it:
 
 | Topic | Files |
 |---|---|
-| Making a lesson | `test_extract.py` (photos, prompt alone, PDFs), `test_streaming.py` (cards as the AI writes them), `test_fix_card.py`, `test_card_page.py` (the page a card comes from: numbered, kept, the one photo sent to correct it), `test_rephrase.py`, `test_explain.py`, `test_helps.py`, `test_dictation.py` |
+| Making a lesson | `test_extract.py` (photos, prompt alone, PDFs), `test_streaming.py` (cards as the AI writes them), `test_fix_card.py`, `test_card_page.py` (the page a card comes from: numbered, kept, the one photo sent to correct it), `test_revise_pages.py` (the lesson corrected without its photos past 10 pages), `test_rephrase.py`, `test_explain.py`, `test_helps.py`, `test_dictation.py` |
 | Lessons, children, tests | `test_lessons.py`, `test_children.py`, `test_instructions.py`, `test_exams.py`, `test_sharing.py`, `test_formats.py` (old data files read) |
 | Pictures, figures, diagrams | `test_pictures.py`, `test_picture_services.py`, `test_stock.py`, `figures/` (one file per figure family, the SVG figures, `test_source.py` what `typst_source.py` makes of the AI's Typst, `test_text_size.py` a figure's text as large as a card shows it), `test_diagrams.py` |
 | Anki | `test_export.py` (the `.apkg`), `test_send.py` (AnkiConnect), `test_note_types.py`, `test_fix_link.py` (✎ Notosaurus), `test_sounds_ahead.py`, `test_markup.py`, `test_real_anki.py` |

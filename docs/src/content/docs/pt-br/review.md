@@ -71,7 +71,8 @@ Em vez de alterar os cartões um por um, peça com suas palavras, no campo acima
 
 ![Pedir uma correção à IA](../../../assets/screenshots/en/correction.png)
 
-Toque em **Corrigir**. A IA revê as fotos e muda só o que você pediu: os cartões alterados são
+Toque em **Corrigir**. A IA revê as fotos (com mais de 10 páginas, só os cartões: ela diz então o que não
+pôde fazer sem as páginas) e muda só o que você pediu: os cartões alterados são
 marcados como **alterado**, os novos como **novo**, e uma frase resume o que ela fez.
 **↩ Desfazer** deixa os cartões como estavam,
 enquanto você não começar a editar um cartão. Um cartão corrigido sozinho (**✨ Corrigir este cartão**)

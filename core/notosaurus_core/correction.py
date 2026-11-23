@@ -28,6 +28,18 @@ def fix_photos(page: int, photos: int) -> tuple[list[int], PhotosSent]:
     return [], "none"
 
 
+def revise_photos(photos: int) -> tuple[list[int], PhotosSent]:
+    """The lesson's photos sent to correct the whole lesson (their numbers, from 1), and what
+    they are: every one, when a call takes them all ("all"); else none ("none": the lesson
+    corrected from its cards, the AI told its pages aren't shown). More than a call takes
+    would be heavy for the AI, slow and costly, and the relay refuses them; one card's page
+    is sent when that card alone is corrected (fix_photos). The same rule on the phone
+    (Generation.revisePhotos: core/shared-cases.json)."""
+    if photos <= MAX_IMAGES:
+        return list(range(1, photos + 1)), "all"
+    return [], "none"
+
+
 async def revise_cards(
     s: AIConfig,
     images: list[Image],
@@ -38,6 +50,7 @@ async def revise_cards(
     instructions: str = "",
     demo: dict[str, str] | None = None,
     quick: bool = False,
+    photos_sent: PhotosSent = "all",
 ) -> Revision:
     """Apply a natural-language correction ("remove…", "you forgot…") to the cards.
 
@@ -45,7 +58,10 @@ async def revise_cards(
     summary; `instructions`: see prompts.ExtractOptions; `demo`: the demo provider's texts in
     that language ("removed", "added", "addedFront"; English by default). `quick`: the model
     thinking little, as a lesson made quick (2026-11-19, 27 corrections with photos: as right,
-    about 30 % faster)."""
+    about 30 % faster). `photos_sent`: what `images` are of the lesson's photos
+    (revise_photos): all of them, or "none" of a lesson that has some (corrected from its
+    cards: the AI says what it couldn't do without the pages). Without a photo the AI writes
+    no card's page (a new card's is 0) and no new mask; the cards keep theirs."""
     # The existing masks stay out of the conversation (their boxes are in our own
     # format): the revised cards get back the mask of the card they were. New cards
     # about a diagram label come with a mask in the model's format.
@@ -59,14 +75,17 @@ async def revise_cards(
         deck=deck.deck,
         cards=[c.model_copy(update={"mask": None, "picture": "", "id": "", "voice": ""}) for c in deck.cards],
     )
-    text = instructions + _revision_text(prompt, plain, instruction, language, len(images), sizes, fmt, labels)
+    text = instructions + _revision_text(
+        prompt, plain, instruction, language, len(images), sizes, fmt, labels, photos_sent
+    )
     # The fun facts and helps already there are kept: the AI sees them
     texts = {**demo_ai.DEMO, **(demo or {})}
     answer = await ai._ask_provider(
         s,
         images,
         text,
-        ai.ai_schema(Revision, fun_facts=True, helps=True, claude=ai.for_claude(s)),
+        # No photo seen: no page to write (numbered among the photos it is given)
+        ai.ai_schema(Revision, fun_facts=True, helps=True, claude=ai.for_claude(s), page=bool(images)),
         quick=quick,
         demo=lambda: demo_ai.revision(deck, instruction, texts),
     )
@@ -74,7 +93,7 @@ async def revise_cards(
     plain_cards(revision.cards)
     pages_within(revision.cards, len(images))  # the lesson's photos, all of them: its own numbers
     revision.summary = plain_text(revision.summary)
-    _keep_masks(revision.cards, deck.cards, sizes, fmt)
+    _keep_masks(revision.cards, deck.cards, sizes, fmt, added=bool(images))
     return revision
 
 
@@ -172,22 +191,28 @@ def _same_card(card: Card, before: Card) -> None:
 
 
 def _keep_masks(
-    revised: list[Card], before: list[Card], sizes: Sequence[tuple[int, int] | None] = (), fmt: str = "pixels"
+    revised: list[Card],
+    before: list[Card],
+    sizes: Sequence[tuple[int, int] | None] = (),
+    fmt: str = "pixels",
+    added: bool = True,
 ) -> None:
     """Give each revised card the mask of the card it was (cards.matching, as its id: a
     changed answer keeps its place on the diagram). Other cards keep the mask the model gave
     (a label added by the correction), placed like at extraction, with a number not used yet
-    on its photo."""
-    added = []
+    on its photo; none when `added` is False (the AI saw no photo: a box it gives is on none)."""
+    new = []
     for card, match in zip(revised, matching(revised, before, any_part=True), strict=True):
         if match and match.mask:
             card.mask = match.mask
-        elif card.mask:
-            added.append(card)
+        elif card.mask and added:
+            new.append(card)
+        else:
+            card.mask = None
     _keep_ids(revised, before)
-    diagrams.normalize(added, sizes, fmt)
-    used = {(c.mask.page, c.mask.n) for c in revised if c.mask and c not in added}
-    for card in (c for c in added if c.mask):
+    diagrams.normalize(new, sizes, fmt)
+    used = {(c.mask.page, c.mask.n) for c in revised if c.mask and c not in new}
+    for card in (c for c in new if c.mask):
         if (card.mask.page, card.mask.n) in used:
             card.mask.n = max((n for page, n in used if page == card.mask.page), default=0) + 1
         used.add((card.mask.page, card.mask.n))

@@ -11,7 +11,7 @@ import pytest
 from app.anki import _deck_name
 from app.exams import common_deck, tag_text
 from notosaurus_core.cards import kept_ids, same_text, text_key
-from notosaurus_core.correction import fix_photos
+from notosaurus_core.correction import fix_photos, revise_photos
 from notosaurus_core.models import Card
 from notosaurus_core.tts import filename, speakable, spoken, spoken_sides
 
@@ -60,6 +60,13 @@ def test_the_photos_sent_to_correct_a_card(case):
     """The page a card comes from alone, when known; else the lesson's photos when a call takes
     them all; else none: the phone's GenerationRoutes (Generation.fixPhotos) the same."""
     assert fix_photos(case["page"], case["photos"]) == (case["out"], case["sent"])
+
+
+@pytest.mark.parametrize("case", CASES["revise_photos"], ids=lambda c: c["name"])
+def test_the_photos_sent_to_correct_a_lesson(case):
+    """Every page when a call takes them all; else none, the lesson corrected from its cards:
+    the phone's GenerationRoutes (Generation.revisePhotos) the same."""
+    assert revise_photos(case["photos"]) == (case["out"], case["sent"])
 
 
 @pytest.mark.parametrize("case", CASES["kept_ids"], ids=lambda c: c["name"])

@@ -72,7 +72,8 @@ Invece di modificare le carte una per una, chiedi con parole tue, nel campo sopr
 
 ![Chiedere una correzione all'IA](../../../assets/screenshots/en/correction.png)
 
-Tocca **Correggi**. L'IA rivede le foto e cambia solo ciò che hai chiesto: le carte cambiate sono
+Tocca **Correggi**. L'IA rivede le foto (oltre 10 pagine, solo le carte: dice allora cosa non ha potuto
+fare senza le pagine) e cambia solo ciò che hai chiesto: le carte cambiate sono
 segnate come **modificata**, le nuove come **nuova**, e una frase riassume ciò che ha fatto.
 **↩ Annulla** riporta le carte com'erano,
 finché non inizi a modificare una carta. Una carta corretta da sola (**✨ Correggi questa carta**) si

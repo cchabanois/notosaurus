@@ -54,6 +54,8 @@ internal fun Route.generationRoutes(server: LocalServer) {
             val every = children.list()
             // The deck without the children's levels: no child's name to the AI (put back after)
             val (private, deck) = Children.splitDeck(req.string("deck"), every)
+            // Every page when one call takes them all; else none, corrected from its cards (Generation.revisePhotos)
+            val (pages, sent) = Generation.revisePhotos(lesson["photo_count"]?.jsonPrimitive?.intOrNull ?: 0)
             val request = buildJsonObject {
                 put("prompt", lesson.string("prompt"))
                 put("deck", buildJsonObject { put("deck", deck); put("cards", req["cards"]!!) })
@@ -61,9 +63,11 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("language", languageName())
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
                 if (req["quick"]?.jsonPrimitive?.booleanOrNull == true) put("quick", true) // the page's "Quick": the AI thinking little
+                put("photos_sent", sent)
             }
+            val photos = pages.mapNotNull { lessons.photo(lesson.string("id"), it)?.readBytes() }
             val revised = withContext(Telling { said -> step(buildJsonObject { put("step", said) }) }) {
-                generation.cancellable(call.request.queryParameters["job"]) { relay().revise(request, lessons.photos(lesson.string("id"))) }
+                generation.cancellable(call.request.queryParameters["job"]) { relay().revise(request, photos) }
             }
             val revisedDeck = listOf(private, revised.string("deck")).filter { it.isNotEmpty() }.joinToString("::")
             // How the cards are asked: as they were, unless the correction said otherwise ("on",

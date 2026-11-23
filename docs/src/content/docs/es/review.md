@@ -74,7 +74,8 @@ tarjetas:
 
 ![Pedir una corrección a la IA](../../../assets/screenshots/en/correction.png)
 
-Toca **Corregir**. La IA vuelve a ver las fotos y solo cambia lo que has pedido: las tarjetas
+Toca **Corregir**. La IA vuelve a ver las fotos (con más de 10 páginas, solo las tarjetas: dice entonces
+lo que no ha podido hacer sin las páginas) y solo cambia lo que has pedido: las tarjetas
 cambiadas se marcan como **cambiada**, las nuevas como **nueva**, y una frase resume lo que ha
 hecho. **↩ Deshacer** deja las tarjetas como estaban,
 mientras no empieces a editar una tarjeta. Una tarjeta corregida sola (**✨ Corregir esta tarjeta**) se
