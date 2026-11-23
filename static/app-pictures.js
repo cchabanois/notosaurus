@@ -54,10 +54,13 @@ const picturesPart = {
   // "✨ Image", the cheapest first: the AI decides from what was written (any language; none:
   // the card); a figure is drawn (cheap). A picture: free ones looked for, sorted by the AI;
   // one fits, it is the card's; several, the user picks (the AI's choice first); none, the
-  // user is asked before the image model draws one (it costs)
+  // user is asked before the image model draws one (it costs). A figure the AI turns into a
+  // picture: the card keeps its figure until a picture replaces it (the search given up, it
+  // is still the figure), the picture's fields kept in `_decided`, sent with the one chosen
   async makePicture(card) {
     card._found = null;
     card._ask = false;
+    card._decided = null;
     const had = card.picture_source?.page ?? "";  // "Change": not the one it has
     const res = await this.pictureAction(card, {
       path: "/make",
@@ -66,7 +69,10 @@ const picturesPart = {
       body: JSON.stringify({ subject: card._subject ?? null }),
     });
     if (!res) return;
-    card._subject = card.figure || card.picture_prompt;
+    card._decided = res.decided ?? null;
+    // Decided for a figure, from nothing written (a figure stays one when it is): left as it
+    // was, the card still the figure (written, the picture's description would be drawn as one)
+    if (!card._decided) card._subject = card.figure || card.picture_prompt;
     if (!res.search) return;  // a figure: drawn
     if (!this.off("pictures.search")) await this.searchPictures(card, res.search);
     const found = (card._found ?? []).filter((f) => !had || f.page !== had);
@@ -81,7 +87,17 @@ const picturesPart = {
   // The user said yes: drawn by the image model (a figure: drawn again)
   async drawPicture(card) {
     card._ask = false;
-    await this.pictureAction(card, { path: "/draw", method: "POST" });
+    const decided = this.pendingPicture(card);
+    const res = await this.pictureAction(card, card._decided
+      ? { path: "/draw", method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(decided) }
+      : { path: "/draw", method: "POST" });
+    if (res) card._decided = null;
+  },
+
+  // The picture makePicture decided for a figure, still to be chosen: sent with the one chosen
+  // (found, drawn, one's own), the figure then replaced; {} when there is none
+  pendingPicture(card) {
+    return card._decided ? { decided: card._decided } : {};
   },
 
   // "🔍 Check": the figure looked at by the AI against its description, on demand (never on
@@ -132,7 +148,10 @@ const picturesPart = {
     if (!file) return;
     const body = new FormData();
     body.append("photo", await resize(file), "photo.jpg");
-    return this.pictureAction(card, { method: "POST", body });
+    if (card._decided) body.append("decided", JSON.stringify(card._decided));
+    const res = await this.pictureAction(card, { method: "POST", body });
+    if (res) card._decided = null;
+    return res;
   },
 
   // Free pictures of the card's picture (its description, its search words: makePicture),
@@ -217,12 +236,13 @@ const picturesPart = {
   },
 
   async chooseFound(card, found) {
-    await this.pictureAction(card, {
+    const res = await this.pictureAction(card, {
       path: "/found",
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ source: found.source, id: found.id }),
+      body: JSON.stringify({ source: found.source, id: found.id, ...this.pendingPicture(card) }),
     });
+    if (res) card._decided = null;
     if (card.picture) card._found = null;
   },
 

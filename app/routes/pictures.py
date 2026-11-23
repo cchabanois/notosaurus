@@ -1,9 +1,11 @@
 import json
 from collections.abc import AsyncIterator
 
-from fastapi import APIRouter, Depends, Header, UploadFile
+from fastapi import APIRouter, Depends, Form, Header, UploadFile
 from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, StreamingResponse
+from pydantic import ValidationError
 
 from notosaurus_core import llm, pictures, stock
 from notosaurus_core.models import Card, PictureSource
@@ -11,7 +13,7 @@ from notosaurus_core.relay_api import STREAM_TYPE
 
 from .. import access, i18n, lessons, settings, usage
 from ..errors import AppError
-from ..models import DrawPictures, FoundPicture, Lesson, PictureRequest, PictureSearch, RedrawRequest
+from ..models import DecidedPicture, DrawPictures, FoundPicture, Lesson, PictureRequest, PictureSearch, RedrawRequest
 from .common import IMAGE_TYPES, Step, page_lang, read_photo, streamed, wants_stream
 
 router = APIRouter()
@@ -89,8 +91,12 @@ async def make_picture(
     """ "✨ Image", its first step (pictures.decided): from what was written for it (any
     language; none: the card), the AI decides a figure, then drawn (cheap), or a picture,
     its description and search words set: the page then looks for free ones (search) and
-    asks the user before the image model draws one (draw). Asked as application/x-ndjson:
-    its steps as they begin (relay_api.PictureStep), then the answer."""
+    asks the user before the image model draws one (draw). A card with a figure the AI turns
+    into a picture keeps its figure until a picture replaces it: never a picture's description
+    beside a figure's drawing, nor a figure's drawing left without its description (the user
+    may give up the search). Its picture's fields then come as "decided" (DecidedPicture),
+    sent back with the picture chosen (found, draw, the user's). Asked as
+    application/x-ndjson: its steps as they begin (relay_api.PictureStep), then the answer."""
     await access.editable(id)
 
     async def made(step: Step | None = None) -> dict:
@@ -103,6 +109,14 @@ async def make_picture(
                 origin, kind = card.picture_source, card.figure_kind  # the figure it had, if any
                 previous = pictures.kept_sources(folder, origin) if pictures.changed_figure(card, req.subject) else []
                 decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang), step)
+                if card.figure.strip() and not decided.figure.strip():
+                    found["decided"] = DecidedPicture(
+                        picture_prompt=decided.picture_prompt,
+                        picture_search=decided.picture_search,
+                        picture_on_back=decided.picture_on_back,
+                    ).model_dump()
+                    found["search"] = decided.picture_search or decided.picture_prompt
+                    return
                 for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"):
                     setattr(card, field, getattr(decided, field))
                 if card.figure.strip():
@@ -134,12 +148,15 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
     suit. Asked as application/x-ndjson: its steps as they begin, then the answer."""
     await access.editable(id)
     problem, careful = (req.problem, req.careful) if req else ("", False)
+    chosen = req.decided if req else None
 
     async def drawn(step: Step | None = None) -> dict:
         async def draw(draft: Lesson, card: Card) -> None:
             async with usage.metered("picture", id, draft.deck):
                 folder = lessons.existing_folder(id) / "images"
                 s = settings.current()
+                if chosen:  # a picture decided for a figure: drawn now, the figure replaced
+                    _decide(card, chosen)
                 # A figure drawn again from what it was drawn from: what is asked changed, the rest kept
                 origin = card.picture_source
                 previous = pictures.kept_sources(folder, origin) if card.figure else []
@@ -182,8 +199,8 @@ async def check_picture(id: str, card_id: str) -> dict:
         raise AppError("photo.not_found", 404)
     s = settings.current()
     async with usage.metered("picture", id, lesson.deck):
-        if card.figure.strip() and card.picture.endswith(".svg"):
-            problem = await llm.check_figure(s, card.figure, path.read_text(encoding="utf-8"))
+        if card.picture.endswith(".svg"):
+            problem = await llm.check_figure(s, figure_description(card), path.read_text(encoding="utf-8"))
         else:
             media = PICTURE_TYPES.get(path.suffix.lower())
             if media is None:
@@ -197,15 +214,45 @@ async def check_picture(id: str, card_id: str) -> dict:
 PICTURE_TYPES = {".jpg": "image/jpeg"}
 
 
+def figure_description(card: Card) -> str:
+    """What a card's SVG picture is checked against: its figure's description; none (a figure an
+    older version turned into a picture without replacing its drawing): what the card's picture
+    should show now, else the card itself, "front → back"."""
+    return card.figure.strip() or card.picture_prompt.strip() or f"{card.front} → {card.back}"
+
+
+def _decided_field(field: str | None) -> DecidedPicture | None:
+    """A form's "decided" field (JSON): None when not sent; not one, the request refused as a
+    body that isn't valid is (422)."""
+    if not field:
+        return None
+    try:
+        return DecidedPicture.model_validate_json(field)
+    except ValidationError as e:
+        raise RequestValidationError(e.errors()) from e
+
+
+def _decide(card: Card, decided: DecidedPicture) -> None:
+    """A picture decided for a card's figure (/picture/make's "decided") as the card's, now that
+    a picture replaces the figure's drawing: its fields set, the figure's cleared."""
+    card.figure = card.figure_kind = ""
+    card.picture_prompt, card.picture_search = decided.picture_prompt, decided.picture_search
+    card.picture_on_back = decided.picture_on_back
+
+
 @router.post("/api/lessons/{id}/cards/{card_id}/picture", status_code=201)
-async def upload_picture(id: str, card_id: str, photo: UploadFile) -> dict:
-    """The user's own photo as the card's picture."""
+async def upload_picture(id: str, card_id: str, photo: UploadFile, decided: str | None = Form(None)) -> dict:
+    """The user's own photo as the card's picture; `decided` (JSON, DecidedPicture): a picture
+    decided for its figure, the card's now."""
     await access.editable(id)
     if photo.content_type not in IMAGE_TYPES:
         raise AppError("extract.bad_format", format=photo.content_type)
+    chosen = _decided_field(decided)
     data = await read_photo(photo)
 
     async def use(draft: Lesson, card: Card) -> None:
+        if chosen:
+            _decide(card, chosen)
         try:
             card.picture = pictures.save(lessons.existing_folder(id) / "images", card, data)
             card.picture_source = PictureSource(source="photo")
@@ -261,6 +308,8 @@ async def found_picture(id: str, card_id: str, req: FoundPicture) -> dict:
 
     async def use(draft: Lesson, card: Card) -> None:
         jpeg, card.picture_source = await stock.fetch(req.source, req.id)
+        if req.decided:
+            _decide(card, req.decided)
         card.picture = pictures.save(lessons.existing_folder(id) / "images", card, jpeg)
 
     return await _edit_card(id, card_id, use)
