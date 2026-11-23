@@ -18,6 +18,7 @@ from page.support import (  # noqa: E402
     eventually,
     field,
     generate_free,
+    gone,
     lesson,
     lessons,
     open_card,
@@ -749,7 +750,7 @@ def test_a_card_corrected_then_undone_shows_its_figure_again(page):
 
     assert page.request.get(drawn).ok  # kept until the card is done with
     card.get_by_role("button", name="Terminé").click()  # its ✕
-    eventually(page, lambda: page.request.get(drawn).status == 404, f"{drawn} kept")  # the undone one's: gone
+    eventually(page, lambda: gone(page, drawn), f"{drawn} kept")  # the undone one's: gone
     assert page.request.get(before).ok  # the card's: kept
 
 
@@ -942,13 +943,19 @@ def test_a_card_added_keeps_a_field_already_typed_in(page):
     n = cards.count()
     page.evaluate(
         """() => { const frame = window.requestAnimationFrame.bind(window);
-          window.requestAnimationFrame = (f) => setTimeout(() => frame(f), 400); }"""
+          window.framesAsked = window.framesCome = 0;
+          window.requestAnimationFrame = (f) => {
+            window.framesAsked++;
+            return setTimeout(() => frame((t) => { try { f(t); } finally { window.framesCome++; } }), 400);
+          }; }"""
     )
     page.get_by_role("button", name="＋ Ajouter une carte").click()
     added = cards.nth(n)
     front = added.locator("textarea.front")
     front.fill("el tío")  # before the late frame
-    page.wait_for_timeout(1200)  # the frame come
+    asked = page.evaluate("window.framesAsked")
+    assert asked  # the focus, asked for a frame later
+    page.wait_for_function(f"window.framesCome >= {asked}")  # the frame come
     sync_api.expect(front).to_be_focused()
     sync_api.expect(added.get_by_role("textbox", name="Que doit demander cette carte ?")).to_have_value("")
     page.keyboard.press("Escape")

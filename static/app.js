@@ -144,6 +144,10 @@ const GAP_END = /(?:::[^{}]*?)?\}\}/g;
 const escapeHtml = (text) => text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 let nextKey = 0;
+// The server's settings read (or not): what waits for them (a PDF's pages counted against
+// the lesson's room, maxPhotos) waits for this, not for the defaults
+let configKnown;
+const configRead = new Promise((resolve) => { configKnown = resolve; });
 const withKey = (card) =>
   ({ info: "", fun_fact: "", explanation: "", mnemonic: "", choices: [], subdeck: "", tags: [], picture: "", picture_prompt: "", figure: "", picture_on_back: false, doubt: null, ...card, key: nextKey++ });
 
@@ -304,6 +308,7 @@ document.addEventListener("alpine:init", () => {
       } catch (e) {
         if (e.detail?.code === "device.not_paired") {
           this.unpaired = true;
+          configKnown();
           return;
         }
       }
@@ -326,6 +331,7 @@ document.addEventListener("alpine:init", () => {
         // The app (its own service, Gemini): until its welcome is accepted, it shows first
         this.welcome.open = Boolean(config.welcome) && !config.welcome_accepted;
       } catch {}
+      configKnown();
       this.loadSwitches();  // not waited for: the relay may be starting
       this.loadCredits();   // nor this: the figures' credits keep their default links until then
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));

@@ -107,8 +107,18 @@ class Services:
 def services(monkeypatch):
     fake = Services()
     monkeypatch.setattr(stock, "_transport", httpx.MockTransport(fake))
-    stock._cache.clear()
     return fake
+
+
+def test_no_source_reached_unless_faked(offline):
+    """No test reaches Commons, Openverse or Pixabay by mistake (conftest's `offline`): a
+    fetch fails loudly, a search (which leaves a failing source out) is caught after."""
+    with pytest.raises(AssertionError, match="free pictures"):
+        run(stock.fetch("commons", "File:Storming.jpg"))
+    with pytest.raises(AppError):
+        run(stock.search("Bastille"))
+    assert {r.url.host for r in offline.asked} == {"commons.wikimedia.org", "api.openverse.org"}
+    offline.asked.clear()  # reached on purpose: the fixture would fail this test
 
 
 def test_only_free_pictures_pupils_may_see(services):
@@ -214,7 +224,6 @@ REDIRECTS = [
 def test_a_redirect_from_an_allowed_host_never_followed(monkeypatch, to):
     redirecting = Redirecting(to)
     monkeypatch.setattr(stock, "_transport", httpx.MockTransport(redirecting))
-    stock._cache.clear()
 
     async def download():
         async with stock._client() as client:
@@ -239,7 +248,6 @@ def test_a_decompression_bomb_found_is_left_out(monkeypatch):
         return Services()(request)
 
     monkeypatch.setattr(stock, "_transport", httpx.MockTransport(bombs))
-    stock._cache.clear()
     assert [f.source for f in run(stock.search("Bastille"))] == ["openverse"]  # no preview: not offered
     with pytest.raises(AppError) as e:
         run(stock.fetch("commons", "File:Storming.jpg"))
