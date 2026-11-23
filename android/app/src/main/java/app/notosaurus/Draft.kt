@@ -4,16 +4,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.header
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.readRemaining
-import kotlinx.io.readByteArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
@@ -66,9 +62,7 @@ class Draft(private val dir: File) {
          * and it read only up to its cap (anything heavier refused before filling memory). */
         internal suspend fun readPhoto(kept: Int, channel: ByteReadChannel): ByteArray {
             if (kept >= LocalServer.MAX_PHOTOS) throw BadRequest("draft.too_large")
-            val data = channel.readRemaining(MAX_PHOTO_BYTES + 1L).readByteArray()
-            if (data.size > MAX_PHOTO_BYTES) throw BadRequest("draft.too_large")
-            return data
+            return channel.readCapped(MAX_PHOTO_BYTES, "draft.too_large")
         }
 
         private const val DRAFT = "draft.json"
@@ -94,7 +88,7 @@ internal fun Route.draftRoutes(server: LocalServer) {
             var text = ""
             var sent = false
             val photos = mutableListOf<ByteArray>()
-            call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
+            eachPart { part ->
                 when (part) {
                     is PartData.FormItem -> when (part.name) {
                         "draft" -> text = part.value
@@ -103,7 +97,6 @@ internal fun Route.draftRoutes(server: LocalServer) {
                     is PartData.FileItem -> photos += Draft.readPhoto(photos.size, part.provider())
                     else -> {}
                 }
-                part.dispose()
             }
             draft.save(text, photos.takeIf { sent })
             JsonObject(emptyMap())

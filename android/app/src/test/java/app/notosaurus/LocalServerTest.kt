@@ -148,6 +148,20 @@ class LocalServerTest : LocalServerTestBase() {
         assertEquals(HttpStatusCode.BadRequest, refused.status)
         assertEquals("draft.too_large", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
         assertEquals("{}", client.get("/api/draft") { page() }.bodyAsText())
+        // One too heavy, read no further than its cap, a field after it: refused all the same
+        val heavy = client.submitFormWithBinaryData(
+            "/api/draft",
+            formData {
+                append("photos_sent", "true")
+                append("photos", ByteArray(Draft.MAX_PHOTO_BYTES + 1), Headers.build {
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                    append(HttpHeaders.ContentDisposition, "filename=\"photo-1.jpg\"")
+                })
+                append("draft", "{}")
+            },
+        ) { method = HttpMethod.Put; page() }
+        assertEquals("draft.too_large", heavy.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals("{}", client.get("/api/draft") { page() }.bodyAsText())
     }
 
     @Test

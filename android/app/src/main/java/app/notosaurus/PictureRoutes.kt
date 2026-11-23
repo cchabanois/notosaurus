@@ -4,15 +4,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.response.respondTextWriter
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.utils.io.toByteArray
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
@@ -74,9 +71,8 @@ internal fun Route.pictureRoutes(server: LocalServer) {
                 val lesson = lesson()
                 val i = cardIndex(lesson)
                 var photo: ByteArray? = null
-                call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
-                    if (part is PartData.FileItem && part.name == "photo") photo = part.provider().toByteArray()
-                    part.dispose()
+                eachPart { part ->
+                    if (part is PartData.FileItem && part.name == "photo") photo = LocalServer.readPhoto(part.provider())
                 }
                 HttpStatusCode.Created to pictures.own(lesson, i, photo ?: throw BadRequest("extract.no_input"))
             } catch (e: Exception) {
