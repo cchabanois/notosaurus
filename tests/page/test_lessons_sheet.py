@@ -33,7 +33,7 @@ def test_lessons_grouped_by_subject(page, clock):
         made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
         page.request.put(f"/api/lessons/{made['id']}", data={"deck": deck, "cards": made["cards"]})
     page.reload()
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     groups = page.locator(".lesson-group")
     sync_api.expect(groups).to_have_count(2)
     titles = [" ".join(h.split()).casefold() for h in groups.locator("h3").all_inner_texts()]
@@ -49,7 +49,7 @@ def test_the_page_stays_still_under_an_open_sheet(page, clock):
         made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
         page.request.put(f"/api/lessons/{made['id']}", data={"deck": f"Maths::Leçon {n}", "cards": made["cards"]})
     generate_free(page, FRONT_PROMPT)  # a lesson open behind: a page long enough to scroll
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     sync_api.expect(page.locator("html")).to_have_class(re.compile("sheet-open"))
     page.evaluate("scrollTo(0, 400)")  # the lesson behind, scrolled down a little
     before = page.evaluate("scrollY")
@@ -76,7 +76,7 @@ def test_android_back_closes_the_open_sheet_first(page):
     page.request.put(f"/api/lessons/{made['id']}", data={"deck": "Maths::Leçon", "cards": made["cards"]})
     page.reload()
     assert page.evaluate("notosaurusBack()") is False
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     sync_api.expect(page.locator(".lesson-list")).to_be_visible()
     assert page.evaluate("notosaurusBack()") is True
     sync_api.expect(page.locator(".lesson-list")).to_be_hidden()
@@ -90,7 +90,7 @@ def test_many_lessons_recent_folded_and_searched(page, clock):
         made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
         page.request.put(f"/api/lessons/{made['id']}", data={"deck": deck, "cards": made["cards"]})
     page.reload()
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     sheet = page.locator(".lesson-list")
     heads = sheet.locator(".group-head")
     sync_api.expect(heads).to_have_count(4)  # the recent ones, then the subjects
@@ -108,7 +108,7 @@ def test_many_lessons_recent_folded_and_searched(page, clock):
     heads.nth(3).click()  # Espagnol, opened: still open next time
     sync_api.expect(sheet.locator(".lesson:visible")).to_have_count(9)
     page.reload()
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     sync_api.expect(sheet.locator(".lesson:visible")).to_have_count(9)
 
     page.get_by_placeholder("🔍 Chercher une leçon…").fill("lecon 4")  # no accent, no case
@@ -287,7 +287,7 @@ def test_lessons_shared_ticked_from_my_lessons_no_test_needed(page, tmp_path):
         page.request.put(f"/api/lessons/{made['id']}", data={"deck": deck, "cards": made["cards"]})
     assert page.request.get("/api/exams").json() == []
     page.reload()
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     page.get_by_role("button", name="📤 Partager des leçons").click()
     page.get_by_role("checkbox", name="Toute la matière : Histoire").check()
     done = page.get_by_role("button", name="📤 Partager (2 leçons)")
@@ -310,7 +310,7 @@ def test_my_lessons_leave_the_lessons_the_room(page):
     page.set_viewport_size({"width": 360, "height": 780})
     for _ in range(9):
         generate_free(page, FRONT_PROMPT)
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     sheet = page.get_by_role("dialog", name="Mes leçons")
     page.wait_for_function("el => el.getBoundingClientRect().top < 30", arg=sheet.element_handle())  # up to the top
     fold = sheet.get_by_role("button", name="Contrôles à préparer")

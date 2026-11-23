@@ -84,7 +84,7 @@ def test_a_test_made_from_my_lessons_then_its_lessons_ticked(page):
     page.goto("/")
     made = [page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json() for _ in range(2)]
     page.reload()
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     page.get_by_role("button", name="Contrôles à préparer").click()  # folded: unfolded
     page.get_by_role("button", name="＋ Nouveau contrôle").click()
     sheet = page.get_by_role("dialog", name="Contrôles à préparer")
@@ -132,7 +132,7 @@ def test_a_tests_cards_shared_from_its_sheet(page):
     exam = {"name": "Interro lundi", "date": "", "lessons": [{"lesson": made["id"]}]}
     page.request.put("/api/exams/interro", data=exam)
     page.reload()
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     page.get_by_role("button", name="📝 1 contrôle à préparer").click()  # folded: unfolded
     page.get_by_role("button", name=re.compile("Interro lundi")).click()
     page.get_by_role("button", name="📤 Partager les cartes du contrôle").click()

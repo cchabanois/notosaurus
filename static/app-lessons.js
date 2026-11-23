@@ -235,11 +235,13 @@ const lessonsPart = {
   // Someone else's lesson (shared, or seen with "All profiles"): it can be read,
   // sent to Anki and exported, not changed. Lessons without owner are everyone's.
   readOnly() {
-    return Boolean(this.lessonOwner) && this.anki.profile !== this.lessonOwner;
+    return this.profiles && Boolean(this.lessonOwner) && this.anki.profile !== this.lessonOwner;
   },
 
+  // Where there are no Anki profiles (the Android app), no lesson is another profile's: one the
+  // computer's export brought keeps its owner (back there, that profile's again), the phone's own here
   canDelete(l) {
-    return !l.owner || l.owner === this.anki.profile;
+    return !this.profiles || !l.owner || l.owner === this.anki.profile;
   },
 
   // Shows a lesson coming from the server (fresh generation or reopened).

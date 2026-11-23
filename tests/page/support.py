@@ -357,7 +357,7 @@ def android_settings(page, account):
 def reopen(page) -> None:
     """The page loaded again, its lesson opened from the list."""
     page.reload()
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     page.locator(".lesson-list .lesson").first.click()
 
 
