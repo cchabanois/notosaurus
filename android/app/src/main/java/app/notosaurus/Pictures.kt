@@ -9,6 +9,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
@@ -142,7 +143,10 @@ class Pictures(
      * then looks for free ones and asks before the image model draws one. A figure whose
      * description was changed: drawn again from what it was drawn from (its kept sources), what is
      * asked changed and the rest kept; the same: drawn anew (as the computer's). {"card", "lesson",
-     * "search" (a picture's)}. */
+     * "search" (a picture's)}. A card with a figure the AI turns into a picture keeps its figure until
+     * a picture replaces it (the user may give up the search: never a figure's drawing left without
+     * its description): the picture's fields then come as "decided" ({"picture_prompt",
+     * "picture_search", "picture_on_back"}), sent back with the picture chosen (draw, own). */
     suspend fun make(lesson: JsonObject, i: Int, subject: String?, language: String = "English", step: Step = {}): JsonObject = drawing(lesson.string("id")) {
         val id = lesson.string("id")
         val cards = lesson.cards()
@@ -159,11 +163,25 @@ class Pictures(
             if (e.code != NEEDS_DRAWING) throw e
             val description = e.params.string("description")
             val search = e.params.string("search")
+            val found = "search" to JsonPrimitive(search.ifEmpty { description }) // what the page looks for
+            if (card.string("figure").isNotBlank()) {
+                val decided = buildJsonObject {
+                    put("picture_prompt", description)
+                    put("picture_search", search)
+                    put("picture_on_back", card.onBack()) // the relay's 409 says no other: the card's
+                }
+                return@drawing buildJsonObject {
+                    put("card", card)
+                    put("lesson", lesson)
+                    put("search", found.second)
+                    put("decided", decided)
+                }
+            }
             cards[i] = cards[i].with(
                 "figure" to JsonPrimitive(""), "figure_kind" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(description),
                 "picture_search" to JsonPrimitive(search),
             )
-            JsonObject(answer(lesson, cards, i) + ("search" to JsonPrimitive(search.ifEmpty { description })))
+            JsonObject(answer(lesson, cards, i) + found)
         }
     }
 
@@ -171,10 +189,17 @@ class Pictures(
      * figure: drawn again, told what its check found (`problem`) when there is one, with the
      * model's thinking when `careful`; from what it was drawn from (its kept sources, as the
      * computer's /picture/draw). {"card", "lesson"}. */
-    suspend fun draw(lesson: JsonObject, i: Int, problem: String = "", careful: Boolean = false, step: Step = {}): JsonObject = drawing(lesson.string("id")) {
+    suspend fun draw(
+        lesson: JsonObject,
+        i: Int,
+        problem: String = "",
+        careful: Boolean = false,
+        decided: JsonObject? = null, // a picture "make" decided for a figure: drawn now, the figure replaced
+        step: Step = {},
+    ): JsonObject = drawing(lesson.string("id")) {
         val id = lesson.string("id")
         val cards = lesson.cards()
-        val card = cards[i]
+        val card = decided?.let { cards[i].decide(it) } ?: cards[i]
         val origin = card["picture_source"] as? JsonObject
         val previous = if (card.string("figure").isNotEmpty()) keptSources(lessons.images(id), origin) else emptyList()
         cards[i] = drawn(
@@ -186,21 +211,25 @@ class Pictures(
 
     /** "🔍 Check": card `i`'s picture looked at by the relay's AI, nothing changed: its figure
      * as drawn against its description (/v1/check-figure); any other picture (a photo found,
-     * drawn by the image model, the user's) against the card (/v1/check-picture).
-     * {"ok", "problem"}. */
+     * drawn by the image model, the user's) against the card (/v1/check-picture). An SVG without
+     * its figure's description (a figure an older version turned into a picture without replacing
+     * its drawing): still a figure, checked against what the card's picture should show, else the
+     * card itself (as the computer's). A card's text longer than the relay takes cut to it, not
+     * refused. {"ok", "problem"}. */
     suspend fun check(lesson: JsonObject, i: Int): JsonObject {
         val card = lesson.cards()[i]
         val figure = card.string("figure")
         val picture = file(lesson.string("id"), card.string("picture")) ?: throw BadRequest("card.not_found")
-        val checked = if (figure.isNotBlank() && picture.extension == "svg") {
+        val text = "${card.string("front")} → ${card.string("back")}"
+        val checked = if (picture.extension == "svg") {
             relay().post("check-figure", buildJsonObject {
-                put("description", figure)
+                put("description", cut(figure.trim().ifEmpty { card.string("picture_prompt").trim() }.ifEmpty { text }))
                 put("svg", picture.readText())
             })
         } else {
             if (picture.extension != "jpg") throw BadRequest("card.not_found")
             relay().post("check-picture", buildJsonObject {
-                put("card", "${card.string("front")} → ${card.string("back")}")
+                put("card", cut(text))
                 put("meant", card.string("picture_prompt").ifBlank { figure })
                 put("image", Base64.getEncoder().encodeToString(picture.readBytes()))
                 put("media_type", "image/jpeg")
@@ -212,11 +241,13 @@ class Pictures(
         }
     }
 
-    /** The user's own photo as card `i`'s picture, made card size (512 px, as the computer's). */
-    fun own(lesson: JsonObject, i: Int, photo: ByteArray, source: JsonObject? = PHOTO): JsonObject = drawing(lesson.string("id")) {
+    /** The user's own photo as card `i`'s picture, made card size (512 px, as the computer's), or
+     * a found one (`source`); `decided`: a picture "make" decided for its figure, the card's now. */
+    fun own(lesson: JsonObject, i: Int, photo: ByteArray, source: JsonObject? = PHOTO, decided: JsonObject? = null): JsonObject = drawing(lesson.string("id")) {
         val cards = lesson.cards()
         val data = if (source == PHOTO) cardSize(photo) else photo // a found one is card size already
         val name = save(lesson.string("id"), cards[i].string("id"), data, "jpg")
+        if (decided != null) cards[i] = cards[i].decide(decided)
         cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to (source ?: JsonNull))
         answer(lesson, cards, i)
     }
@@ -339,6 +370,18 @@ class Pictures(
         }
     }
 
+    /** The card with a picture "make" decided for its figure (`decided`: {"picture_prompt",
+     * "picture_search", "picture_on_back"}), now that a picture replaces the figure's drawing: its
+     * fields set, the figure's cleared (as the computer's). */
+    private fun JsonObject.decide(decided: JsonObject) = with(
+        "figure" to JsonPrimitive(""), "figure_kind" to JsonPrimitive(""),
+        "picture_prompt" to JsonPrimitive(decided.string("picture_prompt")),
+        "picture_search" to JsonPrimitive(decided.string("picture_search")),
+        "picture_on_back" to JsonPrimitive((decided["picture_on_back"] as? JsonPrimitive)?.booleanOrNull ?: onBack()),
+    )
+
+    private fun JsonObject.onBack() = (this["picture_on_back"] as? JsonPrimitive)?.booleanOrNull ?: false
+
     // Not on a sentence with gaps: AnkiDroid shows no picture on it (not paid for, then)
     private fun JsonObject.missingPicture() =
         string("picture").isEmpty() && (string("picture_prompt").isNotBlank() || string("figure").isNotBlank()) &&
@@ -424,6 +467,18 @@ class Pictures(
             val paths = files.filter { SOURCE_NAME.matches(it) }.mapNotNull { folder?.resolve(it) }
             if (paths.size != files.size || !paths.all { it.isFile }) return emptyList()
             return paths.map { it.readText() }
+        }
+
+        /** A whole card's text the relay takes ("front → back": /v1/check-picture's card), as
+         * relay_api.MAX_CARD: a card has no length limit of its own, so a longer one is cut to it
+         * (with "…") rather than refused. */
+        internal const val MAX_CARD = 4000
+
+        /** `text` cut to `max` characters, "…" last when it was longer (never half a character). */
+        internal fun cut(text: String, max: Int = MAX_CARD): String {
+            if (text.length <= max) return text
+            val kept = text.take(max - 1)
+            return (if (kept.lastOrNull()?.isHighSurrogate() == true) kept.dropLast(1) else kept) + "…"
         }
 
         private const val AT_ONCE = 4
