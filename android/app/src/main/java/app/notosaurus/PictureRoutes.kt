@@ -15,6 +15,8 @@ import io.ktor.server.routing.post
 import io.ktor.utils.io.toByteArray
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -52,14 +54,15 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         }
         // The user said yes: drawn by the image model (it costs); a figure drawn again, told what
         // its check found ("problem"), with the model's thinking when "careful", from what it was
-        // drawn from (its kept sources)
+        // drawn from (its kept sources); "decided": a picture "make" decided for a figure, drawn now
         stepping("/api/lessons/{id}/cards/{card}/picture/draw") { req, step ->
             val lesson = lesson()
             val i = cardIndex(lesson)
-            if (lesson.cards()[i].string("figure").isBlank()) switches.check("pictures.draw")
+            val decided = req["decided"] as? JsonObject
+            if (decided != null || lesson.cards()[i].string("figure").isBlank()) switches.check("pictures.draw")
             val problem = req["problem"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content.orEmpty()
             val careful = req["careful"]?.jsonPrimitive?.booleanOrNull == true && !switches.off("ai.careful")
-            pictures.draw(lesson, i, problem, careful) { step(buildJsonObject { put("step", it) }) }
+            pictures.draw(lesson, i, problem, careful, decided) { step(buildJsonObject { put("step", it) }) }
         }
         // "🔍 Check": the card's figure looked at by the AI, nothing changed ({"ok", "problem"})
         stepping("/api/lessons/{id}/cards/{card}/picture/check") { _, _ ->
@@ -67,18 +70,22 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             val lesson = lesson()
             pictures.check(lesson, cardIndex(lesson))
         }
-        // The user's own photo as the card's picture (the page made it card size)
+        // The user's own photo as the card's picture (the page made it card size); "decided" (JSON):
+        // a picture "make" decided for its figure, the card's now
         post("/api/lessons/{id}/cards/{card}/picture") {
             if (!allowed()) return@post
             val (status, answer) = try {
                 val lesson = lesson()
                 val i = cardIndex(lesson)
                 var photo: ByteArray? = null
+                var decided: String? = null
                 call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
                     if (part is PartData.FileItem && part.name == "photo") photo = part.provider().toByteArray()
+                    if (part is PartData.FormItem && part.name == "decided") decided = part.value
                     part.dispose()
                 }
-                HttpStatusCode.Created to pictures.own(lesson, i, photo ?: throw BadRequest("extract.no_input"))
+                val chosen = decided?.let(::decidedField) // once the whole request is read
+                HttpStatusCode.Created to pictures.own(lesson, i, photo ?: throw BadRequest("extract.no_input"), decided = chosen)
             } catch (e: Exception) {
                 failure(e) ?: throw e
             }
@@ -131,7 +138,7 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             val i = cardIndex(lesson)
             val req = body()
             val found = relay().foundPicture(req.string("source"), req.string("id"))
-            pictures.own(lesson, i, found.jpeg, found.source)
+            pictures.own(lesson, i, found.jpeg, found.source, req["decided"] as? JsonObject)
         }
         // The pictures no card uses any more removed (drawn again, replaced, removed: kept until
         // then, so that the page can undo a card's correction while it is edited): asked by the
@@ -161,3 +168,12 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         }
     }
 }
+
+/** A form's "decided" field (a picture "make" decided for a card's figure, as JSON): its object;
+ * not one, a request that isn't valid. */
+internal fun decidedField(value: String): JsonObject =
+    try {
+        Json.parseToJsonElement(value) as? JsonObject
+    } catch (e: SerializationException) {
+        null
+    } ?: throw BadRequest("invalid") // errors.invalid

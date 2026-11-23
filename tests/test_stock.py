@@ -301,6 +301,21 @@ def test_found_on_the_computer(client, monkeypatch):
     assert bad.status_code == 422
 
 
+def test_found_for_a_long_card(client, monkeypatch):
+    """A card has no length limit: its pictures looked for with the whole card as context,
+    "front → back", far past a picture's subject (up to relay_api.MAX_CARD)."""
+    seen = []
+
+    async def as_found(s, subject, context="", pixabay_key=""):
+        seen.append(context)
+        yield []
+
+    monkeypatch.setattr(stock, "sorted_as_found", as_found)
+    context = "q → " + "b" * 3000
+    res = client.post("/api/pictures/search", json={"subject": "a castle", "words": "castle", "context": context})
+    assert res.status_code == 200 and seen == [context]
+
+
 # --- Searched for by the user, sorted by the AI (stock.sorted_search) ---------------
 
 

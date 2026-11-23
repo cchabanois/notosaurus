@@ -97,6 +97,19 @@ def test_limits():
         api.ExplainRequest(card=Card(front="a", back="b"), kind="joke", prompt="p", deck="D")
 
 
+def test_a_long_cards_picture_checked():
+    """A card has no length limit: its picture checked with the whole card's text, "front →
+    back", well past a picture's subject (MAX_SUBJECT), up to MAX_CARD; so a figure without its
+    description (an SVG an older version left), checked against the card."""
+    card = "q → " + "b" * 3000
+    assert api.CheckPictureRequest(card=card, image="aGk=", media_type="image/jpeg").card == card
+    assert api.CheckFigureRequest(description=card, svg="<svg/>").description == card
+    with pytest.raises(ValidationError):
+        api.CheckPictureRequest(card="x" * (api.MAX_CARD + 1), image="aGk=", media_type="image/jpeg")
+    with pytest.raises(ValidationError):
+        api.CheckFigureRequest(description="x" * (api.MAX_CARD + 1), svg="<svg/>")
+
+
 def test_openapi_description():
     spec = json.loads((ROOT / "core" / "relay-api-v1.json").read_text(encoding="utf-8"))
     routes = (

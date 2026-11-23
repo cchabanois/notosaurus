@@ -356,6 +356,147 @@ class PictureRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aFigureTurnedIntoAPictureStaysTheFigureUntilAPictureIsChosen() = app { client ->
+        val asked = mutableListOf<Pair<String, JsonObject>>()
+        val lesson = client.figureLesson(mutableListOf(), emptyList())
+        val id = lesson.string("id")
+        val figure = lesson["cards"]!!.jsonArray[0].jsonObject
+        val cardId = figure.string("id")
+        assertTrue(figure.string("picture").endsWith(".svg"))
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                asked += request.url.encodedPath to json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                return when (request.url.encodedPath) {
+                    // The relay's AI decides a picture, nothing written: no free one asked, 409
+                    "/v1/card-picture" -> cardPicture(request) { sent ->
+                        if (sent.string("asked").isEmpty() && sent["card"]!!.jsonObject.string("figure").isNotEmpty()) {
+                            mapOf("figure" to "", "figure_kind" to "", "picture_prompt" to "a photo of a set square", "picture_search" to "set square")
+                        } else emptyMap()
+                    }
+                    else -> MockResponse.Builder().code(404).build()
+                }
+            }
+        }
+        suspend fun saved() = client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray[0].jsonObject
+        val made = client.post("/api/lessons/$id/cards/$cardId/picture/make") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"subject": ""}""")
+        }.json().jsonObject
+        assertEquals("set square", made.string("search"))
+        val decided = made["decided"]!!.jsonObject
+        assertEquals("a photo of a set square" to "set square", decided.string("picture_prompt") to decided.string("picture_search"))
+        // The search given up: still the figure, its drawing and its description (never one without the other)
+        for (card in listOf(made["card"]!!.jsonObject, saved())) {
+            assertEquals("a right triangle" to figure.string("picture"), card.string("figure") to card.string("picture"))
+            assertEquals("geometry" to "", card.string("figure_kind") to card.string("picture_prompt"))
+        }
+
+        // The user said yes: drawn by the image model as the picture decided, the figure replaced
+        val drawn = client.post("/api/lessons/$id/cards/$cardId/picture/draw") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"decided": $decided}""")
+        }.json().jsonObject["card"]!!.jsonObject
+        val sent = asked.last().second["card"]!!.jsonObject
+        assertEquals("" to "a photo of a set square", sent.string("figure") to sent.string("picture_prompt"))
+        assertEquals("true", asked.last().second["draw"]!!.jsonPrimitive.content)
+        for (card in listOf(drawn, saved())) {
+            assertEquals("" to "", card.string("figure") to card.string("figure_kind"))
+            assertEquals("a photo of a set square" to "set square", card.string("picture_prompt") to card.string("picture_search"))
+            assertTrue(card.string("picture").endsWith(".jpg"))
+        }
+    }
+
+    @Test
+    fun aFigureTurnedIntoAPictureReplacedByTheUsersPhoto() = app { client ->
+        val lesson = client.figureLesson(mutableListOf(), emptyList())
+        val id = lesson.string("id")
+        val cardId = lesson["cards"]!!.jsonArray[0].jsonObject.string("id")
+        val decided = """{"picture_prompt": "a photo of a set square", "picture_search": "set square", "picture_on_back": false}"""
+        val photo = client.submitFormWithBinaryData("/api/lessons/$id/cards/$cardId/picture", formData {
+            append("decided", decided)
+            append("photo", "a set square".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
+            })
+        }) { page() }.json().jsonObject["card"]!!.jsonObject
+        assertEquals("" to "a photo of a set square", photo.string("figure") to photo.string("picture_prompt"))
+        assertTrue(photo.string("picture").endsWith(".jpg"))
+        assertEquals("photo", photo["picture_source"]!!.jsonObject.string("source"))
+        // Not a decision: refused, the card as it was
+        val refused = client.submitFormWithBinaryData("/api/lessons/$id/cards/$cardId/picture", formData {
+            append("decided", "nope")
+            append("photo", "x".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
+            })
+        }) { page() }
+        assertEquals(HttpStatusCode.BadRequest, refused.status)
+    }
+
+    @Test
+    fun anSvgWithoutItsFigureCheckedAsAFigure() = app { client ->
+        // A figure an older version turned into a picture without replacing its drawing: still
+        // checked (/v1/check-figure), against what the card's picture should show, else the card
+        val lesson = client.figureLesson(mutableListOf(), emptyList())
+        val id = lesson.string("id")
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject
+        val asked = mutableListOf<Pair<String, JsonObject>>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                asked += request.url.encodedPath to json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                return MockResponse.Builder().addHeader("Content-Type", "application/json")
+                    .body("""{"ok": false, "problem": "A triangle, not a set square.", "usage": {"credits": 1, "credits_left": 90}}""").build()
+            }
+        }
+        for ((prompt, meant) in listOf("a photo of a set square" to "a photo of a set square", "" to "Ce triangle ? → rectangle")) {
+            val legacy = JsonObject(card + mapOf("figure" to JsonPrimitive(""), "figure_kind" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(prompt)))
+            client.put("/api/lessons/$id") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Maths", "cards": [$legacy]}""") }
+            val checked = client.post("/api/lessons/$id/cards/${card.string("id")}/picture/check") { page() }
+            assertEquals(HttpStatusCode.OK, checked.status)
+            assertEquals("A triangle, not a set square.", checked.json().jsonObject.string("problem"))
+            val (path, sent) = asked.last()
+            assertEquals("/v1/check-figure" to meant, path to sent.string("description"))
+            assertEquals("<svg/>", sent.string("svg"))
+        }
+    }
+
+    @Test
+    fun aLongCardsPictureCheckedCutToWhatTheRelayTakes() = app { client ->
+        // A card has no length limit, the relay's check one (MAX_CARD): cut to it, not refused
+        relayAnswers("""{"deck": {"deck": "D", "cards": [{"front": "q", "back": "${"b".repeat(5000)}"},
+            {"front": "q", "back": "${"b".repeat(1500)}"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val id = lesson.string("id")
+        val asked = mutableListOf<JsonObject>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                asked += json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                return MockResponse.Builder().addHeader("Content-Type", "application/json")
+                    .body("""{"ok": true, "problem": "", "usage": {"credits": 1, "credits_left": 90}}""").build()
+            }
+        }
+        for (card in lesson["cards"]!!.jsonArray.map { it.jsonObject }) {
+            client.submitFormWithBinaryData("/api/lessons/$id/cards/${card.string("id")}/picture", formData {
+                append("photo", "a photo".toByteArray(), Headers.build {
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                    append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
+                })
+            }) { page() }
+            assertEquals(HttpStatusCode.OK, client.post("/api/lessons/$id/cards/${card.string("id")}/picture/check") { page() }.status)
+        }
+        val (long, short) = asked.map { it.string("card") }
+        assertEquals(Pictures.MAX_CARD, long.length)
+        assertEquals("q → " + "b".repeat(Pictures.MAX_CARD - 5) + "…", long)
+        assertEquals("q → " + "b".repeat(1500), short) // under the limit: sent whole
+    }
+
+    @Test
+    fun aCutTextNeverEndsInHalfACharacter() {
+        assertEquals("abc", Pictures.cut("abc", 3))
+        assertEquals("ab…", Pictures.cut("abcd", 3))
+        assertEquals("a…", Pictures.cut("a\uD83D\uDE00b", 3)) // the emoji not split: dropped whole
+    }
+
+    @Test
     fun anEditsCardsMergedIntoTheLessonsAsSavedNow() {
         fun card(id: String, vararg fields: Pair<String, String>) =
             JsonObject(mapOf("id" to JsonPrimitive(id), "front" to JsonPrimitive(id)) + fields.map { it.first to JsonPrimitive(it.second) })
