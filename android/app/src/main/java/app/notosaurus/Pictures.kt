@@ -38,11 +38,24 @@ class Pictures(
      * first (fromTheLesson), for the cards whose thing its photos show, but those in
      * `notFromLesson` (their ids: a correction replaced their picture, the lesson's drawing
      * would only come back). Figures turned off (figures.draw): their cards left without, not
-     * counted as failures. */
-    suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}, notFromLesson: Set<String> = emptySet()): JsonObject =
-        drawing(lesson.string("id")) { drawnMissing(lesson, draw, step, notFromLesson) }
+     * counted as failures. `previous`: by card id, the figure a correction replaced, {"source": its
+     * picture_source (its sources), "kind": its family}: drawn again from it, what is asked
+     * changed and the rest kept (as the computer's /pictures). */
+    suspend fun drawMissing(
+        lesson: JsonObject,
+        draw: Boolean = false,
+        step: Step = {},
+        notFromLesson: Set<String> = emptySet(),
+        previous: Map<String, JsonObject> = emptyMap(),
+    ): JsonObject = drawing(lesson.string("id")) { drawnMissing(lesson, draw, step, notFromLesson, previous) }
 
-    private suspend fun drawnMissing(lesson: JsonObject, draw: Boolean, step: Step, notFromLesson: Set<String>): JsonObject {
+    private suspend fun drawnMissing(
+        lesson: JsonObject,
+        draw: Boolean,
+        step: Step,
+        notFromLesson: Set<String>,
+        previous: Map<String, JsonObject>,
+    ): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
         fromTheLesson(id, cards, step, notFromLesson)
@@ -56,7 +69,13 @@ class Pictures(
                     few.withPermit {
                         try {
                             val card = cards[i].string("id")
-                            cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = !draw) {
+                            val before = previous[card]
+                            val origin = before?.get("source") as? JsonObject
+                            val kept = if (origin != null && cards[i].string("figure").isNotBlank()) keptSources(lessons.images(id), origin) else emptyList()
+                            cards[i] = drawn(
+                                id, cards[i], fresh = false, draw = draw, find = !draw,
+                                previous = kept, previousKind = before?.string("kind").orEmpty(), previousEngine = origin?.string("engine").orEmpty(),
+                            ) {
                                 step(JsonObject(mapOf("card" to JsonPrimitive(card)) + it))
                             }
                             // Shown at once, not when the others are done
@@ -117,12 +136,21 @@ class Pictures(
     /** "✨ Image", its first step (as the computer's /picture/make): from what the user wrote
      * (`subject`; null: its own description) the relay's AI decides a figure, then drawn
      * (cheap), or a picture, its description and search words set, nothing drawn: the page
-     * then looks for free ones and asks before the image model draws one. {"card", "lesson",
+     * then looks for free ones and asks before the image model draws one. A figure whose
+     * description was changed: drawn again from what it was drawn from (its kept sources), what is
+     * asked changed and the rest kept; the same: drawn anew (as the computer's). {"card", "lesson",
      * "search" (a picture's)}. */
     suspend fun make(lesson: JsonObject, i: Int, subject: String?, language: String = "English", step: Step = {}): JsonObject = drawing(lesson.string("id")) {
+        val id = lesson.string("id")
         val cards = lesson.cards()
+        val card = cards[i]
+        val origin = card["picture_source"] as? JsonObject
+        val previous = if (changedFigure(card, subject)) keptSources(lessons.images(id), origin) else emptyList()
         try {
-            cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, asked = subject, language = language, draw = false, find = false, onStep = step)
+            cards[i] = drawn(
+                id, card, fresh = true, asked = subject, language = language, draw = false, find = false, previous = previous,
+                previousKind = card.string("figure_kind"), previousEngine = origin?.string("engine").orEmpty(), onStep = step,
+            )
             answer(lesson, cards, i)
         } catch (e: RelayException) {
             if (e.code != NEEDS_DRAWING) throw e
@@ -139,26 +167,16 @@ class Pictures(
     /** Card `i`'s picture drawn by the image model, now: the user said yes (no free one fit). A
      * figure: drawn again, told what its check found (`problem`) when there is one, with the
      * model's thinking when `careful`; from what it was drawn from (its kept sources, as the
-     * computer's /picture/draw): those of `previousSource` and its family `previousKind` (the
-     * card before a correction cleared its picture), else its own. {"card", "lesson"}. */
-    suspend fun draw(
-        lesson: JsonObject,
-        i: Int,
-        problem: String = "",
-        careful: Boolean = false,
-        previousSource: JsonObject? = null,
-        previousKind: String = "",
-        step: Step = {},
-    ): JsonObject = drawing(lesson.string("id")) {
+     * computer's /picture/draw). {"card", "lesson"}. */
+    suspend fun draw(lesson: JsonObject, i: Int, problem: String = "", careful: Boolean = false, step: Step = {}): JsonObject = drawing(lesson.string("id")) {
         val id = lesson.string("id")
         val cards = lesson.cards()
         val card = cards[i]
-        val origin = previousSource ?: card["picture_source"] as? JsonObject
-        val kind = if (previousSource != null) previousKind else card.string("figure_kind")
+        val origin = card["picture_source"] as? JsonObject
         val previous = if (card.string("figure").isNotEmpty()) keptSources(lessons.images(id), origin) else emptyList()
         cards[i] = drawn(
             id, card, fresh = true, draw = true, find = false, problem = problem, careful = careful,
-            previous = previous, previousKind = kind, previousEngine = origin?.string("engine").orEmpty(), onStep = step,
+            previous = previous, previousKind = card.string("figure_kind"), previousEngine = origin?.string("engine").orEmpty(), onStep = step,
         )
         answer(lesson, cards, i)
     }
@@ -358,6 +376,14 @@ class Pictures(
                 File(folder, name).writeText(content)
                 buildJsonObject { put("file", name) }
             })
+        }
+
+        /** A figure's description written anew (`asked`, "✨ Image"'s): drawn again from what it was
+         * drawn from; the same, or none: drawn anew (the core's pictures.changed_figure). */
+        internal fun changedFigure(card: JsonObject, asked: String?): Boolean {
+            val written = asked.orEmpty().trim()
+            val figure = card.string("figure").trim()
+            return figure.isNotEmpty() && written.isNotEmpty() && written != figure
         }
 
         /** What a figure was drawn from, as its picture_source names it: none when it names none

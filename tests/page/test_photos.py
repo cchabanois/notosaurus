@@ -4,6 +4,7 @@ turned, a part hidden, cropped, the next pages added."""
 import base64
 import io
 import re
+import time
 
 import pytest
 from helpers import plain_image
@@ -1292,3 +1293,21 @@ def test_a_card_keeps_its_page_through_an_edit(page):
     field(page.locator(".flash").nth(2), "back").fill("los tres")
     eventually(page, lambda: lesson(page, made["id"])["cards"][2]["back"] == "los tres", "the edit saved")
     assert [c["page"] for c in lesson(page, made["id"])["cards"]] == [c["page"] for c in made["cards"]]
+
+
+def test_a_pdf_picked_as_the_page_opens_counted_against_the_servers_room(page):
+    """A PDF picked before the server's settings are read (a slow start): its pages counted
+    against the lesson's room as the server says it (30), not the page's default (10): all
+    ticked, not none."""
+
+    def late(route):
+        time.sleep(1.5)
+        route.continue_()
+
+    page.route("**/api/config", late)
+    page.goto("/")
+    page.locator("input[type=file][accept*=pdf]").set_input_files(
+        {"name": "cours.pdf", "mimeType": "application/pdf", "buffer": pdf(12)}
+    )
+    add_pdf_pages(page, 12)
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(12)

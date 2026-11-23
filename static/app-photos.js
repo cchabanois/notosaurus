@@ -300,6 +300,7 @@ const photosPart = {
 
   async readFiles(files) {
     this.error = "";
+    await configRead;  // picked as the page opens: the lesson's room as the server says it (maxPhotos)
     let left = 0;  // photos past the lesson's pages: not added, said
     for (const file of files) {
       if (isPdf(file)) {
@@ -324,6 +325,7 @@ const photosPart = {
 
   // A text shared to the app: pages of the lesson (textLines), as many as there are places
   async addText(text) {
+    await configRead;  // as readFiles
     const ctx = document.createElement("canvas").getContext("2d");
     ctx.font = `${TEXT_PAGE.font}px sans-serif`;
     const room = TEXT_PAGE.width - 2 * TEXT_PAGE.margin;
