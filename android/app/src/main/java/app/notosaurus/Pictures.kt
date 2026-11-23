@@ -224,10 +224,7 @@ class Pictures(
     /** No picture on card `i` any more: a text card. */
     fun remove(lesson: JsonObject, i: Int): JsonObject {
         val cards = lesson.cards()
-        cards[i] = cards[i].with(
-            "picture" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(""), "figure" to JsonPrimitive(""),
-            "figure_kind" to JsonPrimitive(""), "picture_source" to JsonNull,
-        )
+        cards[i] = cards[i].with(*REMOVED.map { it to if (it == "picture_source") JsonNull else JsonPrimitive("") }.toTypedArray())
         return answer(lesson, cards, i)
     }
 
@@ -430,8 +427,11 @@ class Pictures(
         private const val NEEDS_DRAWING = "picture.needs_drawing" // no free picture fits: the user is asked
         private val PHOTO = buildJsonObject { put("source", "photo") }
         private val LESSON = buildJsonObject { put("source", "lesson") } // its own pages' drawing
-        // What the relay decides of a card's picture (Card's fields): taken into the card
+        // What the relay decides of a card's picture (Card's fields): taken into the card (core's pictures.PICTURE_FIELDS)
         private val PICTURE_FIELDS = listOf("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back")
+        // What removing a card's picture clears ("" each, picture_source null): its search words and
+        // where it shows kept (core's pictures.REMOVED)
+        private val REMOVED = listOf("picture", "picture_prompt", "figure", "figure_kind", "picture_source")
         // A card's picture fields, told with "ready" (drawMissing) the moment it has them (core's pictures.READY)
         private val READY = PICTURE_FIELDS + "picture"
         private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py

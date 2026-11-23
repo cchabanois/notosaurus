@@ -6,11 +6,12 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
 from notosaurus_core import figures_typst, pictures
+from notosaurus_core.calls import MAX_IMAGES
 
 from .. import i18n, settings
 from ..access import is_local, paired
 from ..version import VERSION
-from .common import MAX_IMAGES, MAX_PAGES, STATIC_DIR
+from .common import MAX_PAGES, STATIC_DIR
 
 router = APIRouter()
 

@@ -21,9 +21,8 @@ log = logging.getLogger("notosaurus")
 
 STATIC_DIR = Path(__file__).parent.parent.parent / "static"
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-# The pages read in one call to the AI (the relay's cap, relay_api.MAX_IMAGES), and a
-# lesson's: more pages are sent in several calls, its next ones completing it
-MAX_IMAGES = 10
+# A lesson's pages (LocalServer.MAX_PHOTOS on the phone): more than one call to the AI reads
+# (MAX_IMAGES, the relay's cap) are sent in several, its next ones completing it
 MAX_PAGES = 30
 
 

@@ -103,7 +103,7 @@ async def make_picture(
                 origin, kind = card.picture_source, card.figure_kind  # the figure it had, if any
                 previous = pictures.kept_sources(folder, origin) if pictures.changed_figure(card, req.subject) else []
                 decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang), step)
-                for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"):
+                for field in pictures.PICTURE_FIELDS:
                     setattr(card, field, getattr(decided, field))
                 if card.figure.strip():
                     card.picture = await pictures.figure_or_picture(
@@ -288,8 +288,8 @@ async def remove_picture(id: str, card_id: str) -> dict:
     await access.editable(id)
 
     async def remove(draft: Lesson, card: Card) -> None:
-        card.picture = card.picture_prompt = card.figure = card.figure_kind = ""
-        card.picture_source = None
+        for field in pictures.REMOVED:
+            setattr(card, field, None if field == "picture_source" else "")
 
     return await _edit_card(id, card_id, remove)
 

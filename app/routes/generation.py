@@ -14,6 +14,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from notosaurus_core import llm, tts
+from notosaurus_core.calls import MAX_IMAGES
 from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import ExtractOptions, Image, extract_cards
@@ -23,7 +24,7 @@ from ..anki import SharedLesson, build_apkg, build_shared_apkg
 from ..errors import AppError
 from ..lesson_notes import export_request
 from ..models import ExportRequest, Generated, Lesson, LessonIn, ShareRequest
-from .common import IMAGE_TYPES, MAX_IMAGES, MAX_PAGES, jobs, pupil_lang, read_photo, tracked
+from .common import IMAGE_TYPES, MAX_PAGES, jobs, pupil_lang, read_photo, tracked
 
 log = logging.getLogger("notosaurus")
 

@@ -477,7 +477,7 @@ async def figure_or_picture(
         previous_kind=previous_kind,
         previous_engine=previous_engine,
     )
-    for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back"):
+    for field in PICTURE_FIELDS:
         setattr(card, field, getattr(made.card, field))
     if made.extension == "svg":
         name = figures.save(folder, card, made.data.decode())
@@ -486,6 +486,13 @@ async def figure_or_picture(
         return name
     return save(folder, card, made.data)
 
+
+# What is decided of a card's picture (decided, card_picture): taken into the card with it
+# (Pictures.PICTURE_FIELDS on the phone)
+PICTURE_FIELDS = ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back")
+# What removing a card's picture clears ("" each, picture_source None): its search words and
+# where it shows kept (Pictures.REMOVED on the phone)
+REMOVED = ("picture", "picture_prompt", "figure", "figure_kind", "picture_source")
 
 # The engines a figure is drawn again from, its sources given (figure_making.made_figure's
 # previous): Typst's
@@ -617,7 +624,7 @@ class Drawn(NamedTuple):
 
 
 # A card's picture fields, told with "ready" (draw_all) the moment it has them
-READY = {"picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"}
+READY = {"picture", *PICTURE_FIELDS}
 
 
 async def draw_all(
