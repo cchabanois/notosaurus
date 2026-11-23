@@ -223,6 +223,37 @@ def test_a_figure_on_the_front_is_told_its_cards_answer(monkeypatch):
         assert ("gives this answer away" in told["text"]) != on_back
 
 
+def test_a_figure_on_a_texts_with_gaps_question_never_told_its_answers(monkeypatch):
+    """A text with gaps: its answers are in its gaps, its back only an extra. Told as "question
+    → back", the figure on its question was drawn knowing neither what to hide nor that the
+    gaps' words are the answers. Told the text as its question shows it, each gap hidden (its
+    hint kept), and that the words in its gaps are the answers: none of them in what the AI is
+    told. On the back: told nothing."""
+    from notosaurus_core.models import Card
+
+    told = {}
+
+    async def drawn(s, text, description, family, light):
+        told["text"] = text
+        return llm.MadeFigure("<svg/>", "svg", family, False)
+
+    monkeypatch.setattr("notosaurus_core.figure_making._drawn", drawn)
+    for on_back in (False, True):
+        card = Card(
+            front="La prise de la {{c1::Bastille}} a lieu en {{c2::1789::une année}}.",
+            back="Le début de la Révolution",
+            figure="Gravure : la foule devant la forteresse de la Bastille, 14 juillet 1789",
+            figure_kind="other",
+            picture_on_back=on_back,
+        )
+        asyncio.run(pictures.card_picture(AIConfig(llm="gemini"), card))
+        question = told["text"].split("Figure to draw:")[1].split("\n\n", 1)[-1] if not on_back else ""
+        assert ("La prise de la […] a lieu en [une année]." in told["text"]) != on_back
+        assert ("words hidden in its gaps are the answers" in told["text"]) != on_back
+        assert "{{c" not in told["text"] and "Révolution" not in told["text"]
+        assert "Bastille" not in question and "1789" not in question
+
+
 def test_figures_turned_off_refused():
     """The relay's figures.draw switch (AIConfig.figures): refused before any AI call."""
     with pytest.raises(AppError) as refused:
@@ -250,9 +281,9 @@ def test_a_figure_checked_when_asked(client, monkeypatch):
     asked = []
     real = llm.made_figure
 
-    async def draw(s, description, step=None, kind="", problem="", careful=False, front="", *previous):
+    async def draw(s, description, step=None, kind="", problem="", careful=False, front="", *previous, **options):
         asked.append((problem, careful))
-        return await real(s, description, step, kind, problem, careful, front, *previous)
+        return await real(s, description, step, kind, problem, careful, front, *previous, **options)
 
     monkeypatch.setattr(llm, "made_figure", draw)
     told = {False: [{"step": "drawing"}], True: [{"step": "redrawing", "problem": "The angle is at B."}]}
