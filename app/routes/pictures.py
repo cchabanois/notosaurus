@@ -262,12 +262,14 @@ async def prune_pictures(id: str) -> dict:
     removed: kept until then, so that the page can undo a card's correction while it is
     edited). Asked by the page once no card is edited, and when the lesson opens. None while
     the lesson is being changed (lessons.edit: a picture just drawn is in no saved card yet,
-    another tab or a reload asking meanwhile): the next time."""
-    lesson = await access.editable(id)
+    another tab or a reload asking meanwhile): the next time. The lesson read again after that
+    check, nothing awaited in between (access.editable awaits Anki: an edit ending meanwhile
+    saved cards that one never had, its pictures removed)."""
+    await access.editable(id)
     if lessons.being_edited(id):
         return {"removed": 0}
-    folder = lessons.folder(id)
-    return {"removed": pictures.prune(folder / "images", lesson.cards) if folder else 0}
+    folder, lesson = lessons.folder(id), lessons.get(id)
+    return {"removed": pictures.prune(folder / "images", lesson.cards) if folder and lesson else 0}
 
 
 @router.delete("/api/lessons/{id}/cards/{card_id}/picture")

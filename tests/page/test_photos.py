@@ -216,6 +216,36 @@ def test_more_pages_than_one_call_reads_are_sent_in_several(page):
     assert page.evaluate("() => document.querySelector('[x-data]')._x_dataStack[0].newPages().length") == 0
 
 
+def test_a_lesson_read_in_several_calls_has_its_pictures_drawn_once_after_the_last(page):
+    """A PDF of 12 pages read in two calls, its cards asking for figures: their pictures asked
+    once, after the second call (drawn after each, the first drawing wrote back the cards it
+    began with, the next pages' gone, and the second drew the first pages' again)."""
+    calls = []
+    page.on(
+        "request",
+        lambda r: (
+            calls.append(r.url.split("/")[-1])
+            if r.method == "POST" and re.search(r"/api/extract$|/complete$|/pictures$", r.url)
+            else None
+        ),
+    )
+    page.route(
+        "**/api/lessons/*/pictures",
+        lambda route: route.fulfill(json={"lesson": {"cards": []}, "failures": 0, "error": None, "to_draw": []}),
+    )
+    page.goto("/")
+    page.locator("input[type=file][accept*=pdf]").set_input_files(
+        {"name": "cours.pdf", "mimeType": "application/pdf", "buffer": pdf(12)}
+    )
+    add_pdf_pages(page, 12)
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(12)
+    made = generate_from_photos(page, "Le triangle rectangle (géométrie)")  # figures to draw
+    page.wait_for_function("() => !document.querySelector('[x-data]')._x_dataStack[0].loading")  # every call made
+    assert any(c["figure"] for c in lesson(page, made["id"])["cards"])
+    page.wait_for_timeout(300)  # a drawing asked late would be seen
+    assert calls == ["extract", "complete", "pictures"]
+
+
 def test_pdf_text_kept_with_its_page(page, browser):
     page.goto("/")
     page.locator("input[type=file][accept*=pdf]").set_input_files(

@@ -168,4 +168,58 @@ class PictureRoutesTest : LocalServerTestBase() {
         assertEquals("true", search["translate"]!!.jsonPrimitive.content) // written in any language
         assertEquals("La réunion ? → A ∪ B", search.string("context"))
     }
+
+    @Test
+    fun noPruneWhileDrawnAndNoCardAddedMeanwhileDropped() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Maths", "cards": [{"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"},
+            {"front": "Ce carré ?", "back": "un carré", "figure": "a square"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val id = lesson.string("id")
+        val held = java.util.concurrent.CountDownLatch(1)
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val asked = json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                if (asked["card"]!!.jsonObject.string("figure") == "a square") held.await(10, TimeUnit.SECONDS) // drawn slowly
+                return cardPicture(request)
+            }
+        }
+        val images = folder.root.resolve("lessons/$id/images")
+        coroutineScope {
+            val drawing = async(Dispatchers.IO) {
+                client.post("/api/lessons/$id/pictures") { page(); contentType(ContentType.Application.Json); setBody("{}") }.json().jsonObject
+            }
+            assertTrue(waitFor { images.listFiles().orEmpty().isNotEmpty() }) // the triangle's: in no saved card yet
+            val first = images.listFiles()!!.single()
+            // A prune asked meanwhile (a reload, the lesson opened again): none
+            assertEquals(0, client.post("/api/lessons/$id/pictures/prune") { page() }.json().jsonObject["removed"]!!.jsonPrimitive.int)
+            assertTrue(first.isFile)
+            // The page saves a card added meanwhile (the next pages' cards, completed)
+            val saved = client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray
+            val added = JsonArray(saved + buildJsonObject { put("front", "Ce cercle ?"); put("back", "un cercle") })
+            client.put("/api/lessons/$id") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Maths", "cards": $added}""") }
+            held.countDown()
+            val cards = drawing.await()["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+            assertEquals(listOf("Ce triangle ?", "Ce carré ?", "Ce cercle ?"), cards.map { it.string("front") }) // kept
+            assertEquals(first.name, cards[0].string("picture"))
+            assertTrue(cards[1].string("picture").endsWith(".svg"))
+        }
+        assertEquals(0, client.post("/api/lessons/$id/pictures/prune") { page() }.json().jsonObject["removed"]!!.jsonPrimitive.int)
+        assertTrue(images.resolve(client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray[0].jsonObject.string("picture")).isFile)
+    }
+
+    @Test
+    fun anEditsCardsMergedIntoTheLessonsAsSavedNow() {
+        fun card(id: String, vararg fields: Pair<String, String>) =
+            JsonObject(mapOf("id" to JsonPrimitive(id), "front" to JsonPrimitive(id)) + fields.map { it.first to JsonPrimitive(it.second) })
+        val before = listOf(card("a"), card("b"), card("c"))
+        val after = listOf(card("a", "picture" to "pa.jpg"), card("d"), card("c")) // b removed, d added
+        val now = listOf(card("a", "back" to "A"), card("b"), card("c", "front" to "C"), card("e"))
+        assertEquals(
+            listOf(card("a", "back" to "A", "picture" to "pa.jpg"), card("c", "front" to "C"), card("e"), card("d")),
+            Pictures.mergedCards(before, after, now),
+        )
+        val noIds = listOf(JsonObject(mapOf("front" to JsonPrimitive("x"))))
+        assertEquals(listOf(card("a")), Pictures.mergedCards(noIds, listOf(card("a")), listOf(card("b")))) // the edit's
+    }
 }

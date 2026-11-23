@@ -259,12 +259,22 @@ def update(id: str, changes: LessonIn, exported: bool = False, share: bool | Non
     return _save(id, changes.model_dump(include=CONTENT, exclude_none=True), exported, share)
 
 
-def _save(id: str, content: dict, exported: bool = False, share: bool | None = None) -> Lesson | None:
+def _save(
+    id: str,
+    content: dict,
+    exported: bool = False,
+    share: bool | None = None,
+    cards: tuple[list[Card], list[Card]] | None = None,
+) -> Lesson | None:
+    """`cards`: an edit's cards, before and after it, merged into the lesson's as they are
+    now (merged_cards), in place of a `cards` in `content`."""
     with storage.lock:
         path = folder(id)
         if not path:
             return None
         old = _read(path)
+        if cards:
+            content = {**content, "cards": [c.model_dump() for c in merged_cards(*cards, old.cards)]}
         now = storage.now() if exported else _changed_at(old)
         # Validated again (not model_copy): the cards become Card objects, not dicts
         lesson = Lesson(
@@ -278,6 +288,29 @@ def _save(id: str, content: dict, exported: bool = False, share: bool | None = N
         )
         _write(path, lesson)
     return lesson
+
+
+def merged_cards(before: list[Card], after: list[Card], now: list[Card]) -> list[Card]:
+    """The cards an edit made of `before` (`after`), merged into the lesson's as saved now
+    (`now`), card by card (by id): of each card the edit changed, only the fields it changed
+    (a picture drawn: its picture's; the card's text the page saved meanwhile stays); a card
+    added since kept (the next pages' cards, a /complete ending while pictures were drawn),
+    one the edit removed gone, one it added at the end. Without ids to go by (or twice the
+    same): `after`, as it is."""
+    lists = (before, after, now)
+    if any(not all(c.id for c in cards) or len({c.id for c in cards}) != len(cards) for cards in lists):
+        return after
+    was = {c.id: c for c in before}
+    made = {c.id: c for c in after}
+    merged = []
+    for card in now:
+        old, new = was.get(card.id), made.get(card.id)
+        if old is None:  # added since
+            merged.append(card)
+        elif new is not None:  # else removed by the edit
+            changed = {f: getattr(new, f) for f in type(card).model_fields if getattr(new, f) != getattr(old, f)}
+            merged.append(card.model_copy(update=changed, deep=True) if changed else card)
+    return merged + [c for c in after if c.id not in was]
 
 
 # The lessons an edit is changing (their id → how many edits): a picture it writes is in
@@ -295,7 +328,9 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
     working copy (cards and frames its own, deep copies) and may take its time (an AI
     call); what it changed in the content is then saved as `update` saves it (sharing
     never, the rest read again then: changed meanwhile elsewhere, it stays). If `change`
-    fails, nothing is saved. The saved lesson and what `change` returned.
+    fails, nothing is saved. The saved lesson and what `change` returned. Its cards merged
+    card by card into the lesson's as they are then (merged_cards): a picture drawn for minutes
+    drops no card added meanwhile.
 
     The lesson is read outside the lock on purpose: `change` may wait seconds for the AI,
     and holding storage.lock that long would stall every other write. Not a race but a
@@ -312,7 +347,9 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
         # cast: an awaitable `change` gives its T once awaited (pyright can't tell)
         result = cast("T", await outcome) if isinstance(outcome, Awaitable) else outcome
         changed = {f for f in CONTENT if getattr(draft, f) != getattr(before, f)}
-        saved = await asyncio.to_thread(_save, id, draft.model_dump(include=changed))
+        content = draft.model_dump(include=changed - {"cards"})
+        cards = (before.cards, draft.cards) if "cards" in changed else None
+        saved = await asyncio.to_thread(_save, id, content, cards=cards)
     finally:
         if _editing[id] > 1:
             _editing[id] -= 1
