@@ -113,6 +113,8 @@ def test_a_figures_sources_pruned_with_it(case, tmp_path):
     Pictures.pruned the same."""
     from notosaurus_core.pictures import prune
 
+    # Names told apart by their case alone are one file on Windows and macOS: never a case's
+    assert len({name.casefold() for name in case["files"]}) == len(case["files"])
     for name in case["files"]:
         (tmp_path / name).write_text("x", encoding="utf-8")
     cards = [Card(front="f", back="b", picture=p) for p in case["pictures"]]
