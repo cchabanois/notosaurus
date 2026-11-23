@@ -1,12 +1,14 @@
 """What the routers share: the page's files, the photos they accept, the language of
-the page asking, the work told as it goes (stepped), and the AI's work "Cancel" stops
+the page asking, the work told as it goes (streamed), and the AI's work "Cancel" stops
 (jobs)."""
 
 import asyncio
 import json
 import logging
+import traceback
 from collections.abc import Awaitable, Callable
 from pathlib import Path
+from typing import Any
 
 from fastapi import Header, UploadFile
 from fastapi.responses import StreamingResponse
@@ -47,7 +49,7 @@ def pupil_lang(x_notosaurus_lang: str | None = Header(None)) -> str:
 
 
 Step = Callable[[dict], None]
-_working: set[asyncio.Task] = set()  # stepped work under way, kept until done
+_working: set[asyncio.Task] = set()  # streamed work under way, kept until done
 # The AI's work under way, by the page's id for each ("job"): what "Cancel" stops (a
 # lesson being made, corrected, a card corrected)
 jobs: dict[str, asyncio.Task] = {}
@@ -90,23 +92,34 @@ async def finished[T](work: Awaitable[T]) -> T:
                 current.uncancel()  # the cancel taken: what follows the save isn't stopped by it
 
 
-def stepped(work: Callable[[Step], Awaitable[dict]], what: str, job: str = "") -> StreamingResponse:
-    """Work told as it goes, one JSON per line: each step `work` tells (a send's
-    {"step": "sounds", "done", "total"}, a picture's {"card", "step"…}), then {"result": …}
-    (the answer without the stream) or {"error": {"code", "params"}}. It goes on if the
-    page goes away meanwhile; `job`: "Cancel" stops it, ending with {"cancelled": true}.
-    `what`: the work, for the log ("Sending")."""
+def wants_stream(accept: str | None) -> bool:
+    """The page asked for the answer as the work goes (Accept: STREAM_TYPE, see streamed)."""
+    return STREAM_TYPE in (accept or "")
+
+
+def streamed(
+    work: Callable[[Step], Awaitable[Any]], what: str, job: str = "", answer: str = "result"
+) -> StreamingResponse:
+    """Work told as it goes, one JSON per line (STREAM_TYPE): each step `work` tells (a
+    send's {"step": "sounds", "done", "total"}, a picture's {"card", "step"…}, a lesson's
+    cards), then {answer: …} (the answer without the stream: {"result": …}, a lesson's
+    {"lesson": …}) or {"error": {"code", "params"}} as the page translates it. It goes on
+    if the page goes away meanwhile; `job`: "Cancel" stops it, ending with
+    {"cancelled": true}. `what`: the work, for the log ("Sending")."""
     queue: asyncio.Queue = asyncio.Queue()
 
     async def run() -> None:
         try:
-            queue.put_nowait({"result": await work(queue.put_nowait)})
+            queue.put_nowait({answer: await work(queue.put_nowait)})
         except AppError as e:
             queue.put_nowait({"error": e.detail()})
         except asyncio.CancelledError:  # "Cancel": stopped here
             queue.put_nowait({"cancelled": True})
         except Exception as e:
-            log.error("%s failed: %s", what, loggable(e))
+            # Where it failed (files, lines, functions), not what it said: the message,
+            # like the traceback's source lines, may quote the lesson
+            where = "\n".join(f"  {f.filename}:{f.lineno} in {f.name}" for f in traceback.extract_tb(e.__traceback__))
+            log.error("%s failed: %s\n%s", what, loggable(e), where)
             queue.put_nowait({"error": {"code": "internal", "params": {}}})
         finally:
             queue.put_nowait(None)

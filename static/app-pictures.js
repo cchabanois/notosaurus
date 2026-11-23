@@ -33,6 +33,7 @@ const picturesPart = {
         await api(`/api/lessons/${this.lessonId}/cards/${card.id}/picture${request.path ?? ""}`, asked),
         (step) => Object.assign(card, { _step: step.step, _problem: step.problem ?? "", _first: step.first ?? "" }),
       );
+      if (!res) return null;  // cancelled: the card as it was
       card.picture = res.card.picture;
       card.picture_source = res.card.picture_source ?? null;
       card.picture_prompt = res.card.picture_prompt;
@@ -280,7 +281,8 @@ const picturesPart = {
           previous: Object.fromEntries(this.cards.filter((c) => c._previous && !c.picture).map((c) => [c.id, c._previous])),
         }),
       }));
-      if (this.lessonId !== lessonId) return;  // another lesson opened meanwhile
+      // Cancelled (nothing drawn: the cards as they were), or another lesson opened meanwhile
+      if (!res || this.lessonId !== lessonId) return;
       // With where each comes from: the next save would drop it otherwise
       const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
       this.cards.forEach((c) => {
@@ -315,17 +317,14 @@ const picturesPart = {
     return { source: old.picture_source, kind: old.figure_kind ?? "" };
   },
 
-  // The pictures' answer, each card's steps shown on it as they begin (application/x-ndjson):
-  // a figure drawn, checked, redrawn when wrong (its first one shown meanwhile, faded); a
-  // picture looked for, drawn. A server answering all at once (an older one): its answer
-  async pictureSteps(lessonId, res) {
-    if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
-    for await (const item of ndjsonItems(res)) {
-      if (item.result) return item.result;
-      if (item.error) throw itemError(item.error);
-      const card = this.lessonId === lessonId && item.step && this.cards.find((c) => c.id === item.card);
-      if (!card) continue;
-      if (item.step === "ready") {  // its picture, shown at once: not when the others are done
+  // The pictures' answer, each card's steps shown on it as they begin (resultAsItComes): a
+  // figure drawn, checked, redrawn when wrong (its first one shown meanwhile, faded); a
+  // picture looked for, drawn. Null when it was cancelled
+  pictureSteps(lessonId, res) {
+    return resultAsItComes(res, (step, item) => {
+      const card = this.lessonId === lessonId && this.cards.find((c) => c.id === item.card);
+      if (!card) return;
+      if (step === "ready") {  // its picture, shown at once: not when the others are done
         if (!card.picture) {
           Object.assign(card, {
             picture: item.picture, picture_source: item.picture_source ?? null, figure: item.figure ?? card.figure,
@@ -335,9 +334,8 @@ const picturesPart = {
           });
         }
         Object.assign(card, { _step: "", _problem: "", _first: "" });
-      } else Object.assign(card, { _step: item.step, _problem: item.problem ?? "", _first: item.first ?? "" });
-    }
-    throw new Error(t("errors.unreachable"));
+      } else Object.assign(card, { _step: step, _problem: item.problem ?? "", _first: item.first ?? "" });
+    });
   },
 
   // What a card's picture is being made by, on it ("drawing…", "checked…", "drawn again…")

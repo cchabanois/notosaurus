@@ -763,6 +763,28 @@ test("✨ Image: several fit, the user picks (the AI's first); none, asked befor
   assert.equal(other._ask, false);
 });
 
+test("pictures cancelled as they are drawn: no error, the cards as they were, their steps cleared", async () => {
+  const page = await loadScripts("app.js", {
+    routes: () => Response.ndjson([{ card: "c1", step: "drawing" }, { cancelled: true }]),
+  });
+  const c = page.component();
+  c.lessonId = "L1";
+  c.cards = [{ id: "c1", front: "f", back: "b", figure: "un triangle", picture: "" }];
+  await c.drawPictures();
+  assert.equal(c.error, "");
+  assert.equal(c.cards[0].picture, "");
+  assert.equal(c.cards[0]._step, "");
+  assert.deepEqual(plain(c.drawingLessons), []);
+
+  // A card's own picture, cancelled: no error, the card as it was
+  const card = { id: "c2", front: "Un château ?", back: "el castillo", picture: "old.jpg", figure: "", picture_prompt: "a castle" };
+  c.saveTimer = null;
+  assert.equal(await c.pictureAction(card, { path: "/draw", method: "POST" }), null);
+  assert.equal(c.error, "");
+  assert.equal(card.picture, "old.jpg");
+  assert.equal(card._drawing, false);
+});
+
 test("the pictures being drawn belong to their lesson: another one opened meanwhile isn't held back", async () => {
   let done;
   const page = await loadScripts("app.js", {
@@ -929,6 +951,16 @@ test("Add to Anki: its steps said on the button as they come, then its answer", 
   assert.equal(c.sendStep, "");  // the button's own label again
   assert.equal(c.error, "");
   assert.equal(c.lessonExported, true);
+});
+
+test("Add to Anki: cancelled as it goes, nothing said, nothing taken as sent", async () => {
+  const { c, shown } = await sendWith([{ step: "sounds", done: 0, total: 2 }, { cancelled: true }]);
+  assert.equal(shown.length, 1);
+  assert.equal(c.error, "");  // as any cancelled work: no error
+  assert.equal(c.success, "");
+  assert.equal(c.lessonExported, false);
+  assert.equal(c.sending, false);
+  assert.equal(c.sendStep, "");
 });
 
 test("Add to Anki: cards not sent are said, never \"nothing to change\" alone", async () => {

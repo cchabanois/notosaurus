@@ -204,6 +204,7 @@ const ankiPart = {
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         body: JSON.stringify({ ...this.payload(), lesson_id: this.lessonId }),
       }));
+      if (!r) return;  // cancelled: nothing sent, nothing to say
       this.lastSaved = this.snapshot();  // sending also saves the lesson
       this.lessonExported = true;
       this.sentKey = this.ankiKey();
@@ -241,18 +242,13 @@ const ankiPart = {
     }
   },
 
-  // The send's answer, its steps said on the button as they come (application/x-ndjson):
-  // the backs' sounds made (most of the wait), then the cards; a server answering all at
-  // once (an older one): its answer
-  async sendSteps(res) {
-    if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
-    for await (const item of ndjsonItems(res)) {
-      if (item.result) return item.result;
-      if (item.error) throw itemError(item.error);
-      if (item.step === "sounds") this.sendStep = t("app.actions.sendingSounds", { done: item.done, total: item.total });
-      else if (item.step === "cards") this.sendStep = t("app.actions.sendingCards");
-    }
-    throw new Error(t("errors.unreachable"));
+  // The send's answer, its steps said on the button as they come (resultAsItComes): the
+  // backs' sounds made (most of the wait), then the cards; null when it was cancelled
+  sendSteps(res) {
+    return resultAsItComes(res, (step, item) => {
+      if (step === "sounds") this.sendStep = t("app.actions.sendingSounds", { done: item.done, total: item.total });
+      else if (step === "cards") this.sendStep = t("app.actions.sendingCards");
+    });
   },
 
   // AnkiDroid opened on its own screen (the app); missing: the message offers to install it

@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from notosaurus_core import diagrams, llm, pictures
 from notosaurus_core.llm import Image, revise_cards
 from notosaurus_core.models import Card, switched
-from notosaurus_core.relay_api import STREAM_TYPE
 
 from .. import access, ankiconnect, children, i18n, lesson_notes, lessons, settings, sounds, usage
 from ..errors import AppError
@@ -22,7 +21,7 @@ from ..models import (
     LessonSummary,
     RevisionRequest,
 )
-from .common import Step, cancellable, finished, page_lang, stepped
+from .common import Step, cancellable, finished, page_lang, streamed, wants_stream
 
 router = APIRouter()
 
@@ -121,13 +120,13 @@ async def revise_lesson(
     what a call takes: llm.revise_photos). Asked as
     application/x-ndjson: what the AI is at ({"step": relay_api.AiStep}), then the answer.
     `job`: "Cancel" stops it (/api/generations/{job}/cancel), the lesson as it was."""
-    if STREAM_TYPE in (accept or ""):
+    if wants_stream(accept):
 
         async def told(step: Step) -> dict:
             with llm.telling(lambda said: step({"step": said})):
                 return jsonable_encoder(await _revised(id, req, lang))
 
-        return stepped(told, "Correcting", job)
+        return streamed(told, "Correcting", job)
     return await cancellable(job, _revised(id, req, lang))
 
 

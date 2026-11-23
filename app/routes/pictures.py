@@ -9,12 +9,12 @@ from pydantic import ValidationError
 
 from notosaurus_core import llm, pictures, stock
 from notosaurus_core.models import Card, PictureSource
+from notosaurus_core.relay_api import STREAM_TYPE
 
 from .. import access, i18n, lessons, settings, usage
 from ..errors import AppError
 from ..models import DecidedPicture, DrawPictures, FoundPicture, Lesson, PictureRequest, PictureSearch, RedrawRequest
-from .common import IMAGE_TYPES, Step, page_lang, read_photo, stepped
-from .generation import NDJSON
+from .common import IMAGE_TYPES, Step, page_lang, read_photo, streamed, wants_stream
 
 router = APIRouter()
 
@@ -26,7 +26,7 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
     image model only when asked (`draw`: the user said yes), else listed in to_draw. A
     picture that fails leaves its card without one: said, not fatal. Asked as
     application/x-ndjson: each card's steps as they begin ({"card", "step", "problem",
-    "first"}: what the page shows on it meanwhile), then the answer (common.stepped)."""
+    "first"}: what the page shows on it meanwhile), then the answer (common.streamed)."""
     await access.editable(id)
     allowed = bool(req and req.draw)
     not_from_lesson = req.not_from_lesson if req else []
@@ -52,8 +52,8 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
         lesson, made = await lessons.edit(id, draw)
         return {"lesson": lesson, "failures": made.failures, "error": made.error, "to_draw": made.to_draw}
 
-    if NDJSON in (accept or ""):
-        return stepped(lambda step: _encoded(drawn(step)), "Drawing pictures")
+    if wants_stream(accept):
+        return streamed(lambda step: _encoded(drawn(step)), "Drawing pictures")
     return await drawn()
 
 
@@ -135,8 +135,8 @@ async def make_picture(
 
         return {**await _edit_card(id, card_id, make), **found}
 
-    if NDJSON in (accept or ""):
-        return stepped(lambda step: _encoded(made(_nested(step))), "Making a picture")
+    if wants_stream(accept):
+        return streamed(lambda step: _encoded(made(_nested(step))), "Making a picture")
     return await made()
 
 
@@ -176,8 +176,8 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
 
         return await _edit_card(id, card_id, draw)
 
-    if NDJSON in (accept or ""):
-        return stepped(lambda step: _encoded(drawn(_nested(step))), "Drawing a picture")
+    if wants_stream(accept):
+        return streamed(lambda step: _encoded(drawn(_nested(step))), "Drawing a picture")
     return await drawn()
 
 
@@ -270,7 +270,7 @@ async def search_pictures(req: PictureSearch, accept: str | None = Header(None))
     keeping only those that show it (stock.sorted_as_found). Asked as
     application/x-ndjson: each source's as it answers, {"found": [...]} lines, then
     {"done": {"words"}} or {"error"}."""
-    if NDJSON not in (accept or ""):
+    if not wants_stream(accept):
         results, words = [], ""
         async for item in _found(req):
             results += item.get("found", [])
@@ -284,7 +284,7 @@ async def search_pictures(req: PictureSearch, accept: str | None = Header(None))
         except AppError as e:
             yield json.dumps({"error": e.detail()}) + "\n"
 
-    return StreamingResponse(lines(), media_type=NDJSON)
+    return StreamingResponse(lines(), media_type=STREAM_TYPE)
 
 
 async def _found(req: PictureSearch) -> AsyncIterator[dict]:
