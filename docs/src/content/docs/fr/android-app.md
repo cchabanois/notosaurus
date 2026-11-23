@@ -49,8 +49,10 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
    dire au lieu de les taper.
 4. Touchez **✨ Générer les cartes**. La première leçon démarre l'essai gratuit.
 5. Vérifiez les cartes, corrigez-les ou demandez à l'IA en quelques mots : voir
-   [Relire les cartes](../review/). Une carte qui ne va pas : **⋯ → ⚑ Signaler** dessus, chaque
-   signalement est lu.
+   [Relire les cartes](../review/). Touchez une carte, ou **▶ Relire carte par carte** : elle
+   s'ouvre en plein écran, recto et verso comme dans AnkiDroid ; glissez du doigt pour passer à la
+   suivante, et dites ce qui ne va pas dans **✨ Corriger avec l'IA**, en bas, au clavier ou avec
+   🎤. Une carte qui ne va pas : **⋯ → ⚑ Signaler** dessus, chaque signalement est lu.
 6. Touchez **📥 Ajouter à Anki** : les cartes vont dans AnkiDroid. La première fois, AnkiDroid
    demande si Notosaurus peut y ajouter des cartes.
 
@@ -60,6 +62,8 @@ Ses cartes sont mises à jour dans AnkiDroid, pas dupliquées.
 ![La page principale de l'application : les photos de la leçon, la consigne avec 🎤, l'enfant choisi en haut](../../../assets/screenshots/fr/app-home.png)
 
 ![Les cartes d'une leçon dans l'application, avec le champ de correction et son 🎤](../../../assets/screenshots/fr/app-review.png)
+
+![Une carte ouverte dans l'application : son paquet, le recto, le verso et son 🔊, le champ de correction et son 🎤 en bas](../../../assets/screenshots/fr/app-card-open.png)
 
 ## Où elle fonctionne
 
@@ -81,7 +85,7 @@ pas :
 - **🎤 Dicter** : dites une consigne, une correction ou ce que doit demander une nouvelle carte
   au lieu de le taper. Vos mots s'affichent pendant que vous parlez, écrits par la reconnaissance
   vocale du téléphone. Touchez ■ pour arrêter, ou directement **Corriger**, **Écrire** ou
-  **Générer** : ce que vous avez dit est écrit puis envoyé. **✨ Mettre au propre** nettoie ensuite
+  **✨ Générer les cartes** : ce que vous avez dit est écrit puis envoyé. **✨ Mettre au propre** nettoie ensuite
   une consigne. L'application demande le micro la première fois.
 - **⚑ Signaler**, sur une carte, dit à Notosaurus ce qui ne va pas : un mot mal lu, une réponse
   fausse, une figure de travers, une image inadaptée. Chaque signalement est lu et aide à corriger

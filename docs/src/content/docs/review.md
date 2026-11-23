@@ -17,19 +17,57 @@ and it's the best way to get Notosaurus fixed. See [Reporting a problem](#report
 ## The deck and the cards
 
 - **Deck**: the name of the Anki deck. `::` makes sub-decks: `Spanish::Unit 3 - At school`.
-- Each card has a **front** (the question) and a **back** (the answer). The list is compact (front,
-  back, a small picture): tap a card to open it full screen (a window on a computer), as Anki
-  shows it, formulas and figures drawn, with the field **✨ Correct with AI** at the bottom.
-  **▶ Go through card by card** opens the first. Swipe, or **‹ ›**, to go to the previous or next
-  card; after the last, the lesson's end. Tap a text to edit it; **＋** adds a card after this one
-  (left empty, it goes). **✕**, Escape or the phone's back button close it, saved. Touch its
-  picture to change it (a card without one: ⋯ → **🖼️ Add a picture**).
+- Each card has a **front** (the question) and a **back** (the answer).
+
+### The list
+
+The list is compact, like a preview: the front, the back under a dotted line, a small picture
+above the question or after the answer, as in Anki, and only **🔊** to hear the card. **Tap a
+card to open it**; **▶ Go through card by card** opens the first.
+
+### A card open
+
+The card opens full screen (a window on a computer), formulas and figures drawn, as Anki will
+show it:
+
+- at the top, small, **its deck** in Anki ("Paul › Year 7 › English › … › Exercises") and its
+  buttons: **💬 Explain this card** and **More actions** (⋯);
+- **FRONT**: the question, with its picture when it goes on the front; a line, then **BACK**:
+  the answer and its **🔊**, the picture when it goes on the back, then the info and the helps;
+- at the very bottom, the field **✨ Correct with AI**, with **Correct** beside it (see
+  [Correcting with the AI](#correcting-with-the-ai)).
+
+![A card open: its deck at the top, the front with its figure, the back, and the correction field at the bottom](../../assets/screenshots/en/card-open.png)
+
+Tap a text to edit it. **Swipe** anywhere on the card, or tap **‹ ›**, to go to the previous or
+next card. After the last comes the **lesson's end**: how many cards were looked over ("✓ 12
+cards looked over"), **＋ Add a card**, and the button to send the lesson to Anki. **✕**, Escape
+or the phone's back button close the card, saved.
+
+![The lesson's end: how many cards were looked over, a card to add, sending to Anki](../../assets/screenshots/en/lesson-end.png)
+
+Touch a card's picture to change it: its page opens full screen (see
+[Pictures](../card-types/#pictures)). A card without one: ⋯ → **🖼️ Add a picture**.
+
 - **+ info** adds a note shown under the answer: gender, plural, an example…
-- **sub-deck** puts the card in a sub-deck of the lesson (“Vocabulary”, “Verbs”).
-- **🔊**, beside the front or the back, plays it with the lesson's voice. A card says which sides are
+- **+ sub-deck** puts the card in a sub-deck of the lesson ("Vocabulary", "Verbs"); a card put
+  in one shows its sub-deck's name. Tapped, it opens a list: **None: in the lesson's deck**, the
+  lesson's sub-decks with their number of cards, or **New sub-deck…**.
+- **🔊**, beside the answer, plays it with the lesson's voice. A card says which sides are
   read: a vocabulary card's answer, a text with gaps on both sides, whole (its front as a dictation: the words heard, written in its gaps). The
   card's ⋯: **Read the front aloud**, **Stop reading the back**…
-- **More actions** (⋯), at the card's top right, deletes it; **＋ Add a card**, at the bottom, adds one.
+- **More actions** (⋯) also deletes the card.
+
+### Adding a card
+
+**＋** at the top of a card open adds one just after it; **＋ Add a card**, under the list or at
+the lesson's end, adds one at the end. The new card opens, empty; left empty, it goes when
+closed.
+
+The simplest is often to have **the AI write it**: in **What should this card ask?**, at the
+bottom, say what it should ask ("the past tense of go", "the date of the storming of the
+Bastille"), then tap **Write**. On a phone no keyboard opens: tap **🎤** to dictate it, or the
+field to type it. You can also fill in the front and the back yourself.
 
 **📝 Instructions used for this lesson**, above the cards, reminds what the AI was asked.
 
@@ -69,10 +107,22 @@ Instead of changing the cards one by one, ask in plain words, in the field above
 ![Asking the AI for a correction](../../assets/screenshots/en/correction.png)
 
 Tap **Correct**. The AI sees the photos again and changes only what you asked: changed cards
-are marked **changed**, new ones **new**, and a sentence sums up what it did. **↩ Undo** brings
-the cards back as they were, as long as you haven't started editing a card. A card corrected on its own
-(**✨ Correct this card**) is undone the same way while it stays open; once it is closed, the
-correction is kept.
+are marked **changed**, new ones **new**, and a sentence sums up what it did, with how many cards
+were added, changed and removed. Under it:
+
+- **↩ Undo** brings the cards back as they were;
+- **🎯 Again, carefully**, after a quick correction, makes it again with the model's thinking;
+- **✓ Keep** keeps it: it can no longer be undone.
+
+The correction can be undone until you keep it or start editing a card.
+
+**A single card** is corrected from the card open, in the field **✨ Correct with AI** at the
+bottom ("the answer is 1789", "shorter"), then **Correct**. The same **↩ Undo**,
+**🎯 Again, carefully** and **✓ Keep** show; closing the card, or going to the next, keeps the
+correction too.
+
+In the app, **🎤** beside the field dictates the correction. No need to stop the dictation
+first: tap **Correct** straight away, and what you said is written, then sent.
 
 Change your mind while the AI is correcting (the lesson or a single card)? **Cancel** stops it
 right away: the cards stay as they were.

@@ -45,8 +45,10 @@ you to accept its [privacy policy](../app-privacy/):
    [Instructions](../instructions/). The **Dictate** button (🎤) next to the field lets you say them instead of typing.
 4. Tap **✨ Generate cards**. The first lesson starts the free trial.
 5. Check the cards, correct them or ask the AI in plain words: see
-   [Reviewing the cards](../review/). A card that isn't right: **⋯ → ⚑ Report** on it, every
-   report is read.
+   [Reviewing the cards](../review/). Tap a card, or **▶ Go through card by card**: it opens full
+   screen, front and back as in AnkiDroid; swipe to the next one, and say what's wrong in
+   **✨ Correct with AI** at the bottom, typed or with 🎤. A card that isn't right:
+   **⋯ → ⚑ Report** on it, every report is read.
 6. Tap **📥 Add to Anki**: the cards go into AnkiDroid. The first time, AnkiDroid asks whether
    Notosaurus may add cards to it.
 
@@ -56,6 +58,8 @@ are updated in AnkiDroid, not duplicated.
 ![The app's main page: the lesson photos, the instructions with 🎤, the child chosen at the top](../../assets/screenshots/en/app-home.png)
 
 ![A lesson's cards in the app, with the correction field and its 🎤](../../assets/screenshots/en/app-review.png)
+
+![A card open in the app: its deck, the front, the back and its 🔊, the correction field and its 🎤 at the bottom](../../assets/screenshots/en/app-card-open.png)
 
 ## Where it works
 
@@ -71,9 +75,10 @@ In the settings, **📍 Where does Notosaurus work?** chooses **📱 On this pho
 
 Most of Notosaurus is the same as on the computer. What only the app has, or doesn't have:
 
-- **🎤 Dictate**: say an instruction or a correction instead of typing it. Your words show as you
-  speak, written by the phone's own speech recognition; **✨ Tidy up** cleans instructions after. The app
-  asks for the microphone the first time.
+- **🎤 Dictate**: say an instruction, a correction or what a new card should ask instead of
+  typing it. Your words show as you speak, written by the phone's own speech recognition. Tap ■ to
+  stop, or straight away **Correct**, **Write** or **✨ Generate cards**: what you said is written, then
+  sent. **✨ Tidy up** cleans instructions after. The app asks for the microphone the first time.
 - **⚑ Report**, on a card, tells Notosaurus what went wrong: a word misread, a wrong answer, a
   figure off, an unsuitable picture. Every report is read and helps fix Notosaurus (see
   [Reporting a problem](../review/#reporting-a-problem)).

@@ -48,12 +48,16 @@ leçon** : combien de cartes ont été relues (« ✓ 12 cartes relues »), **�
 le bouton pour envoyer la leçon à Anki. **✕**, Échap ou le bouton retour du téléphone referment
 la carte, enregistrée.
 
+![La fin de la leçon : combien de cartes ont été relues, une carte à ajouter, l'envoi à Anki](../../../assets/screenshots/fr/lesson-end.png)
+
 Touchez l'image d'une carte pour la changer : sa page s'ouvre en plein écran (voir
 [Images](../card-types/#images)). Une carte sans image : ⋯ → **🖼️ Ajouter une image**.
 
 - **+ info** ajoute une note affichée sous la réponse : genre, pluriel, un exemple…
 - **+ sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
-  « Verbes ») ; une carte rangée affiche le nom de son sous-paquet.
+  « Verbes ») ; une carte rangée affiche le nom de son sous-paquet. Touché, il ouvre une liste :
+  **Aucun : dans le paquet de la leçon**, les sous-paquets de la leçon avec leur nombre de cartes,
+  ou **Nouveau sous-paquet…**.
 - **🔊**, à côté de la réponse, la fait entendre avec la voix de la leçon. Chaque carte dit
   quelles faces sont lues : la réponse d'une carte de vocabulaire, un texte à trous des deux côtés, en entier (au recto
   comme une dictée : on écrit dans les trous les mots entendus). Le menu ⋯ de la carte : **Lire le recto à voix haute**, **Ne plus lire
