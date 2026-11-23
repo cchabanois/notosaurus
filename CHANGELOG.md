@@ -118,6 +118,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🎤 On Android, the phone's speech recognition stopping on an error no longer wipes what it had already written: the text stays in the field, the error is said.
+- 📷 On Android, tapping 📷 again while the pages just scanned were still being added no longer makes them "unreadable"; the camera's photos are no longer kept on the phone when the document scanner is turned off.
+- 📤 On Android, a second share arriving while the first one was being added no longer mixes their files.
+- On Android, an `.apkg` that fails to be made no longer leaves the lesson's cards in the app's cache.
 - A lesson read only (another Anki profile's) shows its cards' questions and answers again: they were empty.
 - The packages for drawing figures no longer pile up on the computer: the ones of older versions (about 30 MB each) are removed.
 - Building a package (one lesson, or several to share) or sending to Anki no longer stops the computer's page from answering meanwhile.
