@@ -22,6 +22,8 @@ import io.ktor.http.contentType
 import io.ktor.http.encodeURLParameter
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -29,6 +31,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.io.readByteArray
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -60,6 +63,27 @@ import java.util.concurrent.TimeUnit
 
 /** The local server: PictureRoutes.kt's routes. */
 class PictureRoutesTest : LocalServerTestBase() {
+    @Test
+    fun aCardsOwnPhotoTooHeavyRefused() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "the cat", "back": "le chat"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        val (id, card) = lesson.string("id") to lesson["cards"]!!.jsonArray.single().jsonObject.string("id")
+        suspend fun own(photo: ByteArray) = client.submitFormWithBinaryData("/api/lessons/$id/cards/$card/picture", formData {
+            append("photo", photo, Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
+            })
+        }) { page() }
+        // Heavier than the relay takes (as the computer, read_photo): refused, the card as it was
+        val heavy = own(ByteArray(LocalServer.MAX_IMAGE_BYTES + 1))
+        assertEquals(HttpStatusCode.BadRequest, heavy.status)
+        val error = heavy.json().jsonObject["detail"]!!.jsonObject
+        assertEquals("extract.too_large" to 4, error.string("code") to error["params"]!!.jsonObject["max"]!!.jsonPrimitive.int)
+        assertEquals("", client.get("/api/lessons/$id") { page() }.json().jsonObject.cards().single().string("picture"))
+        // At the cap: taken
+        assertEquals(HttpStatusCode.Created, own(ByteArray(LocalServer.MAX_IMAGE_BYTES)).status)
+    }
+
     @Test
     fun picturesFoundShownAsEachSourceAnswers() = app { client ->
         val lines = listOf(

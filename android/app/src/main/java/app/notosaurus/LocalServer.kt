@@ -23,13 +23,15 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
-import io.ktor.utils.io.toByteArray
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.io.readByteArray
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -248,7 +250,13 @@ class LocalServer(
     internal fun Route.making(path: String, make: suspend RoutingContext.(GenerationForm, OnCard) -> JsonObject) {
         post(path) {
             if (!allowed()) return@post
-            val form = form()
+            val form = try {
+                form()
+            } catch (e: Exception) {
+                val (status, answer) = failure(e) ?: throw e
+                call.respondText(answer.toString(), ContentType.Application.Json, status)
+                return@post
+            }
             if (call.request.headers[HttpHeaders.Accept]?.contains(Relay.STREAM_TYPE) != true) {
                 val (status, answer) = try {
                     HttpStatusCode.OK to make(form) {}
@@ -338,17 +346,33 @@ class LocalServer(
     internal fun RoutingContext.cardIndex(lesson: JsonObject): Int =
         lesson.cards().indexOfFirst { it.string("id") == param("card") }.takeIf { it >= 0 } ?: throw BadRequest("card.not_found")
 
+    /** The request's parts, each given to `take` then disposed. One refused (BadRequest): the
+     * rest passed over unread, never kept, then the refusal thrown (Ktor's multipart reader
+     * waits for every part to be gone through: refused halfway, the answer never came). */
+    internal suspend fun RoutingContext.eachPart(formFieldLimit: Long = 20L * 1024 * 1024, take: suspend (PartData) -> Unit) {
+        var refused: BadRequest? = null
+        call.receiveMultipart(formFieldLimit = formFieldLimit).forEachPart { part ->
+            try {
+                if (refused == null) take(part)
+            } catch (e: BadRequest) {
+                refused = e
+            } finally {
+                part.dispose()
+            }
+        }
+        refused?.let { throw it }
+    }
+
     /** The page's form for making a lesson, read whole first (the answer may outlive the request). */
     internal suspend fun RoutingContext.form(): GenerationForm {
         val fields = mutableMapOf<String, String>()
         val images = mutableListOf<ByteArray>()
-        call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
+        eachPart { part ->
             when (part) {
                 is PartData.FormItem -> fields[part.name!!] = part.value
-                is PartData.FileItem -> images += part.provider().toByteArray()
+                is PartData.FileItem -> images += readImage(images.size, part.provider())
                 else -> {}
             }
-            part.dispose()
         }
         return GenerationForm(fields, images, lang())
     }
@@ -363,6 +387,20 @@ class LocalServer(
             "form-action 'self'; frame-ancestors 'none'"
         const val MAX_PHOTOS = 30 // a lesson's pages, as on the computer (MAX_PAGES)
         const val MAX_PER_CALL = 10 // read in one call (the relay's cap): the page sends more in several
+        const val MAX_IMAGE_BYTES = 4 * 1024 * 1024 // a photo sent, as the relay caps it (relay_api.MAX_IMAGE_BYTES)
+
+        /** One more photo for the AI, `kept` already read, as the computer reads them
+         * (app/routes/common.py, read_photo): more than one call takes refused before it is
+         * read, it read only up to the relay's cap. */
+        internal suspend fun readImage(kept: Int, channel: ByteReadChannel): ByteArray {
+            if (kept >= MAX_PER_CALL) throw BadRequest("extract.too_many", buildJsonObject { put("max", MAX_PER_CALL) })
+            return readPhoto(channel)
+        }
+
+        /** A photo uploaded (for the AI, a card's own), read only up to the relay's cap:
+         * anything far heavier refused before filling memory (extract.too_large). */
+        internal suspend fun readPhoto(channel: ByteReadChannel): ByteArray =
+            channel.readCapped(MAX_IMAGE_BYTES, "extract.too_large", buildJsonObject { put("max", MAX_IMAGE_BYTES / (1024 * 1024)) })
 
         // The welcome accepted (its version): raised when what it says changes a lot, so it shows again
         const val WELCOME = "welcome"
@@ -453,3 +491,11 @@ class LocalServer(
 /** A file the user chose to write: its name as created (the suggested one, or Android's
  * "… (1).zip" when one of that name was there), and where to write it. */
 class Document(val name: String, val out: java.io.OutputStream)
+
+/** An uploaded part's bytes, read only up to `max`: heavier refused (`code`, `params`) as soon
+ * as it passes it, before filling memory. */
+internal suspend fun ByteReadChannel.readCapped(max: Int, code: String, params: JsonObject = JsonObject(emptyMap())): ByteArray {
+    val data = readRemaining(max + 1L).readByteArray()
+    if (data.size > max) throw BadRequest(code, params)
+    return data
+}

@@ -2,6 +2,9 @@
 
 import json
 
+from starlette.datastructures import UploadFile
+
+from app.draft import MAX_PHOTO_BYTES
 from app.routes.common import MAX_PAGES
 
 
@@ -32,3 +35,43 @@ def test_what_isnt_a_draft_refused(client):
     refused = client.put("/api/draft", data={"draft": "{}", "photos_sent": "true"}, files=many)
     assert (refused.status_code, refused.json()["detail"]["code"]) == (413, "draft.too_large")
     assert client.get("/api/draft").json() == {}
+
+
+def _reads(monkeypatch) -> list[int]:
+    """The bytes each read of an uploaded photo returned (Starlette makes them, FastAPI's type its subclass)."""
+    read = UploadFile.read
+    returned: list[int] = []
+
+    async def counted(self, size: int = -1) -> bytes:
+        data = await read(self, size)
+        returned.append(len(data))
+        return data
+
+    monkeypatch.setattr(UploadFile, "read", counted)
+    return returned
+
+
+def test_too_many_photos_refused_before_any_is_read(client, monkeypatch):
+    reads = _reads(monkeypatch)
+    many = [("photos", (f"p{n}.jpg", b"x", "image/jpeg")) for n in range(MAX_PAGES + 1)]
+    refused = client.put("/api/draft", data={"draft": "{}", "photos_sent": "true"}, files=many)
+    assert (refused.status_code, refused.json()["detail"]["code"]) == (413, "draft.too_large")
+    assert reads == []
+    assert client.get("/api/draft").json() == {}
+
+
+def test_a_photo_too_heavy_read_no_further_than_its_cap(client, monkeypatch):
+    reads = _reads(monkeypatch)
+    heavy = [("photos", ("p1.jpg", b"x" * (MAX_PHOTO_BYTES + 1024 * 1024), "image/jpeg"))]
+    refused = client.put("/api/draft", data={"draft": "{}", "photos_sent": "true"}, files=heavy)
+    assert (refused.status_code, refused.json()["detail"]["code"]) == (413, "draft.too_large")
+    assert sum(reads) <= MAX_PHOTO_BYTES + 64 * 1024
+    assert client.get("/api/draft").json() == {}
+
+
+def test_as_many_photos_as_a_lesson_has_kept(client):
+    photos = [("photos", (f"p{n}.jpg", f"photo {n}".encode(), "image/jpeg")) for n in range(1, MAX_PAGES + 1)]
+    sent = client.put("/api/draft", data={"draft": "{}", "photos_sent": "true"}, files=photos)
+    assert sent.status_code == 200
+    assert client.get("/api/draft").json() == {"photos": MAX_PAGES}
+    assert client.get(f"/api/draft/photos/{MAX_PAGES}").content == f"photo {MAX_PAGES}".encode()

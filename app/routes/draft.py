@@ -31,10 +31,21 @@ async def save_draft(
     photos_sent: bool = Form(False),
     photos: list[UploadFile] = File([]),
 ) -> dict:
-    """`photos`: all of them, when `photos_sent` (none: no photo); else those kept stay."""
-    sent = [await photo.read() for photo in photos] if photos_sent else None
+    """`photos`: all of them, when `photos_sent` (none: no photo); else those kept stay.
+    Too many refused before any is read, each read only up to its cap (draft.save checks again)."""
+    if photos_sent and len(photos) > MAX_PAGES:
+        raise AppError("draft.too_large", 413)
+    sent = [await _read(photo) for photo in photos] if photos_sent else None
     await asyncio.to_thread(draft.save, text, sent, MAX_PAGES)
     return {}
+
+
+async def _read(photo: UploadFile) -> bytes:
+    """A photo of the draft, read only up to its cap: anything heavier refused before filling memory."""
+    data = await photo.read(draft.MAX_PHOTO_BYTES + 1)
+    if len(data) > draft.MAX_PHOTO_BYTES:
+        raise AppError("draft.too_large", 413)
+    return data
 
 
 @router.delete("/api/draft")
