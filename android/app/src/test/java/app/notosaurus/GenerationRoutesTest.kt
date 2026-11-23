@@ -339,6 +339,52 @@ class GenerationRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aLongLessonCorrectedFromItsCards() = app { client ->
+        // A lesson of 12 pages (more than the relay takes at once): corrected as a whole, it sends
+        // none of them, "photos_sent" "none" (the AI told its pages aren't shown), rather than all
+        // 12 (relay.too_large); a lesson of 10, all of them
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le chat", "back": "the cat", "page": 1}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val ten = client.submitFormWithBinaryData("/api/extract", pageForm(1..10)) { page() }.json().jsonObject
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le chat", "back": "the cat", "page": 1}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 98}}""")
+        val id = client.submitFormWithBinaryData("/api/extract", pageForm(1..10)) { page() }.json().jsonObject.string("id")
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le ciel", "back": "the sky", "page": 2}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 97}}""")
+        val long = client.submitFormWithBinaryData("/api/lessons/$id/complete", pageForm(11..12)) { page() }.json().jsonObject
+
+        val sent = mutableListOf<Pair<List<Int>, String>>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                if (request.url.encodedPath != "/v1/revise") return MockResponse.Builder().code(404).build()
+                val body = request.body!!.utf8()
+                val asked = request.multipartRequest()
+                sent += (1..12).filter { body.contains("page #$it;") } to asked.string("photos_sent")
+                if (sent.last().first.size > 10) return MockResponse.Builder().code(413).body("""{"code": "relay.too_large"}""").build()
+                val cards = asked["deck"]!!.jsonObject["cards"]!!
+                return MockResponse.Builder().body(
+                    """{"deck": "Anglais", "cards": $cards, "summary": "ok", "usage": {"credits": 1, "credits_left": 90}}"""
+                ).build()
+            }
+        }
+        suspend fun revise(lesson: JsonObject): JsonObject {
+            val res = client.post("/api/lessons/${lesson.string("id")}/revise") {
+                page(); contentType(ContentType.Application.Json)
+                setBody("""{"deck": "Anglais", "cards": ${lesson["cards"]}, "instruction": "x"}""")
+            }
+            assertEquals(HttpStatusCode.OK, res.status)
+            return res.json().jsonObject
+        }
+        assertEquals(12, long["photo_count"]!!.jsonPrimitive.int)
+        val revised = revise(long)
+        assertEquals("ok", revised.string("summary")) // corrected all the same
+        assertEquals(emptyList<Int>() to "none", sent.last())
+        assertEquals(listOf(1, 12), revised["lesson"]!!.jsonObject.cards().map { it["page"]!!.jsonPrimitive.int })
+        revise(ten)
+        assertEquals((1..10).toList() to "all", sent.last())
+    }
+
+    @Test
     fun theLessonsOwnDrawingsLookedForTenPagesAtATime() = app { client ->
         // A lesson of 12 pages: 10 read at once, then its 2 next ones
         fun pages(numbers: IntRange) = formData {

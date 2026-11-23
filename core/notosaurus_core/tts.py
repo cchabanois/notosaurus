@@ -22,7 +22,7 @@ from pathlib import Path
 import edge_tts
 
 from . import files
-from .cards import BLANK, is_choice, is_cloze
+from .cards import BLANK, GAP, is_choice, is_cloze
 from .errors import loggable
 from .models import Card
 
@@ -91,10 +91,6 @@ def spoken(card: Card, dictation: bool = False) -> str:
     if said == back:
         return back
     return f"{said}{'' if said[-1] in '.!?' else '.'}\n{back}"
-
-
-# A text with gaps' gap ("{{c1::1789::a year}}"): its answer, or its blank with its hint
-GAP = re.compile(r"\{\{c\d+::(.*?)(?:::(.*?))?\}\}", re.S)
 
 
 def sound_sides(card: Card) -> tuple[bool, bool]:

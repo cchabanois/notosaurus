@@ -49,6 +49,7 @@ from .correction import (  # noqa: F401 (llm's API)
     fix_card,
     fix_photos,
     revise_cards,
+    revise_photos,
 )
 from .errors import loggable
 from .figure_making import (  # noqa: F401 (llm's API)

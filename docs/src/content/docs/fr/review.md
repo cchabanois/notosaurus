@@ -116,7 +116,8 @@ au-dessus des cartes :
 
 ![Demander une correction à l'IA](../../../assets/screenshots/fr/correction.png)
 
-Touchez **Corriger**. L'IA revoit les photos et ne change que ce que vous avez demandé : les
+Touchez **Corriger**. L'IA revoit les photos (au-delà de 10 pages, les cartes seules : elle dit alors ce
+qu'elle n'a pas pu faire sans les pages) et ne change que ce que vous avez demandé : les
 cartes changées sont marquées **modifiée**, les nouvelles **nouvelle**, et une phrase résume ce
 qu'elle a fait, avec le compte des cartes ajoutées, modifiées et supprimées. Dessous :
 

@@ -4412,6 +4412,17 @@
             "description": "The model thinking little (the page's \"Quick\"): faster.",
             "title": "Quick",
             "type": "boolean"
+          },
+          "photos_sent": {
+            "default": "all",
+            "description": "What the \"images\" are of the lesson's photos (llm.revise_photos): \"all\"; \"none\", a lesson that has photos, none sent (more than a call takes): corrected from its cards, the AI saying in its summary what it could not do without the pages.",
+            "enum": [
+              "all",
+              "card",
+              "none"
+            ],
+            "title": "Photos Sent",
+            "type": "string"
           }
         },
         "required": [

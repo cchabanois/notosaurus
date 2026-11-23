@@ -62,6 +62,12 @@ class SharedCasesTest {
     }
 
     @Test
+    fun thePhotosSentToCorrectALesson() = cases("revise_photos").forEach { c ->
+        val out = c["out"]!!.jsonArray.map { it.jsonPrimitive.int } to c.string("sent")
+        assertEquals(c.string("name"), out, Generation.revisePhotos(c["photos"]!!.jsonPrimitive.int))
+    }
+
+    @Test
     fun aCardsInfoField() = cases("info_field").forEach { c ->
         val card = Card(front = "f", back = "b", info = c.string("info"), funFact = c.string("fun_fact"))
         assertEquals(c.string("name"), c.string("out"), Anki.info(card))

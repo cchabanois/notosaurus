@@ -124,6 +124,13 @@ class Generation(
             else -> emptyList<Int>() to "none"
         }
 
+        /** The lesson's photos sent to correct the whole lesson (their numbers, from 1), and what
+         * they are, as the computer (correction.revise_photos, core/shared-cases.json): all, when one
+         * call takes them ("all"); else none ("none": corrected from its cards, the AI told its pages
+         * aren't shown; relay.too_large otherwise). */
+        fun revisePhotos(photos: Int): Pair<List<Int>, String> =
+            if (photos <= LocalServer.MAX_PER_CALL) (1..photos).toList() to "all" else emptyList<Int>() to "none"
+
         /** The pages' texts sent by the page (JSON, one string per photo: a PDF page's text, "" for
          * a photo); anything else (not JSON, not strings, not one per photo): none, as the computer
          * (app/routes/generation.py, _page_texts). A list of the wrong length would give a page's

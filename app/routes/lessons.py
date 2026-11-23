@@ -117,7 +117,8 @@ async def revise_lesson(
     accept: str | None = Header(None),
     job: str = Query(""),
 ):
-    """Apply a natural-language correction to the cards, using the lesson photos. Asked as
+    """Apply a natural-language correction to the cards, using the lesson photos (none above
+    what a call takes: llm.revise_photos). Asked as
     application/x-ndjson: what the AI is at ({"step": relay_api.AiStep}), then the answer.
     `job`: "Cancel" stops it (/api/generations/{job}/cancel), the lesson as it was."""
     if STREAM_TYPE in (accept or ""):
@@ -132,7 +133,9 @@ async def revise_lesson(
 
 async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
     lesson = await access.editable(id)
-    photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
+    # Every page when a call takes them all; else none, corrected from its cards (llm.revise_photos)
+    pages, sent = llm.revise_photos(lesson.photo_count)
+    photos = [Image(lessons.photo(id, n), "image/jpeg") for n in pages]
     every = await asyncio.to_thread(children.list_all)
     child = children.chosen(every, lesson.child, lesson.owner)
     # The deck without the children's levels: no child's name to the AI (put back after)
@@ -149,6 +152,7 @@ async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
             settings.standing_instructions(s, children.for_ai(child)),
             demo=i18n.get(lang, "demo"),
             quick=req.quick,
+            photos_sent=sent,
         )
     revision.deck = "::".join(part for part in (private, revision.deck) if part)
     updated = await asyncio.to_thread(

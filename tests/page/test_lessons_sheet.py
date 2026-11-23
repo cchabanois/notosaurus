@@ -12,6 +12,7 @@ from page.support import (  # noqa: E402
     FRONT_PROMPT,
     add_photo,
     draft_kept,
+    eventually,
     generate_free,
     lesson_made,
     lessons,
@@ -66,8 +67,12 @@ def test_the_page_stays_still_under_an_open_sheet(page, clock):
 
     page.keyboard.press("Escape")
     sync_api.expect(page.locator("html")).not_to_have_class(re.compile("sheet-open"))
-    page.mouse.wheel(0, 400)
-    page.wait_for_function(f"scrollY !== {before}")
+
+    def scrolls() -> bool:  # a wheel turned before the page is free again is lost: turned again
+        page.mouse.wheel(0, 400)
+        return page.evaluate("scrollY") != before
+
+    eventually(page, scrolls, "the page scrolls again once the sheet is closed")
 
 
 def test_android_back_closes_the_open_sheet_first(page):

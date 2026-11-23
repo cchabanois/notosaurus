@@ -159,12 +159,30 @@ def _revision_text(
     sizes: Sequence[tuple[int, int] | None] = (),
     fmt: str = "",
     labels: dict[int, list[int]] | None = None,
+    sent: PhotosSent = "all",
 ) -> str:
-    """`labels`: numbers of the diagram labels already hidden, per photo."""
-    shown = deck.model_dump(exclude={"cards": {"__all__": SET_BY_NOTOSAURUS}})
+    """`labels`: numbers of the diagram labels already hidden, per photo. `sent`: what the
+    photos are of the lesson's (correction.revise_photos): all of them, or "none" of a lesson
+    that has some (its pages not shown: corrected from its cards). Without a photo the cards'
+    pages aren't shown (numbered among photos the AI doesn't see)."""
+    hidden = SET_BY_NOTOSAURUS if photos else SET_BY_NOTOSAURUS | {"page"}
+    shown = deck.model_dump(exclude={"cards": {"__all__": hidden}})
     current = json.dumps(shown, ensure_ascii=False, indent=1)
     source = "these photos with these instructions" if photos else "these instructions (no photo)"
     add = "To add cards, use the photos." if photos else "To add cards, follow the instructions."
+    seen, said = "", f"describe in one short sentence, in {language}, what you changed."
+    if sent == "none" and not photos:
+        source = "photos with these instructions"
+        add = "To add cards, use what the cards, the instructions and the request give."
+        seen = (
+            "\nThe lesson's photos (its pages) are not shown here: work from the current cards. When the "
+            "request needs the pages (something the cards don't hold, a check against the lesson, a "
+            "page's number), do what the cards allow and never make up what the lesson says."
+        )
+        said = (
+            f"describe in one or two short sentences, in {language}, what you changed, and say "
+            "plainly what you could not do without the pages, if anything."
+        )
     if photos and fmt:
         add += (
             ' Cards about labels already hidden on a diagram have "mask": null here: keep it null.'
@@ -179,7 +197,7 @@ def _revision_text(
             add += " Photo sizes: " + ", ".join(known) + "."
     return f"""\
 The cards below were made from {source}:
-{prompt.strip()}
+{prompt.strip()}{seen}
 
 Current cards (JSON):
 {current}
@@ -188,8 +206,7 @@ Requested correction: {instruction.strip()}
 
 Apply this request and return the complete deck (every card, not only the ones that \
 change). Only change what the request is about; keep the other cards exactly as they \
-are, in the same order. {add} In "summary", describe in one short sentence, in \
-{language}, what you changed."""
+are, in the same order. {add} In "summary", {said}"""
 
 
 def _fix_text(

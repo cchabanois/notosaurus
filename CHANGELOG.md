@@ -120,6 +120,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🖼️ A figure on the question side of a sentence with gaps no longer risks showing a hidden word: it is drawn knowing only the question, its gaps hidden.
 - 📐 Two wires of a circuit ending a hair apart are joined, instead of each moving onto the other and leaving the circuit open.
 - 📐 A figure that stays too small after being drawn again is kept as a finished drawing (a map's outlines lightened), instead of being lost.
 - 📊 A box plot whose values are all equal is drawn, instead of refused.

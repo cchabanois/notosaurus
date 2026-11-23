@@ -18,6 +18,7 @@ from typing import Any, NamedTuple
 
 from . import config, figures, files, images, llm, recommended, stock
 from .calls import MAX_IMAGES
+from .cards import cloze_question, is_cloze
 from .config import AIConfig
 from .errors import AppError, loggable
 from .models import Card, PictureSource, SourceFile
@@ -365,10 +366,18 @@ async def card_picture(
     asked again)."""
     card = await decided(s, card, asked, language, step)
     if card.figure.strip():
-        front = "" if card.picture_on_back else f"{card.front.strip()} → {card.back.strip()}"
+        # A text with gaps: its question as shown, each gap hidden (its answers are in them, its
+        # back only an extra); another card's, its question and its answer
+        gaps = is_cloze(card.front)
+        if card.picture_on_back:
+            front = ""
+        elif gaps:
+            front = cloze_question(card.front.strip())
+        else:
+            front = f"{card.front.strip()} → {card.back.strip()}"
         first = next(iter(previous), "") if previous_engine in REDRAWN_FROM else ""
         made = await llm.made_figure(
-            s, card.figure, step, card.figure_kind, problem, careful, front, first, previous_kind
+            s, card.figure, step, card.figure_kind, problem, careful, front, first, previous_kind, gaps=gaps
         )
         if made.engine == "typst" and not made.panels:
             card = card.model_copy(update={"figure_kind": made.family})  # drawn again in it, not asked
