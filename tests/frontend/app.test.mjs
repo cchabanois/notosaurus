@@ -949,6 +949,7 @@ test("Add to Anki: an error as the last line is said", async () => {
 test("photos past the lesson's pages: not added, said", async () => {
   const page = await loadScripts("app.js");
   page.run("resize = async (file) => file; URL.createObjectURL = () => 'blob:'");  // no canvas here
+  page.run("configKnown()");  // the server's settings read, as init() does: the room below is the lesson's
   const c = page.component();
   c.maxPhotos = 10;
   c.photos = Array.from({ length: 9 }, () => ({ url: "p" }));
