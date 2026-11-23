@@ -74,6 +74,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- The lesson's own drawings are looked for on the card's page and the pages next to it, not on every page of the lesson: cheaper, and found more reliably.
 - ✨ **Correct this card** sends the AI only the lesson's page the card comes from, not every page: much cheaper on long lessons (cards made from now on; older cards as before).
 - Corrections cost a little less: the AI is no longer sent where each card's picture comes from.
 - 🗂 A card's sub-deck is chosen in a list: none, one of the lesson's (with its number of cards), or a new one.
