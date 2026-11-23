@@ -89,7 +89,8 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `core/notosaurus_core/config.py` | the AI configuration: service, model, keys, picture service |
 | `core/notosaurus_core/models.py` | cards, decks, diagram masks and frames, AI calls |
 | `core/notosaurus_core/tts.py` | edge-tts audio |
-| `core/notosaurus_core/pictures.py`, `figures.py` | pictures on cards, drawn by an image model; figures drawn as SVG |
+| `core/notosaurus_core/pictures.py` | pictures on cards, drawn by an image model |
+| `core/notosaurus_core/figure_making.py`, `figures_typst.py`, `figure_svg.py`, `figure_labels.py`, `figures.py` | figures: drawn in Typst, one package per family, else as SVG by the AI (its labels and arrows set by the app); cleaned |
 | `core/notosaurus_core/diagrams.py` | diagram labels: boxes from the AI, card images with the labels hidden |
 | `core/notosaurus_core/recommended.py`, `prices.py` | recommended models, estimated costs |
 | `core/notosaurus_core/errors.py` | errors as translatable codes |

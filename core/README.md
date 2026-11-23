@@ -24,7 +24,9 @@ It **never reads the app's settings, lessons or data folder**: the AI configurat
 | `notosaurus_core/config.py` | the AI configuration: the cards' service, model and key, the pictures' service |
 | `notosaurus_core/diagrams.py` | diagram labels hidden on the photo (image occlusion) |
 | `notosaurus_core/pictures.py`, `stock.py` | pictures drawn by an image model; free pictures found instead (Wikimedia Commons, Openverse, Pixabay) |
-| `notosaurus_core/figures.py`, `figures_typst.py` | figures (geometry, graphs, sets, timelines…) written in Typst, one package per kind, compiled offline; their check |
+| `notosaurus_core/figure_making.py`, `figures_typst.py` | figures (geometry, graphs, sets, timelines…) written in Typst, one package per kind, compiled offline; their check |
+| `notosaurus_core/figure_svg.py`, `figure_labels.py` | a figure no family draws, drawn as SVG by the AI; its arrows and labels set by the app |
+| `notosaurus_core/figures.py` | what every figure goes through: cleaned (an allow-list of shapes and text), fitted to what it draws, drawn as a PNG, its labels measured |
 | `notosaurus_core/text_size.py` | a figure's smallest text once fitted to a phone's card, read in its SVG (Typst's letters matched to the same letters known, the AI's font-sizes): a figure too small to read is drawn again |
 | `notosaurus_core/typst_source.py` | the AI's Typst made what it meant before it is compiled (a diagram's marks, decimal commas, a circuit's ends…) |
 | `notosaurus_core/typst/`, `fonts/` | the Typst packages, one archive each as Typst Universe publishes it (`tools/typst_packages.py`), unpacked once in the cache; the font the figures use: shipped so nothing is downloaded, their licences with them |

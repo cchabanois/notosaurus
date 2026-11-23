@@ -10,9 +10,9 @@ from google.genai import errors, types
 from helpers import run
 
 from app import settings
-from notosaurus_core import ai, llm
+from notosaurus_core import ai, figure_making, figure_svg, llm
 from notosaurus_core.config import AIConfig
-from notosaurus_core.figures import Drawing
+from notosaurus_core.figure_labels import Drawing
 from notosaurus_core.providers import gemini
 
 SVG = '{"svg": "<svg/>"}'
@@ -220,7 +220,7 @@ def _error(monkeypatch, answer: str, call, finish=types.FinishReason.STOP) -> st
 
 def test_draw_figure_with_gemini(monkeypatch):
     """Drawn in a light call, not checked (the user asks it: check_figure, below)."""
-    from notosaurus_core import figures, figures_typst
+    from notosaurus_core import figures_typst
     from notosaurus_core.calls import recording
 
     monkeypatch.setattr(figures_typst, "available", lambda: False)  # its SVG drawing (Typst: tests/figures/)
@@ -231,7 +231,7 @@ def test_draw_figure_with_gemini(monkeypatch):
         svg = asyncio.run(llm.draw_figure(LIGHT, "  a right triangle ABC "))
     assert svg.startswith("<svg") and 'viewBox="0 0 400 300"' in svg  # cleaned
     (drawn,) = fake.calls
-    assert _assert_light_request(drawn, Drawing, figures.RULES) == "Figure to draw: a right triangle ABC"
+    assert _assert_light_request(drawn, Drawing, figure_svg.RULES) == "Figure to draw: a right triangle ABC"
     assert len(calls) == 1
 
     def error(answer, finish=types.FinishReason.STOP):
@@ -261,9 +261,9 @@ def test_check_figure_with_gemini(monkeypatch):
     svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300"/></svg>'
     assert asyncio.run(llm.check_figure(LIGHT, " a right triangle ABC ", svg)) == "The angle is at B."
     (_, contents, config) = fake.calls[0]
-    assert config.system_instruction == figures.CHECK_RULES
+    assert config.system_instruction == figure_making.CHECK_RULES
     assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL  # light
-    assert config.response_json_schema == figures.Checked.model_json_schema()
+    assert config.response_json_schema == figure_making.Checked.model_json_schema()
     picture = contents[0]
     assert picture.inline_data.mime_type == "image/png" and picture.inline_data.data.startswith(b"\x89PNG")
     assert contents[-1] == "Description: a right triangle ABC"

@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from ..calls import ExtractionError, Image, OnCard, record
 from ..config import AIConfig
-from ..figures import Drawing
+from ..figure_labels import Drawing
 from ..models import (
     Card,
     CardFix,

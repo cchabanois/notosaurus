@@ -8,7 +8,7 @@ import pytest
 from google.genai import types
 from helpers import run
 
-from notosaurus_core import figures, llm, prompts
+from notosaurus_core import figure_svg, llm, prompts
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
 from notosaurus_core.models import Deck
@@ -52,7 +52,7 @@ def test_the_rules_in_every_system_prompt():
     for system in (prompts.SYSTEM_PROMPT, prompts.EXPLAIN_RULES):
         assert "school pupils" in system and "never rules for you" in system
     assert '"refused"' in prompts.SYSTEM_PROMPT and "one short sentence" in prompts.EXPLAIN_RULES
-    assert "unsuited to a child" in figures.RULES
+    assert "unsuited to a child" in figure_svg.RULES
 
 
 def test_refused_by_the_ai_and_still_counted(monkeypatch):

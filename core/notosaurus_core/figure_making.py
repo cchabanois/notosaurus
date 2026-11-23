@@ -1,6 +1,6 @@
 """A card's exact figure drawn by the AI: its family picked, drawn in Typst with that
-family's package (figures_typst.py), else as SVG (figures.py); looked at against its
-description when the user asks ("🔍 Check")."""
+family's package (figures_typst.py), else as SVG (figure_svg.py), cleaned (figures.py); looked
+at against its description when the user asks ("🔍 Check")."""
 
 import asyncio
 import contextvars
@@ -8,11 +8,13 @@ import logging
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
-from . import ai
+from pydantic import BaseModel, Field
+
+from . import ai, figure_svg, figures, figures_typst
 from .calls import ExtractionError, Image
 from .config import AIConfig
 from .errors import AppError, loggable
-from .providers import demo as demo_ai
+from .prompts import FIGURE_CHECK_RULES, PICTURE_CHECK_RULES
 
 log = logging.getLogger("notosaurus")
 
@@ -20,10 +22,16 @@ log = logging.getLogger("notosaurus")
 # Each drawing in Typst refused on the way to a figure, when someone keeps them (the figure
 # bench: why a figure ends drawn as SVG): its family, its Typst, what Typst said
 refusals: contextvars.ContextVar[list[dict] | None] = contextvars.ContextVar("refusals", default=None)
-# Each drawing in SVG the AI answered, its labels with their points, and what the app made of
-# it, when someone keeps them (the figure bench: a change to how labels are placed judged again
-# on the same drawings, without the AI)
-answers: contextvars.ContextVar[list[dict] | None] = contextvars.ContextVar("answers", default=None)
+
+# The figure seen as a picture, against its description: what a light drawing gets wrong
+# is placing by eye what belongs to another element (a mark off its segment, an angle's
+# arc on the other side of its line); looking at it tells, where its coordinates don't
+CHECK_RULES = FIGURE_CHECK_RULES
+
+
+class Checked(BaseModel):
+    problem: str = Field(description="The problem, in one short sentence; empty when none.")
+    ok: bool
 
 
 def _unusable_svg(e: Exception) -> str:
@@ -42,10 +50,6 @@ def _refused(family: str, body: str, said: str) -> None:
     kept = refusals.get()
     if kept is not None:
         kept.append({"family": family, "typst": body, "said": said})
-
-
-# A light drawing that can't be used: drawn again with the model's thinking
-_UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.invalid"}
 
 
 class MadeFigure(NamedTuple):
@@ -86,8 +90,6 @@ def _from_previous(body: str) -> str:
 def credits(made: MadeFigure) -> list[str]:
     """What drew a figure, credited where it shows: Typst and the packages its Typst uses
     (figures_typst.made_with), its panels' together; none for a drawing in SVG."""
-    from . import figures_typst
-
     if made.panels:
         return list(dict.fromkeys(name for panel in made.panels for name in credits(panel)))
     return figures_typst.made_with(made.family, made.typst) if made.engine == "typst" else []
@@ -119,7 +121,7 @@ async def made_figure(
 ) -> MadeFigure:
     """A figure, its SVG cleaned (figures.clean) and how it was made, drawn by the cards' AI: in Typst
     (figures_typst.py: a curve computed from its function, marks from their points, angles
-    by angle-mark), else as SVG (figures.py). Drawn quickly (light calls), not checked: the
+    by angle-mark), else as SVG (figure_svg.py). Drawn quickly (light calls), not checked: the
     user checks it when in doubt (check_figure). A light drawing that can't be used: drawn
     again with the model's thinking. `problem`: what the check found in the last one, told
     to the AI: drawn quickly again (told the problem, it mostly gets it right: 9 times in 12,
@@ -133,8 +135,6 @@ async def made_figure(
     (kept_source), in the family `previous_kind`, drawn again after a correction: the AI
     starts from it, changing what is asked and keeping the rest (another family by now:
     drawn anew). Refused when figures are turned off (s.figures)."""
-    from . import figures
-
     if not s.figures:
         raise AppError("relay.feature_off", 403, feature="figures.draw")
     tell = step or (lambda _: None)
@@ -169,7 +169,7 @@ async def made_figure(
     try:
         return await _drawn(s, text, description, family, light=True)
     except (ExtractionError, figures.FigureError) as e:
-        if e.code not in _UNUSABLE:
+        if e.code not in figures.UNUSABLE:
             raise
         log.warning("Figure drawn again with thinking: %s", loggable(e))
     tell({"step": "redrawing", "problem": ""})
@@ -179,14 +179,12 @@ async def made_figure(
 async def _panels(s: AIConfig, description: str) -> list:
     """A figure in panels split into them (figures_typst.Panels), from left to right: [] when
     the AI's answer can't be used, or gives fewer than two."""
-    from . import figures_typst
-
     try:
         split = await ai._ask_provider(
             s, [], f"Figure: {description.strip()}", figures_typst.Panels, figures_typst.PANELS_RULES, light=True
         )
     except ExtractionError as e:
-        if e.code not in _UNUSABLE:
+        if e.code not in figures.UNUSABLE:
             raise
         return []
     parts = [p for p in split.panels if p.description.strip()][:3]
@@ -204,8 +202,6 @@ async def _in_panels(
 ) -> MadeFigure:
     """Each panel drawn by its own kind, at once (what a check found told to each), then set
     side by side (figures.side_by_side): Typst's when one of them is."""
-    from . import figures
-
     made = await asyncio.gather(
         *(made_figure(s, p.description, step, p.family, problem, careful, front, gaps=gaps) for p in parts)
     )
@@ -217,8 +213,6 @@ async def _in_panels(
 async def check_figure(s: AIConfig, description: str, svg: str) -> str:
     """What is wrong in a figure, seen as a picture against its description (the user asked
     it: the "🔍 Check" button); "" when it looks right. figure.invalid: it can't be seen."""
-    from . import figures
-
     # off the event loop: a large figure takes a while to draw, and other requests wait meanwhile
     png = await asyncio.to_thread(lambda: figures.to_png(figures.clean(svg)))
     if png is None:
@@ -227,10 +221,10 @@ async def check_figure(s: AIConfig, description: str, svg: str) -> str:
         s,
         [Image(png, "image/png")],
         f"Description: {description.strip()}",
-        figures.Checked,
-        figures.CHECK_RULES,
+        Checked,
+        CHECK_RULES,
         light=True,
-        demo=lambda: figures.Checked(ok=True, problem=""),
+        demo=lambda: Checked(ok=True, problem=""),
     )
     return "" if checked.ok else (checked.problem.strip() or "It doesn't match its description.")
 
@@ -239,9 +233,6 @@ async def check_picture(s: AIConfig, card: str, meant: str, data: bytes, media_t
     """What is wrong in a card's picture (a photo found, drawn by the image model, the user's),
     seen against the card (`card`: "question → answer"; `meant`: what it was to show, when said):
     the user asked it (the "🔍 Check" button); "" when it illustrates the card."""
-    from . import figures
-    from .prompts import PICTURE_CHECK_RULES
-
     text = f"The card: {card.strip()}"
     if meant.strip():
         text += f"\nThe picture was meant to show: {meant.strip()}"
@@ -249,10 +240,10 @@ async def check_picture(s: AIConfig, card: str, meant: str, data: bytes, media_t
         s,
         [Image(data, media_type)],
         text,
-        figures.Checked,
+        Checked,
         PICTURE_CHECK_RULES,
         light=True,
-        demo=lambda: figures.Checked(ok=True, problem=""),
+        demo=lambda: Checked(ok=True, problem=""),
     )
     return "" if checked.ok else (checked.problem.strip() or "It doesn't illustrate the card.")
 
@@ -266,8 +257,6 @@ async def _figure_family(s: AIConfig, description: str, kind: str = "", problem:
     no family drew it then, or one was asked) given a family that draws it now, families being
     added (a map before the atlas). Never on every drawing: a family picked again could differ
     for nothing, and a correction's figure is drawn again from its own, in its family."""
-    from . import figures_typst
-
     if s.llm == "fake" or not s.typst or not figures_typst.available():
         return "other"
     known = kind in figures_typst.FAMILIES or kind == "other"
@@ -285,56 +274,16 @@ async def _figure_family(s: AIConfig, description: str, kind: str = "", problem:
     try:
         picked = await ai._ask_provider(s, [], text, figures_typst.Kind, figures_typst.FAMILY_RULES, light=True)
     except ExtractionError as e:
-        if e.code not in _UNUSABLE:
+        if e.code not in figures.UNUSABLE:
             raise
         return kind if known else "other"  # asked again for nothing usable: as it was
     return picked.family
 
 
-def _labelled(drawing, clamp: bool = False) -> str:
-    """The AI's drawing cleaned, its arrows drawn with their words (figures.arrows_set), its labelled
-    scheme's names set beside it clear of them (figures.labelled), grown to what it draws past its frame."""
-    from . import figures
-
-    points = [(label.x, label.y) for label in drawing.labels]
-    arrowed, marks = figures.arrows_set(figures.clean(drawing.svg), drawing.arrows, points)
-    svg = figures.fitted(figures.labelled(arrowed, drawing.labels, clamp, marks))
-    kept = answers.get()
-    if kept is not None:
-        kept.append({"drawing": drawing.model_dump(), "clamp": clamp, "svg": svg})
-    return svg
-
-
-async def _readable_svg(s: AIConfig, text: str, svg: str, light: bool, demo: Callable[[], Any]) -> str:
-    """The AI's SVG whose text can't be read on a card (a viewBox of 1000 and text of 12: 4 px)
-    drawn once again, told its size (text_size.svg_too_small); the more readable of the two kept."""
-    from . import figures, figures_typst, text_size
-
-    said = await asyncio.to_thread(text_size.svg_too_small, svg, figures_typst.MIN_TEXT_PX)
-    if not said:
-        return svg
-    log.warning("Figure drawn again: its text too small")
-    asked = f"{text}\n\n{said}"
-    try:
-        again = await ai._ask_provider(s, [], asked, figures.Drawing, figures.RULES, light=light, demo=demo)
-        other = await asyncio.to_thread(_labelled, again, True)
-    except (ExtractionError, figures.FigureError) as e:
-        if e.code not in _UNUSABLE:
-            raise
-        return svg
-    before, after = await asyncio.gather(
-        asyncio.to_thread(text_size.smallest_px, svg), asyncio.to_thread(text_size.smallest_px, other)
-    )
-    kept = len(figures.label_words(other)) >= len(figures.label_words(svg))
-    return other if kept and (after or 0) > (before or 0) else svg
-
-
 async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> MadeFigure:
     """A figure drawn once, cleaned: in Typst with its family's package and rule (asked again
     once, told what Typst said, when it doesn't compile), else as SVG (family "other", Typst
-    refusing it twice; the demo), drawn once again when its labels touch (figures.touching_labels)."""
-    from . import figures, figures_typst
-
+    refusing it twice; the demo: figure_svg.drawn)."""
     if family in figures_typst.FAMILIES:
         rules = figures_typst.FAMILIES[family].rules + figures_typst.COMMON
         asked = text
@@ -344,7 +293,7 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
             try:
                 body = (await ai._ask_provider(s, [], asked, figures_typst.Figure, rules, light=light)).typst
             except ExtractionError as e:
-                if e.code not in _UNUSABLE:
+                if e.code not in figures.UNUSABLE:
                     raise
                 _refused(family, "", f"the AI's answer was unusable: {e.code}")
                 break
@@ -369,48 +318,5 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
             except figures.FigureError as e:  # refused by the cleaning: drawn as SVG, as when Typst refuses it
                 _refused(family, small_body, _unusable_svg(e))
         log.warning("Figure drawn as SVG: Typst refused it")
-    demo = lambda: demo_ai.figure(description)  # noqa: E731
-    drawing = await ai._ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)
-    try:
-        svg = await asyncio.to_thread(_labelled, drawing)
-    except figures.LabelError as e:
-        # a label's point outside the drawing: drawn once again, told which; still so, brought to its edge
-        log.warning("Figure drawn again: %s", e)
-        asked = f"{text}\n\nIn your answer, {e}. Answer it again, corrected."
-        try:
-            again = await ai._ask_provider(s, [], asked, figures.Drawing, figures.RULES, light=light, demo=demo)
-            svg = await asyncio.to_thread(_labelled, again)
-        except (ExtractionError, figures.FigureError, figures.LabelError) as other:
-            if isinstance(other, AppError) and other.code not in _UNUSABLE:
-                raise
-            svg = await asyncio.to_thread(_labelled, drawing, True)
-    svg = await _readable_svg(s, text, svg, light, demo)
-    # Its labels written on one another (the AI places its words without measuring them: two
-    # tubes' labels « soudeCl⁻ »): drawn once again, told which; kept if fewer touch and none
-    # left out (told to make room, the AI dropped the tubes' labels, 3 drawings in 3)
-    touching = await asyncio.to_thread(figures.touching_labels, svg)
-    if touching:
-        log.warning("Figure drawn again: %d of its labels touch", len(touching))
-        extents = await asyncio.to_thread(figures.label_extents, svg)
-
-        def told(label: str) -> str:
-            left, right = extents.get(label, (0, 0))
-            return f"« {label} » (drawn from x = {left} to x = {right}, {right - left} wide)"
-
-        said = "; ".join(f"{told(a)} and {told(b)}" for a, b in touching[:4])
-        asked = (
-            f"{text}\n\nYour drawing wrote labels on one another, or with no room between them, "
-            f"as measured in your SVG's units: {said}. "
-            "Draw it again with every label it has, the same words, each clear of the others: more room "
-            "between them, a smaller font, or a label on two lines; never a label left out."
-        )
-        try:
-            again = await ai._ask_provider(s, [], asked, figures.Drawing, figures.RULES, light=light, demo=demo)
-            other = await asyncio.to_thread(_labelled, again, True)
-            kept = sorted(figures.label_words(svg)) == sorted(figures.label_words(other))
-            if kept and len(await asyncio.to_thread(figures.touching_labels, other)) < len(touching):
-                svg = other
-        except (ExtractionError, figures.FigureError) as e:
-            if e.code not in _UNUSABLE:
-                raise
+    svg = await figure_svg.drawn(s, text, description, light)
     return MadeFigure(svg, "svg", family, not light)
