@@ -208,6 +208,116 @@ class PictureRoutesTest : LocalServerTestBase() {
         assertTrue(images.resolve(client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray[0].jsonObject.string("picture")).isFile)
     }
 
+    /** A lesson whose one card is a figure, its sources answered by the relay (`sources`); the
+     * requests to card-picture kept in `asked`. */
+    private suspend fun io.ktor.client.HttpClient.figureLesson(asked: MutableList<JsonObject>, sources: List<String>): JsonObject {
+        relayAnswers("""{"deck": {"deck": "Maths", "cards": [{"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle",
+            "figure_kind": "geometry"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                asked += json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                return cardPicture(request, sources)
+            }
+        }
+        val id = lesson.string("id")
+        post("/api/lessons/$id/pictures") { page(); contentType(ContentType.Application.Json); setBody("{}") }
+        return get("/api/lessons/$id") { page() }.json().jsonObject
+    }
+
+    private fun JsonObject.sourceFiles() = this["picture_source"]!!.jsonObject["sources"]!!.jsonArray.map { it.jsonObject.string("file") }
+
+    @Test
+    fun aFigureKeepsWhatItWasDrawnFromAndIsDrawnAgainFromIt() = app { client ->
+        val asked = mutableListOf<JsonObject>()
+        val lesson = client.figureLesson(asked, listOf("#rect(width: 2cm)", "#circle()"))
+        val id = lesson.string("id")
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject
+        val stem = card.string("picture").removeSuffix(".svg")
+        // Kept beside it, named by its card, as the computer's (core's keep_sources)
+        assertEquals(listOf("$stem.typ", "$stem-2.typ"), card.sourceFiles())
+        val images = folder.root.resolve("lessons/$id/images")
+        assertEquals("#rect(width: 2cm)", images.resolve("$stem.typ").readText())
+        assertEquals("#circle()", images.resolve("$stem-2.typ").readText())
+        assertEquals("typst", card["picture_source"]!!.jsonObject.string("engine"))
+        assertEquals(emptyList<String>(), asked.single()["previous"]!!.jsonArray.map { it.jsonPrimitive.content }) // a first one: anew
+        // Not served to the page, nor to AnkiDroid (Pictures.file: the pictures only)
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/$stem.typ") { page() }.status)
+
+        // Drawn again (its check found something): from what it was drawn from, in order
+        val cardId = card.string("id")
+        client.post("/api/lessons/$id/cards/$cardId/picture/draw") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"problem": "the right angle is not marked"}""")
+        }
+        val again = asked.last()
+        assertEquals(listOf("#rect(width: 2cm)", "#circle()"), again["previous"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals("geometry", again.string("previous_kind"))
+        assertEquals("typst", again.string("previous_engine"))
+
+        // The card as it was before a correction: its sources, its family
+        val before = """{"source": "drawn", "engine": "typst", "sources": [{"file": "$stem-2.typ"}]}"""
+        client.post("/api/lessons/$id/cards/$cardId/picture/draw") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"previous_source": $before, "previous_kind": "graph"}""")
+        }
+        assertEquals(listOf("#circle()"), asked.last()["previous"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals("graph", asked.last().string("previous_kind"))
+
+        // One of them missing: none sent, drawn anew
+        images.resolve("$stem-2.typ").delete()
+        client.post("/api/lessons/$id/cards/$cardId/picture/draw") { page(); contentType(ContentType.Application.Json); setBody("{}") }
+        assertEquals(0, asked.last()["previous"]!!.jsonArray.size)
+        assertEquals("typst", asked.last().string("previous_engine")) // the core decides from what it has
+    }
+
+    @Test
+    fun aGoneFiguresSourcesPrunedAUsedOnesKept() = app { client ->
+        val lesson = client.extract()
+        relay.takeRequest(5, TimeUnit.SECONDS)
+        val id = lesson.string("id")
+        val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }
+        val (a, b) = cards.map { it.string("id") }
+        // Its hash all digits: its sources still its own (core's SOURCE_NAME, #763)
+        val used = listOf("picture-$a-12345678.svg", "picture-$b-abcdef01.svg")
+        val saved = JsonArray(cards.zip(used) { c, p -> JsonObject(c + ("picture" to JsonPrimitive(p))) })
+        client.put("/api/lessons/$id") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Espagnol", "cards": $saved}""") }
+        val images = folder.root.resolve("lessons/$id/images").apply { mkdirs() }
+        val kept = used + listOf("picture-$a-12345678.typ", "picture-$a-12345678-2.typ", "picture-$b-abcdef01.typ", "notes.typ")
+        val gone = listOf("picture-$a-87654321.svg", "picture-$a-87654321.typ", "picture-$a-87654321-2.typ", "picture-$b-00000000.typ")
+        (kept + gone).forEach { images.resolve(it).writeText("x") }
+        assertEquals(1, client.post("/api/lessons/$id/pictures/prune") { page() }.json().jsonObject["removed"]!!.jsonPrimitive.int)
+        assertEquals(kept.sorted(), images.list()!!.sorted())
+    }
+
+    @Test
+    fun aFiguresSourcesFollowItInACopyAndATransfer() = app { client ->
+        client.put("/api/children") {
+            page(); contentType(ContentType.Application.Json); setBody("""[{"id": "mathilde", "name": "Mathilde", "grade": "3e", "decks": "Mathilde::3e"}]""")
+        }
+        val lesson = client.figureLesson(mutableListOf(), listOf("#rect()", "#circle()"))
+        val id = lesson.string("id")
+        val copy = client.post("/api/lessons/$id/copy") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"child": "mathilde"}""")
+        }.json().jsonObject
+        val card = copy["cards"]!!.jsonArray[0].jsonObject
+        val stem = card.string("picture").removeSuffix(".svg")
+        assertTrue(stem.startsWith("picture-${card.string("id")}-"))
+        // Named after its picture, as its picture is (core's lessons.copy): none under the old name
+        assertEquals(listOf("$stem.typ", "$stem-2.typ"), card.sourceFiles())
+        val images = folder.root.resolve("lessons/${copy.string("id")}/images")
+        assertEquals(listOf("#rect()", "#circle()"), card.sourceFiles().map { images.resolve(it).readText() })
+        assertEquals(listOf("$stem-2.typ", "$stem.svg", "$stem.typ"), images.list()!!.sorted())
+
+        // Exported then taken in again (to the computer, another phone): with them
+        val sources = lesson["cards"]!!.jsonArray[0].jsonObject.sourceFiles()
+        client.post("/api/admin/transfer/export") { page() }
+        val zip = document!!.toByteArray()
+        assertTrue(sources.all { "lessons/$id/images/$it" in entries(zip) })
+        local.lessons.delete(id)
+        client.importFile(zip)
+        assertEquals(listOf("#rect()", "#circle()"), sources.map { folder.root.resolve("lessons/$id/images/$it").readText() })
+    }
+
     @Test
     fun anEditsCardsMergedIntoTheLessonsAsSavedNow() {
         fun card(id: String, vararg fields: Pair<String, String>) =

@@ -1,6 +1,6 @@
 """tools/bench_figures.py: hidden labels counted, a run compiled again."""
 
-from figures.support import SQUARE, rule_example
+from figures.support import SQUARE
 from notosaurus_core import figures, figures_typst
 
 # Rings drawn as nested nodes, each label at its centre (TYP-09h): the inner fills cover
@@ -31,8 +31,7 @@ def test_the_figures_bench_sees_hidden_labels():
     assert hidden(SQUARE.replace("</svg>", '<rect width="400" height="300" fill="white"/></svg>')) == 1
     assert hidden(SQUARE.replace("</svg>", '<text x="900" y="40">B</text></svg>')) == 1
     assert hidden(SQUARE.replace(">A<", ' font-size="4">i<')) == 0  # tiny, but seen
-    for family in figures_typst.FAMILIES:
-        assert hidden(figures_typst.compile_svg(family, rule_example(family))) == 0, family
+    # The rules' examples: none hidden, in test_typst.py's test_each_familys_rule_example_compiles
 
 
 def test_the_figures_bench_compiles_a_run_again(tmp_path):

@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -901,5 +901,88 @@
   {"name": "negative: as unknown", "page": -1, "photos": 2, "out": [1, 2], "sent": "all"},
   {"name": "no photo", "page": 0, "photos": 0, "out": [], "sent": "all"},
   {"name": "a page, no photo", "page": 1, "photos": 0, "out": [], "sent": "all"}
+  ],
+ "figure_source_files": [
+  {
+   "picture": "picture-c1-ab12cd34.svg",
+   "count": 1,
+   "out": [
+    "picture-c1-ab12cd34.typ"
+   ]
+  },
+  {
+   "picture": "picture-0f3a9b2c71de-12345678.svg",
+   "count": 3,
+   "out": [
+    "picture-0f3a9b2c71de-12345678.typ",
+    "picture-0f3a9b2c71de-12345678-2.typ",
+    "picture-0f3a9b2c71de-12345678-3.typ"
+   ]
+  },
+  {
+   "picture": "picture-c1-ab12cd34.svg",
+   "count": 0,
+   "out": []
+  }
+ ],
+ "figure_sources_pruned": [
+  {
+   "name": "a used figure's sources kept, a gone one's removed with it",
+   "pictures": [
+    "picture-c1-ab12cd34.svg"
+   ],
+   "files": [
+    "picture-c1-ab12cd34.svg",
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.svg",
+    "picture-c1-0badf00d.typ",
+    "picture-c1-0badf00d-2.typ"
+   ],
+   "removed": 1,
+   "out": [
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-ab12cd34.svg",
+    "picture-c1-ab12cd34.typ"
+   ]
+  },
+  {
+   "name": "its hash all digits: still its own",
+   "pictures": [
+    "picture-c1-12345678.svg"
+   ],
+   "files": [
+    "picture-c1-12345678.svg",
+    "picture-c1-12345678.typ",
+    "picture-c1-12345678-2.typ",
+    "picture-c2-87654321.typ"
+   ],
+   "removed": 0,
+   "out": [
+    "picture-c1-12345678-2.typ",
+    "picture-c1-12345678.svg",
+    "picture-c1-12345678.typ"
+   ]
+  },
+  {
+   "name": "sources whose picture is gone already, a file not ours left",
+   "pictures": [
+    "picture-c2-ab12cd34.jpg"
+   ],
+   "files": [
+    "picture-c2-ab12cd34.jpg",
+    "picture-c1-ab12cd34.typ",
+    "notes.typ",
+    "picture-c1-ab12cd34.typ.bak",
+    "picture-C3-ab12cd34.typ"
+   ],
+   "removed": 0,
+   "out": [
+    "notes.typ",
+    "picture-C3-ab12cd34.typ",
+    "picture-c1-ab12cd34.typ.bak",
+    "picture-c2-ab12cd34.jpg"
+   ]
+  }
  ]
 }

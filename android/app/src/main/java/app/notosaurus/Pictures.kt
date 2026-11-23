@@ -10,6 +10,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
@@ -137,10 +138,28 @@ class Pictures(
 
     /** Card `i`'s picture drawn by the image model, now: the user said yes (no free one fit). A
      * figure: drawn again, told what its check found (`problem`) when there is one, with the
-     * model's thinking when `careful`. {"card", "lesson"}. */
-    suspend fun draw(lesson: JsonObject, i: Int, problem: String = "", careful: Boolean = false, step: Step = {}): JsonObject = drawing(lesson.string("id")) {
+     * model's thinking when `careful`; from what it was drawn from (its kept sources, as the
+     * computer's /picture/draw): those of `previousSource` and its family `previousKind` (the
+     * card before a correction cleared its picture), else its own. {"card", "lesson"}. */
+    suspend fun draw(
+        lesson: JsonObject,
+        i: Int,
+        problem: String = "",
+        careful: Boolean = false,
+        previousSource: JsonObject? = null,
+        previousKind: String = "",
+        step: Step = {},
+    ): JsonObject = drawing(lesson.string("id")) {
+        val id = lesson.string("id")
         val cards = lesson.cards()
-        cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, draw = true, find = false, problem = problem, careful = careful, onStep = step)
+        val card = cards[i]
+        val origin = previousSource ?: card["picture_source"] as? JsonObject
+        val kind = if (previousSource != null) previousKind else card.string("figure_kind")
+        val previous = if (card.string("figure").isNotEmpty()) keptSources(lessons.images(id), origin) else emptyList()
+        cards[i] = drawn(
+            id, card, fresh = true, draw = true, find = false, problem = problem, careful = careful,
+            previous = previous, previousKind = kind, previousEngine = origin?.string("engine").orEmpty(), onStep = step,
+        )
         answer(lesson, cards, i)
     }
 
@@ -197,7 +216,9 @@ class Pictures(
 
     /** The card with its figure (SVG) or picture (JPEG) saved: decided, found or drawn by the relay
      * (/v1/card-picture: the core's pictures.card_picture, the computer's rule too), with what it
-     * shows and where it comes from. */
+     * shows and where it comes from. A figure's sources (what it was drawn from) kept beside it,
+     * named in its picture_source.sources (as the core's figure_or_picture); `previous`: what it
+     * was drawn from before, in the family `previousKind` and the language `previousEngine`. */
     private suspend fun drawn(
         lessonId: String,
         card: JsonObject,
@@ -208,6 +229,9 @@ class Pictures(
         find: Boolean = true,
         problem: String = "",
         careful: Boolean = false,
+        previous: List<String> = emptyList(),
+        previousKind: String = "",
+        previousEngine: String = "",
         onStep: Step = {},
     ): JsonObject {
         val made = relay().cardPicture(buildJsonObject {
@@ -219,10 +243,18 @@ class Pictures(
             put("draw", draw) // else picture.needs_drawing: the image model costs, the user is asked
             put("problem", problem) // its figure's, the check found it: drawn again, told it
             put("careful", careful) // with the model's thinking
+            put("previous", JsonArray(previous.map(::JsonPrimitive))) // drawn again from it: the rest kept
+            put("previous_kind", previousKind)
+            put("previous_engine", previousEngine)
         }, onStep)
-        val decided = made["card"]!!.jsonObject
+        var decided = made["card"]!!.jsonObject
         val extension = if (made.string("media_type") == "image/svg+xml") "svg" else "jpg"
         val name = save(lessonId, card.string("id"), Base64.getDecoder().decode(made.string("data")), extension)
+        val origin = decided["picture_source"] as? JsonObject
+        if (extension == "svg" && origin != null) {
+            val sources = (made["sources"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+            decided = decided.with("picture_source" to origin.with("sources" to keepSources(lessons.images(lessonId)!!, name, sources)))
+        }
         val fields = PICTURE_FIELDS.mapNotNull { field -> decided[field]?.let { field to it } }
         return card.with(*fields.toTypedArray(), "picture" to JsonPrimitive(name))
     }
@@ -272,7 +304,9 @@ class Pictures(
     }
 
     /** The saved lesson's pictures no card uses removed (asked by the page: no card edited any
-     * more and no correction to undo, or the lesson just opened; never by a send). How many.
+     * more and no correction to undo, or the lesson just opened; never by a send), with the
+     * sources a figure was drawn from (named after it), as the core's pictures.prune. How many
+     * pictures.
      * None while its pictures are being drawn (a picture just drawn is in no saved card yet,
      * another tab or a reload asking meanwhile): the next time. The lesson read again then. */
     fun prune(lesson: JsonObject): Int {
@@ -280,8 +314,7 @@ class Pictures(
         synchronized(writing) {
             if ((writing[id] ?: 0) > 0) return 0
             val used = (lessons.get(id) ?: return 0).cards().map { it.string("picture") }.toSet()
-            val gone = lessons.images(id)?.listFiles { f -> NAME.matches(f.name) && f.name !in used }.orEmpty()
-            return gone.count { it.delete() }
+            return pruned(lessons.images(id) ?: return 0, used)
         }
     }
 
@@ -308,6 +341,35 @@ class Pictures(
             } + after.filter { it.string("id") !in was }
         }
 
+        /** The pictures in `folder` no card uses (`used`) removed, with the sources a figure was
+         * drawn from (named after it), as the core's pictures.prune: how many pictures. */
+        internal fun pruned(folder: File, used: Set<String>): Int {
+            val stems = used.map { it.substringBeforeLast('.') }.toSet()
+            folder.listFiles { f -> SOURCE_NAME.matchEntire(f.name)?.let { it.groupValues[1] !in stems } == true }.orEmpty().forEach { it.delete() }
+            return folder.listFiles { f -> NAME.matches(f.name) && f.name !in used }.orEmpty().count { it.delete() }
+        }
+
+        /** What a figure was drawn from written beside its picture: the files, in order, as
+         * picture_source.sources names them (the core's pictures.keep_sources). */
+        internal fun keepSources(folder: File, picture: String, contents: List<String>): JsonArray {
+            val stem = picture.substringBeforeLast('.')
+            return JsonArray(contents.mapIndexed { n, content ->
+                val name = if (n == 0) "$stem.typ" else "$stem-${n + 1}.typ"
+                File(folder, name).writeText(content)
+                buildJsonObject { put("file", name) }
+            })
+        }
+
+        /** What a figure was drawn from, as its picture_source names it: none when it names none
+         * (drawn as SVG, before sources were kept), or one is missing or not one of ours (the
+         * core's pictures.kept_sources). */
+        internal fun keptSources(folder: File?, origin: JsonObject?): List<String> {
+            val files = (origin?.get("sources") as? JsonArray).orEmpty().map { (it as? JsonObject)?.string("file").orEmpty() }
+            val paths = files.filter { SOURCE_NAME.matches(it) }.mapNotNull { folder?.resolve(it) }
+            if (paths.size != files.size || !paths.all { it.isFile }) return emptyList()
+            return paths.map { it.readText() }
+        }
+
         private const val AT_ONCE = 4
         private const val NEEDS_DRAWING = "picture.needs_drawing" // no free picture fits: the user is asked
         private val PHOTO = buildJsonObject { put("source", "photo") }
@@ -318,5 +380,8 @@ class Pictures(
         private val READY = PICTURE_FIELDS + "picture"
         private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py
         private val NAME = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // the files we write
+        // A figure's source files: named after its picture ("picture-c1-ab12cd34.typ", "-2.typ" for
+        // a second), read back only by such a name; its group 1 the picture's stem (core's SOURCE_NAME)
+        internal val SOURCE_NAME = Regex("""^(picture-[a-z0-9]+-[a-f0-9]{8})(-\d+)?\.typ$""")
     }
 }

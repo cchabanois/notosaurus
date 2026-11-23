@@ -47,6 +47,15 @@ def eventually(page, check, what: str, timeout: float = 5000) -> None:
     assert check(), what
 
 
+def gone(page, url: str) -> bool:
+    """`url` answered 404. A GET cut short (the file removed while it was being sent:
+    "Response content shorter than Content-Length") is no answer yet: asked again."""
+    try:
+        return page.request.get(url).status == 404
+    except sync_api.Error:
+        return False
+
+
 def started(page) -> None:
     """The page started: the lesson left in progress found again (app-draft.js), if any."""
     page.wait_for_function("window.Alpine && Alpine.$data(document.querySelector('[x-data]')).draftKept")
@@ -61,6 +70,12 @@ def draft_kept(page) -> None:
         "(d => d.draftSent === d.draftText() && d.draftPhotosSent === d.draftPhotos().map((p) => p.url).join(' '))"
         "(Alpine.$data(document.querySelector('[x-data]')))"
     )
+
+
+def lesson_made(page) -> None:
+    """The lesson being made, saved: its id known (at the stream's end, after its first
+    cards are shown), so the page's draft is now that lesson's."""
+    page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).lessonId")
 
 
 def generate_free(page, prompt: str) -> None:

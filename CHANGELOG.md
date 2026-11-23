@@ -118,6 +118,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 📐 On the phone, a figure drawn again keeps its layout: only what is asked changes
 - A figure's Typst can no longer fetch a package from the internet nor read a file, however it is written: only the packages shipped with Notosaurus are found. A label or a comment may still say any word ("import / export", "the json format").
 - Checking or correcting a very tall figure no longer takes a large amount of memory, nor holds up the server's other requests; a card's correction goes on without the figure when the figure can't be drawn.
 - A card's formula can no longer add links or styles to Notosaurus's page. Commands such as `\href` or `\style` are shown in red, as unknown.

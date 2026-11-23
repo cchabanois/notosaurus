@@ -1,9 +1,13 @@
 """The backs' sounds made ahead, in the background, after a lesson is saved; and "Add to
 Anki" told as it goes (application/x-ndjson)."""
 
+import asyncio
 import json
+import threading
 import time
+import types
 
+import pytest
 from conftest import SEND, extract_lesson, synthesized
 
 from app import lessons, settings, sounds
@@ -19,6 +23,22 @@ def wait_for(condition, timeout=5.0) -> bool:
             return True
         time.sleep(0.02)
     return False
+
+
+@pytest.fixture
+def quiet(monkeypatch) -> threading.Event:
+    """The few seconds of quiet a job waits for, over when the test says (set), not after a
+    time the test hopes is long enough: the jobs' own `asyncio.sleep`, gated."""
+    over = threading.Event()
+
+    async def sleep(delay, result=None):
+        while not over.is_set():
+            await asyncio.sleep(0.01)
+        return result
+
+    gated = types.SimpleNamespace(**{**vars(asyncio), "sleep": sleep})
+    monkeypatch.setattr(sounds, "asyncio", gated)
+    return over
 
 
 def save(client, id: str, backs: list[str], voice: str = VOICE) -> None:
@@ -44,27 +64,28 @@ def test_sounds_made_after_a_save_then_found_by_the_send(client, anki, monkeypat
     assert set(anki.media) == {tts.filename("la madre", VOICE, rate), tts.filename("el padre", VOICE, rate)}
 
 
-def test_a_newer_save_replaces_the_job(client, monkeypatch):
+def test_a_newer_save_replaces_the_job(client, quiet):
     """Saved as the user types: only the backs as last saved are read."""
-    monkeypatch.setattr(sounds, "DELAY", 0.3)
-    lesson = extract_lesson(client)
-    save(client, lesson["id"], ["la mad"])
-    save(client, lesson["id"], ["la madre"])
-    assert wait_for(lambda: synthesized == ["la madre"])
-    time.sleep(0.4)
+    id = extract_lesson(client)["id"]
+    save(client, id, ["la mad"])
+    first = sounds._jobs[id]
+    save(client, id, ["la madre"])
+    assert wait_for(first.done) and first.cancelled()  # replaced while still waiting
+    assert sounds._jobs[id] is not first
+    quiet.set()
+    assert wait_for(lambda: id not in sounds._jobs)  # the newer job done
     assert synthesized == ["la madre"]  # "la mad" never read
-    assert not sounds._jobs
 
 
-def test_nothing_for_a_voice_anki_reads(client, monkeypatch):
-    monkeypatch.setattr(sounds, "DELAY", 0.01)
-    lesson = extract_lesson(client)
-    save(client, lesson["id"], ["la madre"], voice="es_ES")  # Anki's own {{tts}}
-    save(client, extract_lesson(client)["id"], ["la madre"], voice="")  # no sound
-    assert not sounds._jobs
-    time.sleep(0.2)
+def test_nothing_for_a_voice_anki_reads(client, quiet):
+    quiet.set()  # a job, if one were started, would not wait
+    id = extract_lesson(client)["id"]
+    save(client, id, ["la madre"], voice="es_ES")  # Anki's own {{tts}}
+    other = extract_lesson(client)["id"]
+    save(client, other, ["la madre"], voice="")  # no sound
+    assert id not in sounds._jobs and other not in sounds._jobs  # no job: nothing made later either
     assert synthesized == []
-    audio = lessons.audio_dir(lesson["id"])
+    audio = lessons.audio_dir(id)
     assert audio is not None and not audio.exists()
 
 

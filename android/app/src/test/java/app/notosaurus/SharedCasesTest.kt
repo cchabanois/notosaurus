@@ -3,13 +3,16 @@ package app.notosaurus
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.File
+import java.nio.file.Files
 
 /** The cases the computer's Python, the page's JavaScript and this app must agree on
  * (core/shared-cases.json, Python's answers the reference). */
@@ -66,6 +69,27 @@ class SharedCasesTest {
     @Test
     fun aSoundsFile() = cases("sound_file").forEach { c ->
         assertEquals(c.string("text"), c.string("out"), Speech.fileName(c.string("text"), c.string("voice"), c.string("rate")))
+    }
+
+    @Test
+    fun aFiguresSourceFiles() = cases("figure_source_files").forEach { c ->
+        val folder = Files.createTempDirectory("sources").toFile()
+        val contents = List(c["count"]!!.jsonPrimitive.int) { n -> "// source $n" }
+        val files = Pictures.keepSources(folder, c.string("picture"), contents)
+        assertEquals(c.toString(), c["out"]!!.jsonArray.map { it.jsonPrimitive.content }, files.map { it.jsonObject.string("file") })
+        val origin = buildJsonObject { put("source", "drawn"); put("engine", "typst"); put("sources", files) }
+        assertEquals(c.toString(), contents, Pictures.keptSources(folder, origin))
+        folder.deleteRecursively()
+    }
+
+    @Test
+    fun aFiguresSourcesPrunedWithIt() = cases("figure_sources_pruned").forEach { c ->
+        val folder = Files.createTempDirectory("pruned").toFile()
+        c["files"]!!.jsonArray.forEach { folder.resolve(it.jsonPrimitive.content).writeText("x") }
+        val used = c["pictures"]!!.jsonArray.map { it.jsonPrimitive.content }.toSet()
+        assertEquals(c.string("name"), c["removed"]!!.jsonPrimitive.int, Pictures.pruned(folder, used))
+        assertEquals(c.string("name"), c["out"]!!.jsonArray.map { it.jsonPrimitive.content }, folder.list()!!.sorted())
+        folder.deleteRecursively()
     }
 
     @Test

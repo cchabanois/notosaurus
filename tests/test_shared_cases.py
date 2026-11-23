@@ -100,3 +100,31 @@ def test_a_cards_info_field(case):
     from app.note_types.common import info
 
     assert info(Card(front="f", back="b", info=case["info"], fun_fact=case["fun_fact"])) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["figure_source_files"], ids=lambda c: f"{c['picture']}|{c['count']}")
+def test_a_figures_source_files(case, tmp_path):
+    """What a figure was drawn from, beside its picture: the same names on the phone
+    (Pictures.keepSources), read back by either (a lesson goes from one to the other)."""
+    from notosaurus_core.models import PictureSource
+    from notosaurus_core.pictures import keep_sources, kept_sources
+
+    contents = [f"// source {n}" for n in range(case["count"])]
+    files = keep_sources(tmp_path, case["picture"], contents)
+    assert [f.file for f in files] == case["out"]
+    assert kept_sources(tmp_path, PictureSource(source="drawn", engine="typst", sources=files)) == contents
+
+
+@pytest.mark.parametrize("case", CASES["figure_sources_pruned"], ids=lambda c: c["name"])
+def test_a_figures_sources_pruned_with_it(case, tmp_path):
+    """The pictures no card uses removed with their sources, the others' kept: the phone's
+    Pictures.pruned the same."""
+    from notosaurus_core.pictures import prune
+
+    # Names told apart by their case alone are one file on Windows and macOS: never a case's
+    assert len({name.casefold() for name in case["files"]}) == len(case["files"])
+    for name in case["files"]:
+        (tmp_path / name).write_text("x", encoding="utf-8")
+    cards = [Card(front="f", back="b", picture=p) for p in case["pictures"]]
+    assert prune(tmp_path, cards) == case["removed"]
+    assert sorted(p.name for p in tmp_path.iterdir()) == case["out"]
