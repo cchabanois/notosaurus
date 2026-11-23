@@ -23,7 +23,7 @@ anki_collection = pytest.importorskip("anki.collection")
 from anki.import_export_pb2 import ImportAnkiPackageUpdateCondition  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app import settings  # noqa: E402
+from app import ankiconnect, settings  # noqa: E402
 from app.main import app  # noqa: E402
 from app.routes.devices import DEVICE_COOKIE  # noqa: E402
 from notosaurus_core import tts  # noqa: E402
@@ -98,6 +98,8 @@ def bridged(col, notosaurus, monkeypatch):
     bridge.start()
     monkeypatch.setenv("NOTOSAURUS_ANKICONNECT_URL", bridge.url)
     monkeypatch.setenv("NOTOSAURUS_ANKICONNECT_KEY", bridge.key)
+    # Reached for real, over the `offline` fixture's closed AnkiConnect: this bridge is the test's own
+    monkeypatch.setattr(ankiconnect, "_transport", None)
     yield notosaurus, mw
     bridge.stop()
     mw.main.shutdown()
