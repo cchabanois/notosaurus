@@ -260,9 +260,13 @@ function childLevels(child) {
   return new Set([child.name, ...decks.split("::")].map(sameLevel).filter(Boolean));
 }
 
-// A deck level as compared: no case, no accents, an ordinal's ending dropped ("5ème", "5e")
+// A deck level as compared: no case ("ß" as "ss"), no accents (their marks dropped), an
+// ordinal's ending dropped ("5ème", "5e"); any other letter kept ("Иван" is no "Анна"): as
+// the computer's children.same_level (core/shared-cases.json)
 function sameLevel(level) {
-  return fold(level.trim()).replace(/^(\d+)\s*(e|eme|er|ere|re|de|nd|nde|st|rd|th|o|a|º|ª)$/, "$1");
+  const casefold = (text) => text.split("ı").map((t) => t.toLowerCase().toUpperCase().toLowerCase()).join("ı");
+  const plain = casefold(level.normalize("NFKD")).normalize("NFKD").replace(/\p{Mn}/gu, "").trim();
+  return plain.replace(/^([0-9]+)[ \t\n\r\f\v]*(e|eme|er|ere|re|de|nd|nde|st|rd|th|o|a|º|ª)$/, "$1");
 }
 
 // A child's id from its first name: letters and digits ("Léa" → "lea")

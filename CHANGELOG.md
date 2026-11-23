@@ -121,6 +121,14 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🗂️ **Each lesson its own deck on Android too**: a deck that already exists in AnkiDroid or belongs to another lesson gets " (2)", as on the computer.
+- 🏷️ **A lesson shared as a package from the Android app keeps its tests' tags**, as when it is sent to AnkiDroid.
+- 👧 **Children's names and decks in any script**: a child whose name or class is in Cyrillic, Greek or Japanese no longer hides every other non-Latin deck from the AI. "ß" and "ss" are the same level on the phone and on the page.
+- 🔊 On Android, a lesson in the pupil's own language is no longer taken for a foreign one when the AI writes its language in capitals or with spaces.
+- 📦 On the computer, a shared package with a blank name is named after its test, as on Android.
+- Sending to Anki or drawing pictures, cancelled meanwhile: no error said any more, the cards as they were.
+- "🔍 Check the picture" works on long cards; it no longer fails for cards longer than about 1000 characters.
+- Asking the AI to change a figure into a photo no longer leaves the card half-changed when no photo is chosen: the card keeps its figure until a picture actually replaces it. A card already left that way can be checked again.
 - Gemini unreachable: said as such ("Can't reach the Gemini API"), and the relay tries its other routes and fallback models instead of stopping on a generic error.
 - Something shared to the app while Notosaurus is busy (a lesson being made or corrected, a card open) is no longer lost or added in the wrong place: it is added once the current task is done or the card closed.
 - Starting a new lesson from elsewhere (an Anki profile switched, the open lesson deleted) no longer leaves the previous lesson's card open over it.

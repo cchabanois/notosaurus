@@ -19,6 +19,7 @@ from notosaurus_core.models import (  # noqa: F401
     PictureSource,
     Revision,
 )
+from notosaurus_core.relay_api import MAX_CARD, MAX_SUBJECT
 
 CARD_ID = re.compile(r"[a-z0-9]{0,40}")  # Notosaurus, the page and the Android app give 12 hex
 
@@ -209,8 +210,18 @@ class PictureSearch(BaseModel):
     """Free pictures of what the user wrote (any language): stock.search."""
 
     subject: str = Field(min_length=1, max_length=200)
-    context: str = Field(default="", max_length=2000)  # the card, "front → back"
+    context: str = Field(default="", max_length=MAX_CARD)  # the card, "front → back"
     words: str = Field(default="", max_length=200)  # its English search words when known (Card.picture_search)
+
+
+class DecidedPicture(BaseModel):
+    """A picture "✨ Image" decided for a card that has a figure (/picture/make's "decided"):
+    the card keeps its figure until a picture replaces it (found, drawn by the image model,
+    the user's), then takes these fields, its figure's cleared."""
+
+    picture_prompt: str = Field(min_length=1, max_length=MAX_SUBJECT)
+    picture_search: str = Field(default="", max_length=MAX_SUBJECT)
+    picture_on_back: bool = False
 
 
 class FoundPicture(BaseModel):
@@ -218,6 +229,7 @@ class FoundPicture(BaseModel):
 
     source: Literal["commons", "openverse", "pixabay"]
     id: str = Field(min_length=1, max_length=300)
+    decided: DecidedPicture | None = None  # a picture decided for a figure: the card's now
 
 
 class RedrawRequest(BaseModel):
@@ -226,6 +238,7 @@ class RedrawRequest(BaseModel):
 
     problem: str = Field(default="", max_length=1000)
     careful: bool = False  # with a problem: with the model's thinking (asked again after a quick one)
+    decided: DecidedPicture | None = None  # a picture decided for a figure: drawn by the image model
 
 
 class PictureRequest(BaseModel):

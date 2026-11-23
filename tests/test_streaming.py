@@ -239,3 +239,53 @@ def test_what_the_ai_is_at_told_with_the_cards_and_the_correction(client, monkey
     assert len(lines[-1]["result"]["lesson"]["cards"]) == len(lesson["cards"]) - 1
     plain = client.post(f"/api/lessons/{lesson['id']}/revise", json=body).json()
     assert "lesson" in plain and "summary" in plain
+
+
+def test_picture_routes_told_as_they_go(client, monkeypatch):
+    """The pictures' routes asked as a stream: each step as a line as it begins (the
+    batch's flat, a card's own nested under "step"), then {"result": …}, the answer
+    asked without the stream."""
+    from notosaurus_core import pictures
+
+    async def draw_all(s, folder, cards, *, step=None, **kwargs):
+        if step:
+            step({"card": cards[0].id, "step": "drawing"})
+        return pictures.Drawn(0, None, [])
+
+    async def figure_or_picture(s, folder, card, *args, step=None, **kwargs):
+        if step:
+            step({"step": "drawing"})
+        return ""
+
+    monkeypatch.setattr(pictures, "draw_all", draw_all)
+    monkeypatch.setattr(pictures, "figure_or_picture", figure_or_picture)
+    lesson = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
+    card = lesson["cards"][0]["id"]
+    asked = [
+        (f"/api/lessons/{lesson['id']}/pictures", {"draw": True}, {"card": card, "step": "drawing"}),
+        (f"/api/lessons/{lesson['id']}/cards/{card}/picture/draw", {}, {"step": {"step": "drawing"}}),
+    ]
+    for url, body, step in asked:
+        plain = client.post(url, json=body).json()
+        step_line, last = lines(client.post(url, json=body, headers=NDJSON))
+        assert step_line == step
+        assert set(last) == {"result"} and set(last["result"]) == set(plain)
+        assert last["result"]["lesson"]["id"] == lesson["id"]
+
+
+def test_a_send_that_fails_unexpectedly_mid_stream(client, monkeypatch, caplog):
+    """A plain bug while sending, told as it goes: the last line an "internal" error, the
+    log saying where it failed, never what it said (as a lesson made: one stream for both)."""
+    from app import media
+
+    async def failing(*args, **kwargs):
+        raise RuntimeError("could not send 'la madre de Pedro'")
+
+    monkeypatch.setattr(media, "card_audio", failing)
+    lesson = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
+    body = {"lesson_id": lesson["id"], "deck": lesson["deck"], "cards": lesson["cards"]}
+    with caplog.at_level("ERROR", logger="notosaurus"):
+        items = lines(client.post("/api/anki/send", json=body, headers=NDJSON))
+    assert items == [{"error": {"code": "internal", "params": {}}}]
+    assert "RuntimeError" in caplog.text and "failing" in caplog.text  # its type, and where
+    assert "madre" not in caplog.text and "Pedro" not in caplog.text

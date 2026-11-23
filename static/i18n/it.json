@@ -527,8 +527,6 @@
       "who": "Per chi?",
       "hint": "La classe e le tue istruzioni vanno all'IA; il nome, mai.",
       "name": "Nome",
-      "choose": "Scegli",
-      "chosen": "✓ Scelto",
       "remove": "Rimuovi",
       "confirmRemove": "Rimuovere {name}? Le lezioni restano.",
       "grade": "Classe",
@@ -1174,7 +1172,6 @@
     },
     "picture": {
       "no_model": "Nessun modello di immagini: impostane uno nelle impostazioni (o una chiave Gemini o OpenRouter).",
-      "unknown_model": "Modello di immagini sconosciuto: {model}.",
       "missing_key": "Nessuna chiave {service} per il modello di immagini.",
       "failed": "Impossibile disegnare l'immagine: {detail}",
       "empty": "Il modello di immagini non ha dato alcuna immagine.",

@@ -526,15 +526,6 @@ def fetch(name: str, folder: Path | None = None, url: str | None = None) -> byte
     raise AssertionError("unreachable")
 
 
-def download_text(name: str, folder: Path | None, url: str) -> str:
-    """A text file, from `folder` when it has it (by that name), else from its URL."""
-    if folder and (folder / name).is_file():
-        return (folder / name).read_text(encoding="utf-8")
-    request = urllib.request.Request(url, headers={"User-Agent": "notosaurus-atlas (tools/atlas.py)"})
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return response.read().decode("utf-8")
-
-
 def usual_names(folder: Path | None = None) -> dict[str, list[str]]:
     """Each country's usual names in the page's languages, by its two-letter code (CLDR):
     its short and variant ones too ("UK", "Birmanie"); the world's parts' by their M49 code

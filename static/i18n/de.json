@@ -527,8 +527,6 @@
       "who": "Für wen?",
       "hint": "Klasse und deine Anweisungen bekommt die KI; den Vornamen nie.",
       "name": "Vorname",
-      "choose": "Wählen",
-      "chosen": "✓ Gewählt",
       "remove": "Entfernen",
       "confirmRemove": "{name} entfernen? Die Lektionen bleiben erhalten.",
       "grade": "Klasse",
@@ -1174,7 +1172,6 @@
     },
     "picture": {
       "no_model": "Kein Bildmodell: Lege eins in den Einstellungen fest (oder einen Gemini- oder OpenRouter-Schlüssel).",
-      "unknown_model": "Unbekanntes Bildmodell: {model}.",
       "missing_key": "Kein {service}-Schlüssel für das Bildmodell.",
       "failed": "Das Bild konnte nicht gezeichnet werden: {detail}",
       "empty": "Das Bildmodell hat kein Bild geliefert.",

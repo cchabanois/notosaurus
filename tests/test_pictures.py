@@ -2,17 +2,19 @@
 
 import base64
 import io
+import json
 
 import apkg
 import pytest
 from helpers import bomb_png, plain_image, run
 from PIL import Image
 
+from app import lessons
 from app.settings import Settings
-from notosaurus_core import correction, diagrams, llm, pictures, tts
+from notosaurus_core import correction, diagrams, llm, pictures, stock, tts
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
-from notosaurus_core.models import Card, PicturePlan
+from notosaurus_core.models import Card, PicturePlan, PictureSource
 from notosaurus_core.relay_api import MAX_IMAGE_BYTES
 
 
@@ -607,3 +609,118 @@ def test_a_figure_whose_hash_is_digits_keeps_its_sources(tmp_path):
         (tmp_path / name).write_text("x")
     assert pictures.prune(tmp_path, [Card(front="a", back="b", picture=used)]) == 0
     assert sorted(p.name for p in tmp_path.iterdir()) == sorted(names[:3])
+
+
+# A picture the AI decides for a figure, as /picture/make answers it ("decided")
+DECIDED = {"picture_prompt": "a set square on a desk", "picture_search": "set square", "picture_on_back": True}
+
+
+def _figure_turned_into_a_picture(client, monkeypatch) -> tuple[str, dict, dict, str]:
+    """A lesson whose first card is a figure (drawn: its SVG), "✨ Image" asked on it with
+    nothing written, the AI deciding a photo: the lesson's id, the figure's card before, the
+    card as /make answered it, its picture's URL."""
+    lesson = client.post("/api/extract", data={"prompt": "géométrie"}).json()
+    lesson = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]
+    figure = lesson["cards"][0]
+    assert figure["figure"] and figure["picture"].endswith(".svg")
+
+    async def plan(s, front, back, asked, language):
+        return PicturePlan(kind="picture", description="a set square on a desk", search="set square", on_back=True)
+
+    monkeypatch.setattr(llm, "plan_picture", plan)
+    url = f"/api/lessons/{lesson['id']}/cards/{figure['id']}/picture"
+    made = client.post(f"{url}/make", json={"subject": ""}).json()
+    assert made["search"] == "set square"
+    assert made["decided"] == DECIDED
+    return lesson["id"], figure, made["card"], url
+
+
+def _card(client, lesson_id, card_id) -> dict:
+    return next(c for c in client.get(f"/api/lessons/{lesson_id}").json()["cards"] if c["id"] == card_id)
+
+
+def test_a_figure_turned_into_a_picture_stays_the_figure_until_one_is_chosen(client, drawn, monkeypatch):
+    """ "✨ Image" on a figure, the AI deciding a picture: the card stays the figure (its SVG and
+    its description, never one without the other) until a picture replaces it; the search given
+    up, it is still the figure, its 🔍 check that of a figure. A photo found chosen: the figure
+    cleared, the picture decided and the photo kept."""
+    lesson_id, figure, made, url = _figure_turned_into_a_picture(client, monkeypatch)
+    for card in (made, _card(client, lesson_id, figure["id"])):
+        assert (card["figure"], card["figure_kind"], card["picture"]) == (
+            figure["figure"],
+            figure["figure_kind"],
+            figure["picture"],
+        )
+        assert (card["picture_prompt"], card["picture_search"]) == ("", "")
+    seen = []
+
+    async def check(s, description, svg):
+        seen.append(description)
+        return ""
+
+    monkeypatch.setattr(llm, "check_figure", check)
+    assert client.post(f"{url}/check").json() == {"ok": True, "problem": ""}
+    assert seen == [figure["figure"]]
+
+    async def fetch(source, id_, pixabay_key=""):
+        return plain_image(300, 200, "teal", "JPEG"), PictureSource(source="commons", licence="CC0")
+
+    monkeypatch.setattr(stock, "fetch", fetch)
+    body = {"source": "commons", "id": "File:Set square.jpg", "decided": DECIDED}
+    chosen = client.post(f"{url}/found", json=body).json()["card"]
+    for card in (chosen, _card(client, lesson_id, figure["id"])):
+        assert (card["figure"], card["figure_kind"]) == ("", "")
+        assert (card["picture_prompt"], card["picture_search"], card["picture_on_back"]) == (
+            "a set square on a desk",
+            "set square",
+            True,
+        )
+        assert card["picture"].endswith(".jpg") and card["picture_source"]["source"] == "commons"
+
+
+def test_a_figure_turned_into_a_picture_drawn_or_replaced_by_ones_own(client, drawn, monkeypatch):
+    """The picture decided for a figure drawn by the image model (the user said yes), or the
+    user's own photo: then the card's, its figure cleared. A decision that isn't one refused."""
+    url = _figure_turned_into_a_picture(client, monkeypatch)[3]
+    drawn.clear()
+    card = client.post(f"{url}/draw", json={"decided": DECIDED}).json()["card"]
+    assert drawn == ["a set square on a desk"]  # the picture decided, not the figure drawn again
+    assert (card["figure"], card["picture_prompt"]) == ("", "a set square on a desk")
+    assert card["picture"].endswith(".jpg")
+
+    lesson_id, figure, _, url = _figure_turned_into_a_picture(client, monkeypatch)
+    photo = ("p.jpg", plain_image(400, 300, "blue"), "image/jpeg")
+    refused = client.post(url, files={"photo": photo}, data={"decided": "{}"})
+    assert refused.status_code == 422
+    assert _card(client, lesson_id, figure["id"])["figure"] == figure["figure"]  # nothing changed
+    card = client.post(url, files={"photo": photo}, data={"decided": json.dumps(DECIDED)}).json()["card"]
+    assert (card["figure"], card["figure_kind"], card["picture_prompt"]) == ("", "", "a set square on a desk")
+    assert card["picture"].endswith(".jpg") and card["picture_source"]["source"] == "photo"
+
+
+def test_an_svg_without_its_figure_checked_as_a_figure(client, drawn, monkeypatch):
+    """A figure an older version turned into a picture without replacing its drawing (its SVG
+    kept, its description gone): its 🔍 check still works, as a figure's, against what the card's
+    picture should show now, else the card itself."""
+    from app import storage
+
+    lesson = client.post("/api/extract", data={"prompt": "géométrie"}).json()
+    lesson = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]
+    card = lesson["cards"][0]
+    assert card["picture"].endswith(".svg")
+    seen = []
+
+    async def check(s, description, svg):
+        seen.append((description, svg[:4]))
+        return "A triangle, not a set square."
+
+    monkeypatch.setattr(llm, "check_figure", check)
+    folder = lessons.existing_folder(lesson["id"])
+    whole = f"{card['front']} → {card['back']}"
+    for prompt, meant in (("a set square on a desk", "a set square on a desk"), ("", whole)):
+        saved = storage.read_json(folder / "lesson.json")
+        saved["cards"][0].update(figure="", figure_kind="", picture_prompt=prompt)  # as an older version left it
+        storage.write_json(folder / "lesson.json", saved)
+        res = client.post(f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture/check")
+        assert res.json() == {"ok": False, "problem": "A triangle, not a set square."}
+        assert seen[-1] == (meant, "<svg")

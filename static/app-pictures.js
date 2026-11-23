@@ -33,6 +33,7 @@ const picturesPart = {
         await api(`/api/lessons/${this.lessonId}/cards/${card.id}/picture${request.path ?? ""}`, asked),
         (step) => Object.assign(card, { _step: step.step, _problem: step.problem ?? "", _first: step.first ?? "" }),
       );
+      if (!res) return null;  // cancelled: the card as it was
       card.picture = res.card.picture;
       card.picture_source = res.card.picture_source ?? null;
       card.picture_prompt = res.card.picture_prompt;
@@ -53,10 +54,13 @@ const picturesPart = {
   // "✨ Image", the cheapest first: the AI decides from what was written (any language; none:
   // the card); a figure is drawn (cheap). A picture: free ones looked for, sorted by the AI;
   // one fits, it is the card's; several, the user picks (the AI's choice first); none, the
-  // user is asked before the image model draws one (it costs)
+  // user is asked before the image model draws one (it costs). A figure the AI turns into a
+  // picture: the card keeps its figure until a picture replaces it (the search given up, it
+  // is still the figure), the picture's fields kept in `_decided`, sent with the one chosen
   async makePicture(card) {
     card._found = null;
     card._ask = false;
+    card._decided = null;
     const had = card.picture_source?.page ?? "";  // "Change": not the one it has
     const res = await this.pictureAction(card, {
       path: "/make",
@@ -65,7 +69,10 @@ const picturesPart = {
       body: JSON.stringify({ subject: card._subject ?? null }),
     });
     if (!res) return;
-    card._subject = card.figure || card.picture_prompt;
+    card._decided = res.decided ?? null;
+    // Decided for a figure, from nothing written (a figure stays one when it is): left as it
+    // was, the card still the figure (written, the picture's description would be drawn as one)
+    if (!card._decided) card._subject = card.figure || card.picture_prompt;
     if (!res.search) return;  // a figure: drawn
     if (!this.off("pictures.search")) await this.searchPictures(card, res.search);
     const found = (card._found ?? []).filter((f) => !had || f.page !== had);
@@ -80,7 +87,17 @@ const picturesPart = {
   // The user said yes: drawn by the image model (a figure: drawn again)
   async drawPicture(card) {
     card._ask = false;
-    await this.pictureAction(card, { path: "/draw", method: "POST" });
+    const decided = this.pendingPicture(card);
+    const res = await this.pictureAction(card, card._decided
+      ? { path: "/draw", method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(decided) }
+      : { path: "/draw", method: "POST" });
+    if (res) card._decided = null;
+  },
+
+  // The picture makePicture decided for a figure, still to be chosen: sent with the one chosen
+  // (found, drawn, one's own), the figure then replaced; {} when there is none
+  pendingPicture(card) {
+    return card._decided ? { decided: card._decided } : {};
   },
 
   // "🔍 Check": the figure looked at by the AI against its description, on demand (never on
@@ -131,7 +148,10 @@ const picturesPart = {
     if (!file) return;
     const body = new FormData();
     body.append("photo", await resize(file), "photo.jpg");
-    return this.pictureAction(card, { method: "POST", body });
+    if (card._decided) body.append("decided", JSON.stringify(card._decided));
+    const res = await this.pictureAction(card, { method: "POST", body });
+    if (res) card._decided = null;
+    return res;
   },
 
   // Free pictures of the card's picture (its description, its search words: makePicture),
@@ -216,12 +236,13 @@ const picturesPart = {
   },
 
   async chooseFound(card, found) {
-    await this.pictureAction(card, {
+    const res = await this.pictureAction(card, {
       path: "/found",
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ source: found.source, id: found.id }),
+      body: JSON.stringify({ source: found.source, id: found.id, ...this.pendingPicture(card) }),
     });
+    if (res) card._decided = null;
     if (card.picture) card._found = null;
   },
 
@@ -232,6 +253,13 @@ const picturesPart = {
   // The open lesson's pictures are being drawn (not another's, left while they were)
   drawingHere() {
     return this.drawingLessons.includes(this.lessonId);
+  },
+
+  // A card's picture shown on this side (`onBack`: with its answer), as it says: there, or
+  // being made (asked for, and this lesson's being drawn)
+  pictureShown(card, onBack) {
+    return Boolean(card.picture_on_back) === onBack
+      && Boolean(card.picture || card._drawing || ((card.picture_prompt || card.figure) && this.drawingHere()));
   },
 
   // The pictures the cards ask for: figures drawn, free pictures found; those none fits are
@@ -260,7 +288,8 @@ const picturesPart = {
           previous: Object.fromEntries(this.cards.filter((c) => c._previous && !c.picture).map((c) => [c.id, c._previous])),
         }),
       }));
-      if (this.lessonId !== lessonId) return;  // another lesson opened meanwhile
+      // Cancelled (nothing drawn: the cards as they were), or another lesson opened meanwhile
+      if (!res || this.lessonId !== lessonId) return;
       // With where each comes from: the next save would drop it otherwise
       const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
       this.cards.forEach((c) => {
@@ -295,17 +324,14 @@ const picturesPart = {
     return { source: old.picture_source, kind: old.figure_kind ?? "" };
   },
 
-  // The pictures' answer, each card's steps shown on it as they begin (application/x-ndjson):
-  // a figure drawn, checked, redrawn when wrong (its first one shown meanwhile, faded); a
-  // picture looked for, drawn. A server answering all at once (an older one): its answer
-  async pictureSteps(lessonId, res) {
-    if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
-    for await (const item of ndjsonItems(res)) {
-      if (item.result) return item.result;
-      if (item.error) throw itemError(item.error);
-      const card = this.lessonId === lessonId && item.step && this.cards.find((c) => c.id === item.card);
-      if (!card) continue;
-      if (item.step === "ready") {  // its picture, shown at once: not when the others are done
+  // The pictures' answer, each card's steps shown on it as they begin (resultAsItComes): a
+  // figure drawn, checked, redrawn when wrong (its first one shown meanwhile, faded); a
+  // picture looked for, drawn. Null when it was cancelled
+  pictureSteps(lessonId, res) {
+    return resultAsItComes(res, (step, item) => {
+      const card = this.lessonId === lessonId && this.cards.find((c) => c.id === item.card);
+      if (!card) return;
+      if (step === "ready") {  // its picture, shown at once: not when the others are done
         if (!card.picture) {
           Object.assign(card, {
             picture: item.picture, picture_source: item.picture_source ?? null, figure: item.figure ?? card.figure,
@@ -315,9 +341,8 @@ const picturesPart = {
           });
         }
         Object.assign(card, { _step: "", _problem: "", _first: "" });
-      } else Object.assign(card, { _step: item.step, _problem: item.problem ?? "", _first: item.first ?? "" });
-    }
-    throw new Error(t("errors.unreachable"));
+      } else Object.assign(card, { _step: step, _problem: item.problem ?? "", _first: item.first ?? "" });
+    });
   },
 
   // What a card's picture is being made by, on it ("drawing…", "checked…", "drawn again…")

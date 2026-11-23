@@ -252,10 +252,6 @@ const cardsPart = {
     return name.split("::").map((level) => level.trim()).filter(Boolean);
   },
 
-  subdecks() {
-    return [...new Set(this.cards.map((c) => c.subdeck).filter(Boolean))];
-  },
-
   // --- A card's sub-deck, chosen ---------------------------------------
   // Touched, a list the page draws: none, the lesson's sub-decks (how many cards each), or a
   // new one typed. Not a field's suggestions (<datalist>): Android's WebView shows them barely or

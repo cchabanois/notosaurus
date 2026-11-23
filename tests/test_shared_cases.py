@@ -143,3 +143,119 @@ def test_a_figures_sources_pruned_with_it(case, tmp_path):
     cards = [Card(front="f", back="b", picture=p) for p in case["pictures"]]
     assert prune(tmp_path, cards) == case["removed"]
     assert sorted(p.name for p in tmp_path.iterdir()) == case["out"]
+
+
+def _child(c: dict | None):
+    from app.children import Child
+
+    return Child(**c) if c else None
+
+
+@pytest.mark.parametrize("case", CASES["same_level"], ids=lambda c: f"{c['a']}|{c['b']}")
+def test_two_deck_levels_the_same(case):
+    """A child's level told in a deck: its case, its accents and an ordinal's ending aside,
+    any script's letters kept (Children.same on the phone, sameLevel in the page)."""
+    from app.children import same_level
+
+    assert (same_level(case["a"]) == same_level(case["b"])) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["split_deck"], ids=lambda c: c["deck"])
+def test_a_deck_split_into_the_childrens_levels_and_the_rest(case):
+    """The children's levels a deck starts with, and what the AI sees: Children.splitDeck."""
+    from app.children import split_deck
+
+    assert list(split_deck(case["deck"], [_child(c) for c in case["children"]])) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["deck_for"], ids=lambda c: c["deck"])
+def test_a_lessons_deck_in_its_childs_decks(case):
+    """Children.deckFor the same."""
+    from app.children import deck_for
+
+    assert deck_for(_child(case["child"]), case["deck"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["decks_for_ai"], ids=lambda c: c["child"] or "none")
+def test_the_decks_the_ai_may_reuse(case):
+    """A child's own and no child's, never another's: Children.decksForAi the same."""
+    from app.children import decks_for_ai
+
+    every = [_child(c) for c in case["children"]]
+    child = next((c for c in every if c and c.id == case["child"]), None)
+    assert decks_for_ai(case["decks"], [c for c in every if c], child) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["new_deck_name"], ids=lambda c: c["name"])
+def test_each_lesson_its_own_deck(case):
+    """A deck that exists (Anki's, another lesson's) never a new lesson's: the phone's
+    Generation.existing and freeName the same."""
+    from app.decks import existing, free_name
+
+    assert free_name(case["deck"], existing(case["anki"], case["lessons"], case["own"])) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["shared_deck"], ids=lambda c: c["rest"])
+def test_a_lessons_deck_in_a_shared_package(case):
+    """ExportRoutes.sharedDeck the same."""
+    from app.routes.generation import _shared_deck
+
+    assert _shared_deck(case["top"], case["rest"], case["common"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["shared_id"], ids=lambda c: c["in"])
+def test_a_lessons_id_in_a_shared_package(case):
+    """ExportRoutes.sharedId the same."""
+    from app.routes.generation import _shared_id
+
+    assert _shared_id(case["in"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["package_name"], ids=lambda c: c["in"])
+def test_a_packages_file_name(case):
+    """ExportRoutes.packageName the same."""
+    from app.routes.generation import _filename
+
+    assert _filename(case["in"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["package_deck"], ids=lambda c: f"{c['name']}|{c['default']}|{c['common']}")
+def test_a_shared_packages_own_deck(case):
+    """The name asked, else the test's, else the lessons' common deck: ExportRoutes.packageDeck."""
+    from app.routes.generation import _package_deck
+
+    assert _package_deck(case["name"], case["default"], case["common"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["speech_rate"], ids=lambda c: json.dumps(c))
+def test_a_lessons_speech_rate(case):
+    """Speech.rate the same."""
+    from app.routes.generation import _rate
+
+    assert _rate(case["slowed"], case["speed"], foreign=case["foreign"], dictation=case["dictation"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["learned_language"], ids=lambda c: json.dumps(c))
+def test_the_language_being_learned(case):
+    """Speech.learned the same."""
+    from app.routes.generation import _learned
+
+    assert _learned(case["language"], case["pupil"], spelling=case["spelling"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["page_texts"], ids=lambda c: f"{c['raw']}|{c['photos']}")
+def test_the_pages_texts_sent_by_the_page(case):
+    """Generation.pageTexts the same."""
+    from app.routes.generation import _page_texts
+
+    assert _page_texts(case["raw"], case["photos"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["standing_instructions"], ids=lambda c: json.dumps(c["child"]))
+def test_the_standing_instructions_told_the_ai(case):
+    """Generation.standingInstructions (with Children.forAi) the same."""
+    from app import children, settings
+
+    child = children.Child(id="c", name="Jules", **case["child"]) if case["child"] else None
+    told = settings.standing_instructions(settings.Settings(instructions=case["instructions"]), children.for_ai(child))
+    assert told == case["out"]

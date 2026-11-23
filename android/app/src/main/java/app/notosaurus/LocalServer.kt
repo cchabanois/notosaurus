@@ -42,7 +42,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
 import kotlin.concurrent.thread
-import java.net.URI
 import java.util.UUID
 
 /** A step of a route told as it goes (LocalServer.stepping): a line to the page. */
@@ -104,7 +103,7 @@ class LocalServer(
     internal val transfer = LessonsTransfer(File(dataDir, "lessons"), lessons, prefs, children, exams, prompts, speech, version)
     internal val cacheDir = File(dataDir, "cache") // a file being imported
     internal val pictures = Pictures(lessons, ::relay, cardSize) { switches.off(it) }
-    internal val generation = Generation(lessons, prefs, ::relay, speech, children)
+    internal val generation = Generation(lessons, prefs, ::relay, speech, children, anki::deckNames)
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
     internal val saved = Saved(prefs) // what the page keeps on this phone (the child chosen…)
@@ -433,11 +432,6 @@ class LocalServer(
         const val COMPUTER_MODE = "computer"
         const val COMPUTER = "computer" // the computer's address, as its QR code gives it (with its token)
         const val COMPUTER_NAME = "computer_name" // its name, shown in the settings ("" when it didn't say)
-
-        /** The computer's Notosaurus address, from its QR code or as typed (Computer.url). */
-        fun computerUrl(raw: String): URI? = Computer.url(raw)
-
-        fun origin(url: URI) = Computer.origin(url)
 
         /** The app's: the page from its assets (its own files in page/ first, then the
          * repository's static/, in web/), data in its own files, AnkiDroid. */

@@ -166,8 +166,6 @@
 .lesson-list .empty { padding: 1rem .5rem; color: var(--muted); }
 .lesson-owner { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; margin: -.3rem 0 .7rem; }
 .owner-name { font-size: .88rem; color: var(--muted); }
-.switch.disabled { opacity: .55; cursor: default; }
-.lesson-owner .switch { font-size: .88rem; }
 .lesson-owner .warn { flex-basis: 100%; margin: 0; font-size: .85rem; color: var(--danger); font-weight: 700; }
 .badge.shared { background: var(--primary-soft); color: var(--primary); }
 

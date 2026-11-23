@@ -73,12 +73,14 @@ STREAM_TYPE = "application/x-ndjson"
 MAX_IMAGE_BYTES = 4 * 1024 * 1024  # a prepared photo weighs a few hundred KB
 MAX_PROMPT = 8000  # Notosaurus's own prompts are under 1,000 characters
 MAX_INSTRUCTIONS = 10_000  # standing instructions, for everyone and for the pupil
-MAX_PAGE_TEXT = 20_000  # per photo; the AI gets the first llm.PAGE_TEXT_MAX
 MAX_NAME = 300  # a deck name
 MAX_EXISTING = 500  # a lesson's cards made already (the AI is sent the first 6,000 characters)
 MAX_DECKS = 1000
 MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
+# A whole card's text, "front → back": a card has no length limit of its own (a long sentence,
+# a definition, its answer), so its own bound, well above a picture's subject
+MAX_CARD = 4000
 MAX_DRAWN_CARDS = 200  # a lesson's cards wanting a picture
 MAX_FIGURE_SVG = 1_000_000  # a figure checked: Typst's, its letters as shapes, weighs tens of KB
 MAX_KEPT_FIGURE = 50_000  # a figure's Typst, sent back to draw it again from: 430 bytes usually, 48 KB the most seen
@@ -253,7 +255,12 @@ class CheckFigureRequest(BaseModel):
     """POST /v1/check-figure: a figure looked at against its description (the user asked it:
     the "🔍 Check" button), as llm.check_figure. JSON."""
 
-    description: str = Field(min_length=1, max_length=MAX_SUBJECT, description="What it should show.")
+    description: str = Field(
+        min_length=1,
+        max_length=MAX_CARD,
+        description="What it should show: its description; a figure without one (an SVG picture left from an older "
+        'figure): what the card\'s picture should show, or the card itself, "question → answer".',
+    )
     svg: str = Field(min_length=1, max_length=MAX_FIGURE_SVG, description="The figure, as drawn.")
 
 
@@ -262,7 +269,7 @@ class CheckPictureRequest(BaseModel):
     user's) looked at against the card (the user asked it: the "🔍 Check" button), as
     llm.check_picture. JSON. Answer: CheckFigureResponse."""
 
-    card: str = Field(min_length=1, max_length=MAX_SUBJECT, description='The card: "question → answer".')
+    card: str = Field(min_length=1, max_length=MAX_CARD, description='The card: "question → answer".')
     meant: str = Field(default="", max_length=MAX_SUBJECT, description="What the picture was to show, when said.")
     image: str = Field(
         min_length=1,

@@ -566,3 +566,67 @@ def test_the_pictures_to_draw_are_the_open_lessons_only(page):
     page.evaluate("id => Alpine.$data(document.querySelector('[x-data]')).openLesson(id)", other["id"])
     page.wait_for_function("id => Alpine.$data(document.querySelector('[x-data]')).lessonId === id", arg=other["id"])
     sync_api.expect(bar).to_be_hidden()
+
+
+def test_a_figure_turned_into_a_photo_stays_the_figure_until_one_is_chosen(page, monkeypatch):
+    """A figure's description emptied, "📐 Redessiner la figure": the AI decides a photo, free
+    ones offered. Given up (« Terminé »): the card is still the figure, its drawing and its
+    description, its « 🔍 Vérifier la figure » working. One chosen: the figure gone, the photo
+    and what it shows kept."""
+    from notosaurus_core import llm, stock
+    from notosaurus_core.models import PicturePlan, PictureSource
+
+    async def plan(s, front, back, asked, language):
+        return PicturePlan(kind="picture", description="a set square on a desk", search="set square")
+
+    async def check(s, description, svg):
+        return "L'angle droit n'est pas marqué."
+
+    async def fetch(source, id_, pixabay_key=""):
+        return plain_image(300, 200, "teal", "JPEG"), PictureSource(source="commons", licence="CC0")
+
+    monkeypatch.setattr(llm, "plan_picture", plan)
+    monkeypatch.setattr(llm, "check_figure", check)
+    monkeypatch.setattr(stock, "fetch", fetch)
+    preview = "data:image/jpeg;base64," + base64.b64encode(plain_image(120, 90, "#2e86de")).decode()
+    results = [
+        {"source": "commons", "id": f"File:{n}.jpg", "title": f"{n}", "preview": preview, "licence": "CC0"}
+        for n in (1, 2)
+    ]
+    page.route("**/api/pictures/search", lambda route: route.fulfill(json={"results": results}))
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()  # drawn
+    (summary,) = lessons(page)
+    before = lesson(page, summary["id"])["cards"][0]
+    assert before["figure"] and before["picture"].endswith(".svg")
+    dialog = page.get_by_role("dialog", name="Image")
+
+    def turn_into_a_photo():
+        card.locator(".card-picture.figure img:not(.first):visible").click()
+        dialog.get_by_label("La figure à dessiner (étiquettes comprises)").fill("")
+        dialog.get_by_role("button", name="📐 Redessiner la figure").click()
+        sync_api.expect(card.locator(".found-pick")).to_have_count(2)
+
+    turn_into_a_photo()
+    dialog.get_by_role("button", name="Terminé").click()  # the search given up
+    sync_api.expect(dialog).to_be_hidden()
+    after = lesson(page, summary["id"])["cards"][0]
+    assert (after["figure"], after["figure_kind"], after["picture"]) == (
+        before["figure"],
+        before["figure_kind"],
+        before["picture"],
+    )
+    assert after["picture_prompt"] == ""
+    card.get_by_role("button", name="🔍 Vérifier la figure").first.click()
+    sync_api.expect(card.locator(".figure-check:visible")).to_contain_text("L'angle droit n'est pas marqué.")
+
+    turn_into_a_photo()
+    with page.expect_response(lambda r: r.url.endswith("/picture/found")) as chosen:
+        card.locator(".found-pick").nth(1).click()
+    assert chosen.value.ok
+    sync_api.expect(card.locator(".found-pick")).to_have_count(0)
+    after = lesson(page, summary["id"])["cards"][0]
+    assert (after["figure"], after["figure_kind"]) == ("", "")
+    assert (after["picture_prompt"], after["picture_search"]) == ("a set square on a desk", "set square")
+    assert after["picture"].endswith(".jpg") and after["picture_source"]["source"] == "commons"

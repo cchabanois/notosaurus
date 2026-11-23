@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import re
-import traceback
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import Annotated
@@ -14,7 +13,6 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from notosaurus_core import llm, tts
-from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import ExtractOptions, Image, extract_cards
 
@@ -23,7 +21,7 @@ from ..anki import SharedLesson, build_apkg, build_shared_apkg
 from ..errors import AppError
 from ..lesson_notes import export_request
 from ..models import ExportRequest, Generated, Lesson, LessonIn, ShareRequest
-from .common import IMAGE_TYPES, MAX_IMAGES, MAX_PAGES, jobs, pupil_lang, read_photo, tracked
+from .common import IMAGE_TYPES, MAX_IMAGES, MAX_PAGES, Step, jobs, pupil_lang, read_photo, streamed, wants_stream
 
 log = logging.getLogger("notosaurus")
 
@@ -191,50 +189,21 @@ def _learned(back_language: str, lang: str, spelling: bool) -> str:
     return back_language
 
 
-NDJSON = "application/x-ndjson"
-_streaming: set[asyncio.Task] = set()  # generations under way, kept until done
-
-
 def _streamed(work, job: str = "") -> StreamingResponse:
-    """The cards sent to the page as soon as the AI writes them, one JSON per line:
+    """The cards sent to the page as soon as the AI writes them (common.streamed):
     {"card": …} (or {"restart": true}: the ones sent so far are dropped; {"step": …}:
-    what the AI is at, relay_api.AiStep), then
-    {"lesson": …}, {"error": {"code", "params"}} as the page translates it, or
+    what the AI is at, relay_api.AiStep), then {"lesson": …}, an error or
     {"cancelled": true}. The lesson is made and saved even if the page goes away
-    meanwhile: only "Cancel" (`job`, see cancel_generation) stops it."""
-    queue: asyncio.Queue = asyncio.Queue()
+    meanwhile: only "Cancel" (`job`, see cancel_generation) stops it, nothing saved."""
 
-    async def card(found: dict | None) -> None:
-        await queue.put({"card": found} if found is not None else {"restart": True})
+    async def told(step: Step):
+        async def card(found: dict | None) -> None:
+            step({"card": found} if found is not None else {"restart": True})
 
-    async def run() -> None:
-        try:
-            with llm.telling(lambda step: queue.put_nowait({"step": step})):
-                lesson = await work(card)
-            await queue.put({"lesson": jsonable_encoder(lesson)})
-        except AppError as e:
-            await queue.put({"error": e.detail()})
-        except asyncio.CancelledError:  # "Cancel": stopped here, nothing saved
-            await queue.put({"cancelled": True})
-        except Exception as e:
-            # Where it failed (files, lines, functions), not what it said: the message,
-            # like the traceback's source lines, may quote the lesson
-            where = "\n".join(f"  {f.filename}:{f.lineno} in {f.name}" for f in traceback.extract_tb(e.__traceback__))
-            log.error("Generating failed: %s\n%s", loggable(e), where)
-            await queue.put({"error": {"code": "internal", "params": {}}})
-        finally:
-            await queue.put(None)
+        with llm.telling(lambda said: step({"step": said})):
+            return jsonable_encoder(await work(card))
 
-    task = asyncio.create_task(run())
-    _streaming.add(task)
-    task.add_done_callback(_streaming.discard)
-    tracked(task, job)
-
-    async def lines():
-        while (item := await queue.get()) is not None:
-            yield json.dumps(item, ensure_ascii=False) + "\n"
-
-    return StreamingResponse(lines(), media_type=NDJSON)
+    return streamed(told, "Generating", job, answer="lesson")
 
 
 @router.post("/api/generations/{job}/cancel")
@@ -246,10 +215,6 @@ async def cancel_generation(job: str) -> dict:
     if task:
         task.cancel()
     return {"cancelled": task is not None}
-
-
-def _wants_stream(accept: str | None) -> bool:
-    return NDJSON in (accept or "")
 
 
 @router.post("/api/extract", status_code=201)
@@ -271,7 +236,7 @@ async def extract(
         sounds.soon(created.id, created.voice)  # its backs' sounds made meanwhile
         return created
 
-    if _wants_stream(accept):
+    if wants_stream(accept):
         return _streamed(work, form.job)
     return JSONResponse(jsonable_encoder(await work()), status_code=201)
 
@@ -307,7 +272,7 @@ async def complete(
         sounds.soon(lesson.id, lesson.voice)
         return lesson
 
-    if _wants_stream(accept):
+    if wants_stream(accept):
         return _streamed(work, form.job)
     return await work()
 
@@ -340,7 +305,7 @@ async def regenerate(
         sounds.soon(lesson.id, lesson.voice)
         return lesson
 
-    if _wants_stream(accept):
+    if wants_stream(accept):
         return _streamed(work, form.job)
     return await work()
 
@@ -386,6 +351,14 @@ def _shared_deck(top: str, rest: str, common: str) -> str:
     return "::".join([top, *levels])
 
 
+def _package_deck(name: str, default: str, common: str) -> str:
+    """A shared package's own deck: the name asked, else `default` (the test's name), else the
+    deck its lessons share (`common`); one level ("::" a dash), its spaces single. The phone's
+    packageDeck the same (core/shared-cases.json)."""
+    chosen = next((n for n in (name, default, common) if n.strip()), "")
+    return " ".join(chosen.replace("::", " - ").split()) or "Notosaurus"
+
+
 def _shared_id(lesson_id: str) -> str:
     """A lesson's id as a shared package carries it (in its diagrams' and cards' keys): not
     its own, made from its deck, which may name the child."""
@@ -417,7 +390,7 @@ async def export_shared(req: ShareRequest, background: BackgroundTasks) -> FileR
     every = await asyncio.to_thread(children.list_all)
     rests = {lesson.id: children.split_deck(lesson.deck, every)[1] for lesson, _ in found}
     common = exams.common_deck(list(rests.values()))
-    top = " ".join((req.name or default or common).replace("::", " - ").split()) or "Notosaurus"
+    top = _package_deck(req.name, default, common)
     sounded, failures = [], 0
     for lesson, cards in found:
         own = export_request(lesson)
