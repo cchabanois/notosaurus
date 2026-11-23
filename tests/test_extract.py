@@ -96,6 +96,41 @@ def test_prompt_only_tells_the_ai_there_is_no_photo():
     assert "these instructions (no photo)" in prompts._revision_text("p", Deck(deck="D", cards=[]), "x", "en", photos=0)
 
 
+def test_corrections_never_show_the_ai_what_notosaurus_sets():
+    """A correction (the lesson's, one card's) shows the AI the cards as it writes them: not a
+    picture's file nor where it comes from (its packages, sources, licence…), which it never
+    writes; what to draw (figure, picture_prompt, picture_search) shown, to keep or change it."""
+    from notosaurus_core.models import Card, Deck, PictureSource, SourceFile
+
+    origin = PictureSource(
+        source="drawn",
+        engine="typst",
+        made_with=["typst 0.14.2", "notosaurus-atlas 0.9.0"],
+        sources=[SourceFile(file="picture-abc123-source.typ")],
+        licence="CC0",
+        page="https://example.org/figure-page",
+    )
+    card = Card(
+        id="abc123",
+        front="Où est Lyon ?",
+        back="Au confluent du Rhône et de la Saône",
+        figure="A map of France, Lyon marked",
+        figure_kind="map",
+        picture="picture-abc123-1.jpg",
+        picture_source=origin,
+        voice="fr-FR-DeniseNeural",
+    )
+    texts = [
+        prompts._revision_text("p", Deck(deck="D", cards=[card]), "x", "French", photos=0),
+        prompts._fix_text("p", "D", card, [], "x", "French", photos=0),
+    ]
+    for text in texts:
+        assert "A map of France, Lyon marked" in text and '"figure_kind": "map"' in text
+        for detail in ("picture_source", "notosaurus-atlas", "source.typ", "example.org", "picture-abc123", "abc123"):
+            assert detail not in text, detail
+        assert "DeniseNeural" not in text
+
+
 def test_extract_fake_cloze(client):
     res = client.post("/api/extract", data={"prompt": "Texte à trous"})
     assert res.status_code == 201

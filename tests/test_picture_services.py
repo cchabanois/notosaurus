@@ -504,3 +504,28 @@ def test_no_lesson_drawing_when_the_call_fails(monkeypatch, tmp_path):
     cards = [Card(front="le chat", back="the cat", picture_prompt="a cat", id="c")]
     photo = llm.Image(_page_with_a_drawing(), "image/jpeg")
     assert run(pictures.lesson_drawings(AIConfig(llm="gemini", gemini_api_key="k"), [photo], cards)) == {}
+
+
+def test_a_lesson_drawing_cut_out_off_the_loop(monkeypatch):
+    """A drawing cut out of its page (PIL's, up to 0.2 s each) in a thread: the server's loop
+    goes on answering meanwhile."""
+    import threading
+
+    from notosaurus_core.models import CardDrawing, Drawings
+
+    threads = []
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        threads.append(threading.current_thread())  # the loop's
+        return Drawings(drawings=[CardDrawing(card=0, page=1, box=[125, 200, 375, 400])])
+
+    def cut_out(data, box):
+        threads.append(threading.current_thread())
+        return b"jpeg"
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    monkeypatch.setattr(pictures, "cut_out", cut_out)
+    cards = [Card(front="le chat", back="the cat", picture_prompt="a cat", id="c")]
+    photo = llm.Image(_page_with_a_drawing(), "image/jpeg")
+    found = run(pictures.lesson_drawings(AIConfig(llm="gemini", gemini_api_key="k"), [photo], cards))
+    assert found == {0: b"jpeg"} and len(threads) == 2 and threads[1] is not threads[0]

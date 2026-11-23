@@ -358,7 +358,12 @@ async def export(req: ExportRequest, background: BackgroundTasks) -> FileRespons
     lesson = await access.lesson(req.lesson_id)
     audio, failures = await media.card_audio(req, background)
     tags = await asyncio.to_thread(exams.card_tags, lesson.id, [c.id for c in req.cards]) if lesson else {}
-    path = build_apkg(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson), tags)
+
+    def build() -> str:  # in a thread: the photos cropped (PIL) and the package written block
+        with media.exporting:
+            return build_apkg(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson), tags)
+
+    path = await asyncio.to_thread(build)
     background.add_task(os.remove, path)
     if lesson and await access.is_owner(lesson):  # someone else's lesson: exported, not changed
         await asyncio.to_thread(lessons.update, lesson.id, req, exported=True)
@@ -413,17 +418,25 @@ async def export_shared(req: ShareRequest, background: BackgroundTasks) -> FileR
     rests = {lesson.id: children.split_deck(lesson.deck, every)[1] for lesson, _ in found}
     common = exams.common_deck(list(rests.values()))
     top = " ".join((req.name or default or common).replace("::", " - ").split()) or "Notosaurus"
-    parts, failures = [], 0
+    sounded, failures = [], 0
     for lesson, cards in found:
         own = export_request(lesson)
         audio, failed = await media.card_audio(own, background)
         failures += failed
-        images, pictures = media.diagram_images(own, lesson), media.card_pictures(own, lesson)
-        shared = own.model_copy(
-            update={"deck": _shared_deck(top, rests[lesson.id], common), "lesson_id": _shared_id(lesson.id)}
-        )
-        parts.append(SharedLesson(shared, audio, images, pictures, None if cards is None else set(cards)))
-    path = build_shared_apkg(parts)
+        sounded.append((lesson, cards, own, audio))
+
+    def build() -> str:  # in a thread: up to 50 lessons' photos cropped (PIL), their package written
+        with media.exporting:
+            parts = []
+            for lesson, cards, own, audio in sounded:
+                images, pictures = media.diagram_images(own, lesson), media.card_pictures(own, lesson)
+                shared = own.model_copy(
+                    update={"deck": _shared_deck(top, rests[lesson.id], common), "lesson_id": _shared_id(lesson.id)}
+                )
+                parts.append(SharedLesson(shared, audio, images, pictures, None if cards is None else set(cards)))
+            return build_shared_apkg(parts)
+
+    path = await asyncio.to_thread(build)
     background.add_task(os.remove, path)
     return FileResponse(
         path,

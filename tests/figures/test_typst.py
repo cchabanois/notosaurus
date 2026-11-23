@@ -32,6 +32,39 @@ def test_typst_packages_unpacked_once_from_their_archives():
     assert [p.name for p in folder.parent.iterdir() if p.name.startswith("typst-")] == [folder.name]
 
 
+def test_typst_packages_of_other_archives_removed(monkeypatch, tmp_path):
+    """Unpacked for new archives (a new atlas), the folders older archives were unpacked in go
+    (about 30 MB each), not the current one, nor what only looks like one (a folder being
+    written aside, a link: never followed); one that can't be removed fails nothing."""
+    from notosaurus_core import files
+
+    monkeypatch.setattr(files, "_cache_root", lambda: tmp_path / "cache")  # restored after
+    cache = tmp_path / "cache"
+    (cache / "typst-0123456789ab" / "preview").mkdir(parents=True)
+    (cache / "typst-0123456789ab" / "preview" / "typst.toml").write_text("")
+    stuck = cache / "typst-ba9876543210"
+    (stuck / "preview").mkdir(parents=True)
+    (stuck / "preview" / "typst.toml").write_text("")
+    (cache / "typst-k3x_8abc").mkdir()  # another process's, being unpacked
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    (elsewhere / "kept.txt").write_text("")
+    (cache / "typst-aaaaaaaaaaaa").symlink_to(elsewhere, target_is_directory=True)
+    # Its file can't be removed: its folder read-only (Linux, macOS), the file open as another
+    # process reading it holds it (Windows, where a folder's mode doesn't keep its files)
+    (stuck / "preview").chmod(0o500)
+    try:
+        with (stuck / "preview" / "typst.toml").open("rb"):
+            folder = figures_typst.packages()
+    finally:
+        (stuck / "preview").chmod(0o700)
+    assert folder.parent == cache and (folder / "preview").is_dir()
+    assert not (cache / "typst-0123456789ab").exists()
+    assert (stuck / "preview" / "typst.toml").is_file()  # left, the compile not failed
+    assert (cache / "typst-k3x_8abc").is_dir() and (elsewhere / "kept.txt").is_file()
+    assert figures_typst.compile_svg("geometry", TRIANGLE).startswith("<svg")
+
+
 def test_typst_cut_when_too_long_and_nothing_loaded(monkeypatch):
     import subprocess
 

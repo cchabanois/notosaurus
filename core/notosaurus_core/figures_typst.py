@@ -496,12 +496,29 @@ def packages() -> Path:
             with tarfile.open(archive, mode="r:gz") as tar:
                 tar.extractall(aside / "preview" / name / version, filter="data")
         os.replace(aside, folder)
+        _remove_others(folder)
     except OSError:
         if not folder.is_dir():  # not another process's, unpacked meanwhile
             raise
     finally:
         shutil.rmtree(aside, ignore_errors=True)
     return folder
+
+
+_UNPACKED = re.compile(r"typst-[0-9a-f]{12}")  # packages()'s folders (not one being written aside)
+
+
+def _remove_others(folder: Path) -> None:
+    """The packages unpacked from other archives (an older version's, about 30 MB each)
+    removed, `folder` kept: what can't be (another process still reading it) left as it is,
+    a link never followed."""
+    try:
+        others = [p for p in folder.parent.iterdir() if p != folder and _UNPACKED.fullmatch(p.name)]
+    except OSError:
+        return
+    for other in others:
+        if not other.is_symlink() and other.is_dir():
+            shutil.rmtree(other, ignore_errors=True)
 
 
 _SVG_IMAGE = re.compile(r'href="data:image/svg\+xml;base64,([A-Za-z0-9+/=]+)"')

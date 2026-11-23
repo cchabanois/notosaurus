@@ -3,6 +3,7 @@ audio, the cards' pictures and the diagrams' images."""
 
 import shutil
 import tempfile
+import threading
 from collections.abc import Callable
 from pathlib import Path
 
@@ -42,6 +43,13 @@ async def card_audio(
     audio, failures = await tts.tts_voices(voices, directory, rate, on_done=one_done)
     tts.prune(directory, set(audio.values()))
     return audio, failures
+
+
+# The diagrams' images are cut from the photos as a lesson is exported, and the ones it no
+# longer uses removed (diagram_images): a package built (or notes sent) in a thread, off the
+# server's loop, holds this from the images gathered to the package written, so that another
+# export never removes or half writes an image it reads.
+exporting = threading.Lock()
 
 
 def card_pictures(req: ExportRequest, lesson: Lesson | None) -> dict[int, Path]:

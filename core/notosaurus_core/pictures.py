@@ -554,7 +554,7 @@ async def lesson_drawings(s: AIConfig, photos: list[llm.Image], cards: list[Card
     drawings = {}
     for i, (page, box) in found.items():
         try:
-            drawings[i] = cut_out(photos[page].data, box)
+            drawings[i] = await asyncio.to_thread(cut_out, photos[page].data, box)  # PIL's: off the loop
         except (OSError, ValueError) as e:
             log.warning("A lesson's drawing not cut out: %s", loggable(e))
     return drawings
