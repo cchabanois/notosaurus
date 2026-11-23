@@ -255,19 +255,56 @@ class PictureRoutesTest : LocalServerTestBase() {
         assertEquals("geometry", again.string("previous_kind"))
         assertEquals("typst", again.string("previous_engine"))
 
-        // The card as it was before a correction: its sources, its family
-        val before = """{"source": "drawn", "engine": "typst", "sources": [{"file": "$stem-2.typ"}]}"""
-        client.post("/api/lessons/$id/cards/$cardId/picture/draw") {
-            page(); contentType(ContentType.Application.Json); setBody("""{"previous_source": $before, "previous_kind": "graph"}""")
-        }
-        assertEquals(listOf("#circle()"), asked.last()["previous"]!!.jsonArray.map { it.jsonPrimitive.content })
-        assertEquals("graph", asked.last().string("previous_kind"))
-
         // One of them missing: none sent, drawn anew
         images.resolve("$stem-2.typ").delete()
         client.post("/api/lessons/$id/cards/$cardId/picture/draw") { page(); contentType(ContentType.Application.Json); setBody("{}") }
         assertEquals(0, asked.last()["previous"]!!.jsonArray.size)
         assertEquals("typst", asked.last().string("previous_engine")) // the core decides from what it has
+    }
+
+    private fun JsonObject.previous() = this["previous"]!!.jsonArray.map { it.jsonPrimitive.content }
+
+    @Test
+    fun aFigureMadeAgainFromItsTypstWhenItsDescriptionChanged() = app { client ->
+        val asked = mutableListOf<JsonObject>()
+        val lesson = client.figureLesson(asked, listOf("#rect(width: 2cm)", "#circle()"))
+        val id = lesson.string("id")
+        val make = "/api/lessons/$id/cards/${lesson["cards"]!!.jsonArray[0].jsonObject.string("id")}/picture/make"
+        // "📐 Redraw the figure", its description the same, or none: another drawing wanted, anew
+        for (body in listOf("""{"subject": "a right triangle"}""", "{}")) {
+            client.post(make) { page(); contentType(ContentType.Application.Json); setBody(body) }
+            assertEquals(emptyList<String>(), asked.last().previous())
+        }
+        // Its description changed: from what it was drawn from, what is asked changed (as the computer's)
+        client.post(make) { page(); contentType(ContentType.Application.Json); setBody("""{"subject": "a right triangle, in red"}""") }
+        assertEquals(listOf("#rect(width: 2cm)", "#circle()"), asked.last().previous())
+        assertEquals("geometry", asked.last().string("previous_kind"))
+        assertEquals("typst", asked.last().string("previous_engine"))
+    }
+
+    @Test
+    fun aFigureACorrectionReplacedDrawnAgainFromIt() = app { client ->
+        val asked = mutableListOf<JsonObject>()
+        val lesson = client.figureLesson(asked, listOf("#rect(width: 2cm)", "#circle()"))
+        val id = lesson.string("id")
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject
+        // As a correction left it: its figure changed, its picture and where it came from cleared
+        val corrected = JsonObject(
+            card + mapOf("figure" to JsonPrimitive("a right triangle, in red"), "picture" to JsonPrimitive(""), "picture_source" to JsonNull),
+        )
+        suspend fun drawn(body: String): JsonObject {
+            client.put("/api/lessons/$id") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Maths", "cards": [$corrected]}""") }
+            client.post("/api/lessons/$id/pictures") { page(); contentType(ContentType.Application.Json); setBody(body) }
+            return asked.last()
+        }
+        // The page's "previous": the figure it had (its sources, its family), drawn again from it
+        val previous = """{"${card.string("id")}": {"source": ${card["picture_source"]}, "kind": "geometry"}}"""
+        val again = drawn("""{"previous": $previous}""")
+        assertEquals(listOf("#rect(width: 2cm)", "#circle()"), again.previous())
+        assertEquals("geometry", again.string("previous_kind"))
+        assertEquals("typst", again.string("previous_engine"))
+        // None: drawn anew
+        assertEquals(emptyList<String>(), drawn("{}").previous())
     }
 
     @Test

@@ -101,12 +101,10 @@ def test_kept_source_only_for_typst():
     assert figure_making.kept_source(llm.MadeFigure("<svg/>", "svg", "other", False)) == ""
 
 
-def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
-    """ "Draw" a card's figure again: from the sources its card names, or those of the figure
-    it had before a correction cleared it (`previous_source`, its family `previous_kind`);
-    copied with a lesson copied, named after its new card."""
+def _typst_lesson(client) -> tuple[dict, list[dict], dict]:
+    """A lesson whose first cards' figures were drawn in Typst, their sources kept (the demo
+    draws SVG): the lesson, its cards, and where their figure came from."""
     from app import lessons, storage
-    from app.routes import pictures as routes
 
     lesson = client.post("/api/extract", data={"prompt": "Le triangle rectangle (géométrie)"}).json()
     cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
@@ -114,10 +112,17 @@ def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
     name = cards[0]["picture"].replace(".svg", ".typ")
     (folder / name).write_text(TRIANGLE, encoding="utf-8")
     origin = {"source": "drawn", "engine": "typst", "sources": [{"file": name}]}
-    saved = storage.read_json(folder.parent / "lesson.json")  # drawn in Typst before (the demo draws SVG)
+    saved = storage.read_json(folder.parent / "lesson.json")
     for card in saved["cards"][:2]:
         card.update(figure_kind="geometry", picture_source=origin)
     storage.write_json(folder.parent / "lesson.json", saved)
+    return lesson, saved["cards"], origin
+
+
+def _told(monkeypatch) -> list[tuple[list[str], str, str]]:
+    """What each figure drawn was given to draw it again from: (previous, its kind, its engine)."""
+    from app.routes import pictures as routes
+
     told = []
     drawn = routes.pictures.figure_or_picture
 
@@ -126,13 +131,22 @@ def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
         return await drawn(*args, **kwargs)
 
     monkeypatch.setattr(routes.pictures, "figure_or_picture", draw)
+    return told
+
+
+def test_drawn_again_from_its_sources(client, monkeypatch):
+    """ "Draw" a card's figure again: from the sources its card names (none: anew); copied with a
+    lesson copied, named after its new card."""
+    from app import lessons
+
+    lesson, cards, origin = _typst_lesson(client)
+    name = origin["sources"][0]["file"]
+    told = _told(monkeypatch)
     first = f"/api/lessons/{lesson['id']}/cards/{cards[0]['id']}/picture/draw"
     assert client.post(first, json={"problem": "C est mal placé"}).status_code == 200  # its own
     second = f"/api/lessons/{lesson['id']}/cards/{cards[2]['id']}/picture/draw"  # none of its own
-    assert client.post(second, json={"previous_source": origin, "previous_kind": "geometry"}).status_code == 200
-    unknown = {**origin, "sources": [{"file": "../lesson.json"}]}
-    assert client.post(second, json={"previous_source": unknown, "previous_kind": "geometry"}).status_code == 200
-    assert told == [([TRIANGLE], "geometry", "typst"), ([TRIANGLE], "geometry", "typst"), ([], "geometry", "typst")]
+    assert client.post(second, json={}).status_code == 200
+    assert [previous for previous, *_ in told] == [[TRIANGLE], []]
 
     # Copied for another child: its sources with its picture, named after its new card
     client.put("/api/children", json=[{"id": "mathilde", "name": "Mathilde", "grade": "3e", "decks": "Mathilde::3e"}])
@@ -164,3 +178,38 @@ def test_drawn_again_only_from_an_engine_it_knows(monkeypatch, engine, used):
     card = Card(id="c1", front="ABC ?", back="rectangle", figure="Le triangle ABC", figure_kind="geometry")
     asyncio.run(pictures.card_picture(S, card, previous=[TRIANGLE], previous_kind="geometry", previous_engine=engine))
     assert ("Start from it" in sent[-1]) == used
+
+
+def test_made_again_from_its_typst_when_its_description_changed(client, monkeypatch):
+    """ "📐 Redraw the figure" (/picture/make) with its description changed: drawn again from the
+    sources its card names, what is asked changed and the rest kept; the same description, or
+    none: drawn anew (another drawing wanted)."""
+    lesson, cards, _ = _typst_lesson(client)
+    told = _told(monkeypatch)
+    make = f"/api/lessons/{lesson['id']}/cards/{cards[0]['id']}/picture/make"
+    assert client.post(make, json={"subject": cards[0]["figure"]}).status_code == 200
+    assert client.post(make, json={}).status_code == 200
+    assert [previous for previous, *_ in told] == [[], []]
+    other = f"/api/lessons/{lesson['id']}/cards/{cards[1]['id']}/picture/make"
+    assert client.post(other, json={"subject": "Le triangle ABC rectangle en A, en rouge"}).status_code == 200
+    assert told[-1] == ([TRIANGLE], "geometry", "typst")
+
+
+def test_drawn_again_after_a_correction_from_the_figure_it_had(client, monkeypatch):
+    """A correction changed a figure's description (its picture and picture_source cleared): the
+    page's `previous` (by card id, the figure it had: its source and family) reaches the drawing,
+    from its Typst; the other cards drawn anew, a source not ours read as none."""
+    from app import lessons, storage
+
+    lesson, cards, origin = _typst_lesson(client)
+    folder = lessons.existing_folder(lesson["id"])
+    saved = storage.read_json(folder / "lesson.json")
+    for card in saved["cards"][:3]:  # as the correction left them
+        card.update(picture="", picture_source=None, figure=card["figure"] + " en rouge")
+    storage.write_json(folder / "lesson.json", saved)
+    told = _told(monkeypatch)
+    unknown = {**origin, "sources": [{"file": "../lesson.json"}]}
+    previous = {cards[0]["id"]: {"source": origin, "kind": "geometry"}, cards[1]["id"]: {"source": unknown}}
+    res = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"previous": previous})
+    assert res.status_code == 200
+    assert sorted(told) == sorted([([TRIANGLE], "geometry", "typst"), ([], "", "typst"), ([], "", "")])

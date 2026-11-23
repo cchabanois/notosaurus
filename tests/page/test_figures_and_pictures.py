@@ -83,7 +83,7 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     real, go_on = routes.pictures.draw_all, threading.Event()
     first = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"></svg>'
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=()):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None):
         step({"card": cards[0].id, "step": "drawing"})
         step({"card": cards[0].id, "step": "redrawing", "problem": "L'angle est du mauvais côté.", "first": first})
         await asyncio.to_thread(go_on.wait, 30)
@@ -143,6 +143,83 @@ def test_a_figure_corrected_keeps_its_size_while_drawn_again(page):
     sync_api.expect(shown).to_be_visible()
 
 
+# The first card's figure as drawn in Typst, its sources kept (the demo draws SVG)
+DRAWN_IN_TYPST = """() => {
+  const c = Alpine.$data(document.querySelector('[x-data]')).cards[0];
+  Object.assign(c, { figure_kind: 'geometry', picture_source: { source: 'drawn', engine: 'typst',
+    sources: [{ file: c.picture.replace('.svg', '.typ') }] } });
+  return { id: c.id, source: JSON.parse(JSON.stringify(c.picture_source)) };
+}"""
+
+
+def _asked_to_draw(page) -> list[dict]:
+    """The pictures' requests (POST …/pictures) as sent, held: nothing drawn."""
+    asked = []
+
+    def hold(route):
+        asked.append(route.request.post_data_json)
+        route.fulfill(status=503, json={"detail": {"code": "errors.unreachable"}})
+
+    page.route("**/api/lessons/*/pictures", hold)
+    return asked
+
+
+def test_a_figure_a_card_correction_replaced_drawn_again_from_it(page):
+    """A card's correction changing what its figure shows: drawn again from the figure it had
+    (`previous`: where it came from, its sources, and its family), what is asked changed and the
+    rest kept."""
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    sync_api.expect(page.locator(".card-picture.figure img").first).to_be_visible()
+    was = page.evaluate(DRAWN_IN_TYPST)
+
+    def fix(route):  # what the figure shows changed: its picture and where it came from cleared
+        changed = {**route.request.post_data_json["card"], "picture": "", "picture_source": None}
+        changed["figure"] += " Le carré en rouge."
+        route.fulfill(json={"card": changed, "summary": "Figure changée."})
+
+    page.route("**/fix-card*", fix)
+    asked = _asked_to_draw(page)
+    card = open_card(page.locator(".flash").first)
+    field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("Le carré en rouge")
+    field.press("Enter")
+    for _ in range(50):  # its figure then drawn again
+        if asked:
+            break
+        page.wait_for_timeout(100)
+    assert asked[-1]["previous"] == {was["id"]: {"source": was["source"], "kind": "geometry"}}
+
+
+def test_a_figure_a_lesson_correction_replaced_drawn_again_from_it(page):
+    """The lesson's correction changing what a card's figure shows: drawn again from the figure
+    it had, as after the card's own; the cards it left as they were, from nothing."""
+    import json
+
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    sync_api.expect(page.locator(".card-picture.figure img").first).to_be_visible()
+    was = page.evaluate(DRAWN_IN_TYPST)
+
+    def revise(route):  # its first card's figure changed: its picture and where it came from cleared
+        response = route.fetch()
+        items = [json.loads(line) for line in response.text().splitlines() if line.strip()]
+        for item in items:
+            if "result" in item:
+                first = item["result"]["lesson"]["cards"][0]
+                first.update(picture="", picture_source=None, figure=first["figure"] + " Le carré en rouge.")
+        body = "".join(json.dumps(item) + "\n" for item in items)
+        route.fulfill(body=body, content_type=response.headers.get("content-type", ""))
+
+    page.route("**/api/lessons/*/revise*", revise)
+    asked = _asked_to_draw(page)
+    page.locator(".revise textarea").fill("Le carré en rouge")
+    page.locator(".revise .btn.primary").click()
+    for _ in range(50):  # its figure then drawn again
+        if asked:
+            break
+        page.wait_for_timeout(100)
+    assert asked[-1]["previous"] == {was["id"]: {"source": was["source"], "kind": "geometry"}}
+
+
 def test_a_picture_a_correction_replaced_not_taken_from_the_lesson_again(page):
     """A correction that replaces a card's picture ("another photo"): its next one is not cut
     out of the lesson's photos again (the same drawing would come back), the page says so to
@@ -188,7 +265,7 @@ def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
 
     real, go_on = routes.pictures.draw_all, threading.Event()
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=()):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None):
         folder.mkdir(parents=True, exist_ok=True)
         name = f"picture-{cards[0].id}-0123abcd.svg"
         (folder / name).write_text(
@@ -270,7 +347,7 @@ def test_a_figures_credits_link_its_projects(page, monkeypatch):
         source="drawn", model="gemini-x", engine="typst", made_with=["Typst 0.15.0", "lilaq 0.6.0"]
     )
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=()):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None):
         def told(said):  # each card's picture as Typst drew it
             step({**said, "picture_source": typst.model_dump()} if said["step"] == "ready" else said)
 

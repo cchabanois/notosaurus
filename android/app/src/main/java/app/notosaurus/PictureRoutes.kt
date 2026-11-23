@@ -36,9 +36,11 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         stepping("/api/lessons/{id}/pictures") { req, step ->
             val draw = req["draw"]?.jsonPrimitive?.booleanOrNull == true
             if (draw) switches.check("pictures.draw")
-            // The cards whose picture a correction replaced: not the lesson's drawing again
+            // The cards whose picture a correction replaced: not the lesson's drawing again; a
+            // figure drawn again from the one it had ("previous": by card id, {"source", "kind"})
             val notFromLesson = (req["not_from_lesson"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.contentOrNull }.toSet()
-            pictures.drawMissing(lesson(), draw, step, notFromLesson)
+            val previous = (req["previous"] as? JsonObject).orEmpty().mapNotNull { (card, was) -> (was as? JsonObject)?.let { card to it } }.toMap()
+            pictures.drawMissing(lesson(), draw, step, notFromLesson, previous)
         }
         // "✨ Image", its first step: a figure drawn, or a picture decided (the page then looks
         // for free ones, and asks before one is drawn)
@@ -50,16 +52,14 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         }
         // The user said yes: drawn by the image model (it costs); a figure drawn again, told what
         // its check found ("problem"), with the model's thinking when "careful", from what it was
-        // drawn from: "previous_source" and "previous_kind" (the card before a correction cleared
-        // its picture), else its own (as app/models.py's RedrawRequest)
+        // drawn from (its kept sources)
         stepping("/api/lessons/{id}/cards/{card}/picture/draw") { req, step ->
             val lesson = lesson()
             val i = cardIndex(lesson)
             if (lesson.cards()[i].string("figure").isBlank()) switches.check("pictures.draw")
             val problem = req["problem"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content.orEmpty()
             val careful = req["careful"]?.jsonPrimitive?.booleanOrNull == true && !switches.off("ai.careful")
-            val before = req["previous_source"] as? JsonObject
-            pictures.draw(lesson, i, problem, careful, before, req.string("previous_kind")) { step(buildJsonObject { put("step", it) }) }
+            pictures.draw(lesson, i, problem, careful) { step(buildJsonObject { put("step", it) }) }
         }
         // "🔍 Check": the card's figure looked at by the AI, nothing changed ({"ok", "problem"})
         stepping("/api/lessons/{id}/cards/{card}/picture/check") { _, _ ->

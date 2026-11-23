@@ -252,15 +252,22 @@ const picturesPart = {
       const res = await this.pictureSteps(lessonId, await api(`/api/lessons/${lessonId}/pictures`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
-        // A card whose picture a correction replaced: not the lesson's drawing again
-        body: JSON.stringify({ draw, not_from_lesson: this.cards.filter((c) => c._notFromLesson && !c.picture).map((c) => c.id) }),
+        // A card whose picture a correction replaced: not the lesson's drawing again; its figure
+        // drawn again from the one it had (previousFigure)
+        body: JSON.stringify({
+          draw,
+          not_from_lesson: this.cards.filter((c) => c._notFromLesson && !c.picture).map((c) => c.id),
+          previous: Object.fromEntries(this.cards.filter((c) => c._previous && !c.picture).map((c) => [c.id, c._previous])),
+        }),
       }));
       if (this.lessonId !== lessonId) return;  // another lesson opened meanwhile
       // With where each comes from: the next save would drop it otherwise
       const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
       this.cards.forEach((c) => {
         const made = drawn.get(c.id);
-        if (!c.picture && made?.picture) Object.assign(c, { picture: made.picture, picture_source: made.picture_source ?? null, _replacing: "" });
+        if (!c.picture && made?.picture) {
+          Object.assign(c, { picture: made.picture, picture_source: made.picture_source ?? null, _replacing: "", _previous: null });
+        }
       });
       this.toDraw = res.to_draw ?? [];
       if (res.failures) {
@@ -280,6 +287,14 @@ const picturesPart = {
     }
   },
 
+  // The figure a correction replaced on a card (`old`, the card as it was), to draw the new one
+  // from: where it came from (its sources, kept beside it until pruned) and its family; what the
+  // correction asks changed, the rest kept. None when it had no sources (drawn anew)
+  previousFigure(old, card) {
+    if (!old?.figure || !card.figure || !old.picture_source?.sources?.length) return null;
+    return { source: old.picture_source, kind: old.figure_kind ?? "" };
+  },
+
   // The pictures' answer, each card's steps shown on it as they begin (application/x-ndjson):
   // a figure drawn, checked, redrawn when wrong (its first one shown meanwhile, faded); a
   // picture looked for, drawn. A server answering all at once (an older one): its answer
@@ -296,6 +311,7 @@ const picturesPart = {
             picture: item.picture, picture_source: item.picture_source ?? null, figure: item.figure ?? card.figure,
             figure_kind: item.figure_kind ?? card.figure_kind ?? "",
             picture_prompt: item.picture_prompt ?? card.picture_prompt, picture_search: item.picture_search ?? card.picture_search,
+            _previous: null,
           });
         }
         Object.assign(card, { _step: "", _problem: "", _first: "" });

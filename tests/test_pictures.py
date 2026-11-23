@@ -178,7 +178,7 @@ def test_the_cards_a_correction_replaced_passed_on(client, monkeypatch):
 
     told = {}
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=()):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None):
         told["not_from_lesson"] = list(not_from_lesson)
         return pictures.Drawn(0, None, [])
 

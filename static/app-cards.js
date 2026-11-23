@@ -218,10 +218,12 @@ const cardsPart = {
 
   // The pictures no saved card uses removed (POST …/pictures/prune), once nothing can bring
   // them back: no card edited, no correction to undo, the lesson saved as shown. Not while
-  // the server draws (a picture it writes is in no card yet): the next time, or the next open.
+  // the server draws (a picture it writes is in no card yet), nor while a figure a correction
+  // replaced is still to be drawn again from (previousFigure: its sources go with it): the next
+  // time, or the next open.
   async prunePictures() {
     if (!this.lessonId || this.readOnly() || this.editing !== "" || this.revision.undo) return;
-    if (this.drawingHere() || this.pictureJobs) return;
+    if (this.drawingHere() || this.pictureJobs || this.cards.some((c) => c._previous && !c.picture)) return;
     const id = this.lessonId;
     if (this.saveTimer || this.snapshot() !== this.lastSaved) await this.saveNow();
     if (this.lessonId !== id || this.editing !== "" || this.snapshot() !== this.lastSaved || this.saveState !== "saved") return;

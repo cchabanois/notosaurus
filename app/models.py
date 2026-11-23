@@ -187,11 +187,22 @@ class SettingsUpdate(BaseModel):
     picture_model: str | None = None
 
 
+class PreviousFigure(BaseModel):
+    """A card's figure as it was before a correction cleared its picture: where it came from
+    (its sources, still beside the lesson's pictures until pruned) and its family."""
+
+    source: PictureSource
+    kind: str = Field(default="", max_length=40)
+
+
 class DrawPictures(BaseModel):
     draw: bool = False  # the pictures no free one fits drawn by the image model: the user said yes
     # The cards (ids) whose picture a correction replaced: not cut out of the lesson's photos
     # again (the drawing the user wanted replaced), looked for as any other
     not_from_lesson: list[str] = Field(default=[], max_length=500)
+    # The cards (ids) whose figure a correction replaced: drawn again from the one they had,
+    # what the correction asks changed and the rest kept
+    previous: dict[str, PreviousFigure] = Field(default={}, max_length=500)
 
 
 class PictureSearch(BaseModel):
@@ -215,10 +226,6 @@ class RedrawRequest(BaseModel):
 
     problem: str = Field(default="", max_length=1000)
     careful: bool = False  # with a problem: with the model's thinking (asked again after a quick one)
-    # The card as it was before a correction cleared its picture: where that figure came from
-    # (its sources) and its family, drawn again from them; else its own, when it has them
-    previous_source: PictureSource | None = None
-    previous_kind: str = Field(default="", max_length=40)
 
 
 class PictureRequest(BaseModel):

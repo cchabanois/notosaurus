@@ -28,6 +28,7 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
     await access.editable(id)
     allowed = bool(req and req.draw)
     not_from_lesson = req.not_from_lesson if req else []
+    previous = {card: (was.source, was.kind) for card, was in req.previous.items()} if req else {}
 
     async def drawn(step: Step | None = None) -> dict:
         async def draw(draft: Lesson) -> pictures.Drawn:
@@ -43,6 +44,7 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
                     step=step,
                     photos=photos,
                     not_from_lesson=not_from_lesson,
+                    previous=previous,
                 )
 
         lesson, made = await lessons.edit(id, draw)
@@ -97,12 +99,23 @@ async def make_picture(
         async def make(draft: Lesson, card: Card) -> None:
             async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
                 s = settings.current()
+                folder = lessons.existing_folder(id) / "images"
+                origin, kind = card.picture_source, card.figure_kind  # the figure it had, if any
+                previous = pictures.kept_sources(folder, origin) if pictures.changed_figure(card, req.subject) else []
                 decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang), step)
                 for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"):
                     setattr(card, field, getattr(decided, field))
                 if card.figure.strip():
-                    folder = lessons.existing_folder(id) / "images"
-                    card.picture = await pictures.figure_or_picture(s, folder, card, fresh=True, step=step)
+                    card.picture = await pictures.figure_or_picture(
+                        s,
+                        folder,
+                        card,
+                        fresh=True,
+                        step=step,
+                        previous=previous,
+                        previous_kind=kind,
+                        previous_engine=origin.engine if origin else "",
+                    )
                 else:
                     found["search"] = card.picture_search or card.picture_prompt
 
@@ -127,12 +140,9 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
             async with usage.metered("picture", id, draft.deck):
                 folder = lessons.existing_folder(id) / "images"
                 s = settings.current()
-                # A figure drawn again from what it was drawn from: a correction keeps the rest
-                before = req is not None and req.previous_source is not None
-                origin = req.previous_source if req and before else card.picture_source
-                kind = req.previous_kind if req and before else card.figure_kind
+                # A figure drawn again from what it was drawn from: what is asked changed, the rest kept
+                origin = card.picture_source
                 previous = pictures.kept_sources(folder, origin) if card.figure else []
-                engine = origin.engine if origin else ""
                 card.picture = await pictures.figure_or_picture(
                     s,
                     folder,
@@ -143,8 +153,8 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
                     problem=problem,
                     careful=careful,
                     previous=previous,
-                    previous_kind=kind,
-                    previous_engine=engine,
+                    previous_kind=card.figure_kind,
+                    previous_engine=origin.engine if origin else "",
                 )
 
         return await _edit_card(id, card_id, draw)
