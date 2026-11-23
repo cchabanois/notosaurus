@@ -118,6 +118,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A figure's Typst can no longer fetch a package from the internet nor read a file, however it is written: only the packages shipped with Notosaurus are found. A label or a comment may still say any word ("import / export", "the json format").
+- Checking or correcting a very tall figure no longer takes a large amount of memory, nor holds up the server's other requests; a card's correction goes on without the figure when the figure can't be drawn.
 - A card's formula can no longer add links or styles to Notosaurus's page. Commands such as `\href` or `\style` are shown in red, as unknown.
 - Notosaurus's page now runs only its own scripts, on the computer and in the phone app.
 - Another website open on the computer can no longer make Notosaurus act: make a lesson, import lessons, unpair the phones or test the AI.
