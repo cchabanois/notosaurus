@@ -48,6 +48,8 @@ leçon** : combien de cartes ont été relues (« ✓ 12 cartes relues »), **�
 le bouton pour envoyer la leçon à Anki. **✕**, Échap ou le bouton retour du téléphone referment
 la carte, enregistrée.
 
+![La fin de la leçon : combien de cartes ont été relues, une carte à ajouter, l'envoi à Anki](../../../assets/screenshots/fr/lesson-end.png)
+
 Touchez l'image d'une carte pour la changer : sa page s'ouvre en plein écran (voir
 [Images](../card-types/#images)). Une carte sans image : ⋯ → **🖼️ Ajouter une image**.
 

@@ -44,6 +44,8 @@ next card. After the last comes the **lesson's end**: how many cards were looked
 cards looked over"), **＋ Add a card**, and the button to send the lesson to Anki. **✕**, Escape
 or the phone's back button close the card, saved.
 
+![The lesson's end: how many cards were looked over, a card to add, sending to Anki](../../assets/screenshots/en/lesson-end.png)
+
 Touch a card's picture to change it: its page opens full screen (see
 [Pictures](../card-types/#pictures)). A card without one: ⋯ → **🖼️ Add a picture**.
 
