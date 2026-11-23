@@ -121,6 +121,11 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Something shared to the app while Notosaurus is busy (a lesson being made or corrected, a card open) is no longer lost or added in the wrong place: it is added once the current task is done or the card closed.
+- Starting a new lesson from elsewhere (an Anki profile switched, the open lesson deleted) no longer leaves the previous lesson's card open over it.
+- The offer to draw pictures with the AI no longer follows you to another lesson.
+- A correction cancelled just as it was being saved now shows the corrected cards it saved, instead of the old ones.
+- The sub-deck tag's tooltip uses each language's punctuation.
 - 🖼️ A figure on the question side of a sentence with gaps no longer risks showing a hidden word: it is drawn knowing only the question, its gaps hidden.
 - 📐 Two wires of a circuit ending a hair apart are joined, instead of each moving onto the other and leaving the circuit open.
 - 📐 A figure that stays too small after being drawn again is kept as a finished drawing (a map's outlines lightened), instead of being lost.
