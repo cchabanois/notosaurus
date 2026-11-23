@@ -118,6 +118,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A lesson read only (another Anki profile's) shows its cards' questions and answers again: they were empty.
 - The packages for drawing figures no longer pile up on the computer: the ones of older versions (about 30 MB each) are removed.
 - Building a package (one lesson, or several to share) or sending to Anki no longer stops the computer's page from answering meanwhile.
 - 🖼️ After exporting, sharing or sending a lesson, ↩ Undo no longer brings back a card with a broken picture.
