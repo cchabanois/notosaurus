@@ -2,8 +2,11 @@
 stalls, a route stalling again and again left to rest, then tried again by one call."""
 
 import asyncio
+import inspect
 import json
 import logging
+import re
+import time
 import types as py_types
 
 from google.genai import types
@@ -111,6 +114,65 @@ def test_another_routes_own_failure_goes_on(monkeypatch):
     else:
         raise AssertionError("an error was expected")
     assert _asked(clients) == [("eu", "a")]
+
+
+def _main_resting(monkeypatch, failure: str) -> tuple[dict[str, Scripted], list[str]]:
+    """eu (the config's own) resting, the Gemini API failing with `failure` on every try;
+    the routes each try went to."""
+    clients = _routed(monkeypatch)
+    gemini._HEALTH["eu"] = gemini._Health(rest_until=time.monotonic() + 60)
+    tried: list[str] = []
+
+    async def failing(request, model):
+        tried.append(next(name for name, client in clients.items() if client is request.client))
+        raise llm.ExtractionError(failure)
+
+    monkeypatch.setattr(gemini, "_call_one_model", failing)
+    return clients, tried
+
+
+def test_a_bad_answer_on_another_route_stops_at_once(monkeypatch):
+    """The answer's own failure (not the JSON asked for) would come again anywhere: no other
+    try paid for, and the route not counted toward its rest."""
+    _, tried = _main_resting(monkeypatch, "llm.invalid_answer")
+    try:
+        _ask()
+    except llm.ExtractionError as e:
+        assert e.code == "llm.invalid_answer"
+    else:
+        raise AssertionError("an error was expected")
+    assert tried == ["key"]
+    assert gemini._HEALTH["key"].stalled == [] and not gemini._HEALTH["key"].rest_until
+
+    gemini._HEALTH["eu"].rest_until = 0.0  # on the config's own route, as before
+    tried.clear()
+    try:
+        _ask()
+    except llm.ExtractionError as e:
+        assert e.code == "llm.invalid_answer"
+    else:
+        raise AssertionError("an error was expected")
+    assert tried == ["eu"] and gemini._HEALTH["eu"].stalled == []
+
+
+def test_another_routes_own_failure_counted_toward_its_rest(monkeypatch):
+    _, tried = _main_resting(monkeypatch, "llm.invalid_key")
+    try:
+        _ask()
+    except llm.ExtractionError as e:
+        assert e.code == "llm.invalid_key"
+    else:
+        raise AssertionError("an error was expected")
+    assert tried == ["key", "key"]  # the fallback model tried too
+    assert gemini._HEALTH["key"].rest_until  # failed twice (stalls=2): rests
+
+
+def test_every_gemini_error_on_one_side():
+    """Each code Gemini's call may fail with is the route's or the answer's, never both."""
+    raised = set(re.findall(r'ExtractionError\("(llm\.[a-z_]+)"', inspect.getsource(gemini)))
+    assert raised == gemini._ROUTE_ERRORS | gemini._ANSWER_ERRORS
+    assert not gemini._ROUTE_ERRORS & gemini._ANSWER_ERRORS
+    assert gemini._NEXT_MODEL <= gemini._ROUTE_ERRORS
 
 
 def test_past_the_budget_the_fallback_model_not_another_route(monkeypatch):

@@ -92,6 +92,15 @@ LIGHT_ANSWER_S = 30
 # Anything else (a wrong key, a request refused) stops at once.
 _NEXT_MODEL = {"llm.overloaded", "llm.gemini_quota", "llm.timeout"}
 
+# Each error is the route's or the answer's; a new code goes on one side
+# (test_every_gemini_error_on_one_side). The route's own (its key, its quota or credits, a
+# 4xx of its own such as a model it lacks, overloaded, stalled): on another route than the
+# config's own, the next try, and counted toward its rest. The answer's (refused, empty,
+# cut short, not the JSON asked for): the same anywhere, raised at once on any route,
+# the route not counted.
+_ROUTE_ERRORS = _NEXT_MODEL | {"llm.invalid_key", "llm.missing_key", "llm.api_error"}
+_ANSWER_ERRORS = {"llm.refused", "llm.empty_answer", "llm.truncated", "llm.invalid_answer"}
+
 
 class _Stalled(Exception):
     """The model stopped answering."""
@@ -245,7 +254,8 @@ async def _fallback(request: _Request, models: list[str], routes: list[_Route] |
     """The answer of the first try that gives one: the configured model on each route
     (resting ones left out), then the fallback models on the first. Overloaded, without
     quota or stalled, the next try; any other error stops, as does the last try's, except
-    on another route than the config's own (its key, its credits: the next try may work).
+    the route's own on another route than the config's (its key, its credits: the next try
+    may work), never the answer's (_ROUTE_ERRORS, _ANSWER_ERRORS).
     Another route is tried only within the routing's budget."""
     if not models:
         raise ExtractionError("llm.empty_answer", provider="Gemini")  # no model at all
@@ -266,7 +276,7 @@ async def _fallback(request: _Request, models: list[str], routes: list[_Route] |
             try:
                 response = await _call_one_model(request, model)
             except ExtractionError as e:
-                elsewhere = route is not routes[0]  # another route's own failure (its key, its credits)
+                elsewhere = route is not routes[0] and e.code in _ROUTE_ERRORS  # another route's own failure
                 if len(routes) > 1 and (e.code in _NEXT_MODEL or elsewhere):
                     _failed(route, request.routing, claimed)
                 if last or not (e.code in _NEXT_MODEL or elsewhere):
