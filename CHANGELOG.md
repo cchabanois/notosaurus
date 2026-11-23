@@ -73,6 +73,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- Corrections cost a little less: the AI is no longer sent where each card's picture comes from.
 - 🗂 A card's sub-deck is chosen in a list: none, one of the lesson's (with its number of cards), or a new one.
 - ⏳ A button that waits for the AI pulses until the answer comes: 🔊 while its voice is made, 💬 while the explanation is thought (shown where it will come), the search for a picture, « Mettre au propre ».
 - 📄 A PDF of several pages shows its pages before adding them, all ticked when they fit: tap the ones you don't want.
@@ -117,6 +118,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- The packages for drawing figures no longer pile up on the computer: the ones of older versions (about 30 MB each) are removed.
+- Building a package (one lesson, or several to share) or sending to Anki no longer stops the computer's page from answering meanwhile.
 - 🖼️ After exporting, sharing or sending a lesson, ↩ Undo no longer brings back a card with a broken picture.
 - 🖼️ Undoing the first card's correction no longer loses its old picture.
 - 🖼️ Opening a lesson again (a reload, another tab) while its pictures are being drawn no longer deletes a picture just drawn.
