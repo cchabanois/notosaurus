@@ -75,7 +75,8 @@ Statt die Karten einzeln zu ändern, bitte in eigenen Worten, im Feld über den 
 
 ![Die KI um eine Korrektur bitten](../../../assets/screenshots/en/correction.png)
 
-Tippe auf **Korrigieren**. Die KI sieht die Fotos noch einmal und ändert nur, worum du gebeten
+Tippe auf **Korrigieren**. Die KI sieht die Fotos noch einmal (bei mehr als 10 Seiten nur die Karten: sie sagt
+dann, was sie ohne die Seiten nicht tun konnte) und ändert nur, worum du gebeten
 hast: Geänderte Karten werden als **geändert** markiert, neue als **neu**, und ein Satz fasst
 zusammen, was sie getan hat. **↩ Rückgängig** stellt die Karten wieder her, wie sie waren,
 solange du noch keine Karte bearbeitest. Eine einzeln korrigierte Karte (**✨ Diese Karte korrigieren**)

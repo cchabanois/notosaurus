@@ -106,7 +106,8 @@ Instead of changing the cards one by one, ask in plain words, in the field above
 
 ![Asking the AI for a correction](../../assets/screenshots/en/correction.png)
 
-Tap **Correct**. The AI sees the photos again and changes only what you asked: changed cards
+Tap **Correct**. The AI sees the photos again (a lesson of more than 10 pages: the cards alone, the AI
+saying what it couldn't do without the pages) and changes only what you asked: changed cards
 are marked **changed**, new ones **new**, and a sentence sums up what it did, with how many cards
 were added, changed and removed. Under it:
 

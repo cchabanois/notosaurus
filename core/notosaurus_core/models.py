@@ -245,8 +245,9 @@ class Revision(Deck):
     )
 
 
-# What the photos sent to correct one card are of the lesson's (correction.fix_photos): all of
-# them, the card's own page alone, or none (the lesson has more than a call takes)
+# What the photos sent to correct one card (correction.fix_photos) or the lesson
+# (correction.revise_photos) are of the lesson's: all of them, the card's own page alone (one
+# card), or none (the lesson has more than a call takes)
 PhotosSent = Literal["all", "card", "none"]
 
 
