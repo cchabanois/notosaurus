@@ -118,6 +118,11 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A card's formula can no longer add links or styles to Notosaurus's page. Commands such as `\href` or `\style` are shown in red, as unknown.
+- Notosaurus's page now runs only its own scripts, on the computer and in the phone app.
+- Another website open on the computer can no longer make Notosaurus act: make a lesson, import lessons, unpair the phones or test the AI.
+- A picture's source page is shown as a link only when it is an `https:` address.
+- Exporting or sending a lesson to Anki takes only that lesson's own pictures.
 - A lesson of many pages, read in several calls, has its pictures drawn once, after the last call: the next pages' cards are no longer dropped from the saved lesson, and the first pages' pictures are no longer drawn (and paid for) twice.
 - A picture drawn while the lesson is changed elsewhere (the next pages added, a card edited) keeps those changes.
 - A figure whose name ends in digits only keeps its Typst source.
