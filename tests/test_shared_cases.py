@@ -259,3 +259,12 @@ def test_the_standing_instructions_told_the_ai(case):
     child = children.Child(id="c", name="Jules", **case["child"]) if case["child"] else None
     told = settings.standing_instructions(settings.Settings(instructions=case["instructions"]), children.for_ai(child))
     assert told == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["anki_formula"], ids=lambda c: c["name"])
+def test_a_cards_formulas_as_they_go_to_anki(case):
+    """A card's text as it goes to Anki: its formulas without MathJax's html commands (a link,
+    a style), the phone's the same (Formulas.ankiText); the text outside them as it is."""
+    from app.note_types.formulas import anki_text
+
+    assert anki_text(case["in"]) == case["out"]

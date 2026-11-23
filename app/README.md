@@ -23,7 +23,7 @@ Docker. The Android app doesn't use it: it answers the same `/api` on the phone 
 | `children.py` | the children's cards: first name (never sent to the AI), class, decks, instructions |
 | `exams.py` | the tests to prepare: lessons or some of their cards, under an `Exam::<name>` tag in Anki |
 | `access.py`, `hosts.py`, `origins.py`, `attempts.py` | who may do what: paired devices and Anki profiles; the host names answered (DNS rebinding); changes only from the page itself, its Content-Security-Policy; wrong admin passwords slowed down |
-| `anki.py`, `note_types/` | the notes a lesson gives and the `.apkg` (genanki); the note types, one module per family (text, cloze, choice, diagram, picture) |
+| `anki.py`, `note_types/` | the notes a lesson gives and the `.apkg` (genanki); the note types, one module per family (text, cloze, choice, diagram, picture); `formulas.py` a card's formulas as they go to Anki, none of MathJax's `html` commands |
 | `ankiconnect.py` | the direct send: AnkiConnect, or the add-on's bridge |
 | `lesson_notes.py`, `decks.py` | a lesson's notes found in Anki, and deleted with it; the decks that exist, given to the AI |
 | `media.py`, `sounds.py` | what the cards take to Anki (audio, pictures, diagram images); the backs' sounds made ahead |

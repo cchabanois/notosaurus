@@ -1,6 +1,6 @@
 """What the Android app and the page keep of the computer's and core's own (Kotlin and
-JavaScript can't import Python): the same limits, the same picture fields, read from their
-sources."""
+JavaScript can't import Python): the same limits, the same picture fields, the same formula
+commands kept out of Anki, read from their sources."""
 
 import re
 from pathlib import Path
@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from app import draft
+from app.note_types import formulas
 from app.routes.common import MAX_PAGES
 from notosaurus_core import pictures
 from notosaurus_core.calls import MAX_IMAGES
@@ -51,6 +52,10 @@ def test_the_apps_limits_are_the_computers(file, name, value):
 def test_the_apps_picture_fields_are_cores():
     assert kotlin_list("Pictures.kt", "PICTURE_FIELDS") == list(pictures.PICTURE_FIELDS)
     assert kotlin_list("Pictures.kt", "REMOVED") == list(pictures.REMOVED)
+
+
+def test_the_apps_formula_commands_kept_out_are_the_computers():
+    assert kotlin_list("Formulas.kt", "HTML_COMMANDS") == formulas.HTML_COMMANDS
 
 
 def test_the_pages_picture_fields_are_cores():

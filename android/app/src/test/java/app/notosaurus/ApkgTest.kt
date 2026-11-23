@@ -57,6 +57,38 @@ class ApkgTest {
     }
 
     @Test
+    fun formulasRunNothingInAnkiDroidNorInAPackage() {
+        // MathJax's html commands, which AnkiDroid's MathJax runs at review, in every text field
+        val link = """\(\href{javascript:alert(1)}{x}\)"""
+        val styled = """\(\style{position:fixed;inset:0}{y} + \class{flash}{z} + \cssId{taken}{w} + \data{a=1}{v}\)"""
+        val coloured = """\(\style{color: red}{u}\)"""
+        val deck = Deck(
+            "Maths",
+            listOf(
+                Card(
+                    id = "c1", front = "Front $link", back = "Back $styled", info = "Info $coloured", funFact = "Fact $link",
+                    explanation = "Why $styled", mnemonic = "Remember $link",
+                ),
+                Card(id = "c2", front = "Which? $link", back = "This $coloured", choices = listOf("That $styled", "Other $link")),
+                Card(id = "c3", front = "Gap {{c1::$link}} and $styled", back = "Extra $link"),
+            ),
+        )
+        val files = mutableSetOf<File>()
+        fun shown(f: File, kind: String) = Apkg.shown(f.also { files += it }, kind)
+        val notes = Anki.buildNotes(noteTypes, deck, Media(), Options(), ::shown, { f, k, _ -> shown(f, k) }) { _, f, _ -> f }
+        val command = Regex("""\\(?:href|style|class|cssId|data)(?![a-zA-Z])""")
+        fun checked(fields: List<String>) {
+            val text = fields.joinToString("\n")
+            assertTrue(text, "Front" in text && "Which?" in text && "Gap" in text) // every card's note
+            assertFalse(text, command.containsMatchIn(text))
+            assertTrue(text, """\color{red}""" in text) // the style of one colour, as Anki's colour
+        }
+        // What AnkiDroid is sent, and the package
+        checked(notes.flatMap { it.values.values })
+        checked(written(notes, files).query("SELECT flds FROM notes") { it.getString(1) }.flatMap { it.split('\u001f') })
+    }
+
+    @Test
     fun theComputersGuidsAndDeckIds() {
         // genanki.guid_for and note_types.common.stable_id, run on the computer for these values
         assertEquals("H:y>fXo5(e", Apkg.guidFor(listOf("Histoire::Révolution", "c1")))
