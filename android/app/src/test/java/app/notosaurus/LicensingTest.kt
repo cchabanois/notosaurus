@@ -3,7 +3,10 @@ package app.notosaurus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.job
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 import mockwebserver3.Dispatcher
@@ -65,12 +68,12 @@ class LicensingTest {
         val store = FakeStore()
         val licensing = Licensing(MemoryPreferences(), { relay.url("/").toString() }, store, now = { clock })
         repeat(3) { licensing.recheckSoon() } // the relay saying it lapsed, call after call
-        waitFor { store.ownedAsked.get() == 1 }
-        Thread.sleep(200)
+        settled(licensing) // every check those calls started is over: one only
         assertEquals(1, store.ownedAsked.get())
         clock += 601L * 1_000_000_000L // past the period
         licensing.recheckSoon()
-        waitFor { store.ownedAsked.get() == 2 }
+        settled(licensing)
+        assertEquals(2, store.ownedAsked.get())
         licensing.stop()
     }
 
@@ -89,11 +92,9 @@ class LicensingTest {
         assertFalse(licensing.purchasePending)
     }
 
-    private fun waitFor(condition: () -> Boolean) {
-        val deadline = System.currentTimeMillis() + 5_000
-        while (!condition()) {
-            if (System.currentTimeMillis() > deadline) throw AssertionError("not in time")
-            Thread.sleep(20)
-        }
+    // The checks recheckSoon started in the background, all over (it starts them before it
+    // returns): none still to come
+    private fun settled(licensing: Licensing) = runBlocking {
+        withTimeout(5_000) { licensing.background.coroutineContext.job.children.toList().joinAll() }
     }
 }

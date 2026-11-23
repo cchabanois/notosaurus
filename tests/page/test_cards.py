@@ -17,12 +17,14 @@ from page.support import (  # noqa: E402
     SAVED,
     eventually,
     field,
+    frames,
     generate_free,
     gone,
     lesson,
     lessons,
     open_card,
     open_prompt,
+    settled,
 )
 
 
@@ -74,14 +76,14 @@ def test_a_card_added_on_a_touch_screen_opens_no_keyboard(page):
     sync_api.expect(added).to_have_class(re.compile(r"\bediting\b"))
     asked = added.get_by_role("textbox", name="Que doit demander cette carte ?")
     sync_api.expect(asked).to_be_visible()
-    page.wait_for_timeout(300)  # its focus would come a frame later
+    frames(page)  # its focus would come a frame later (editCard)
     assert page.evaluate("document.activeElement.matches('textarea, input')") is False
     asked.tap()
     sync_api.expect(asked).to_be_focused()
 
     added.get_by_role("button", name="Ajouter une carte après celle-ci").tap()
     sync_api.expect(page.locator(".flash.editing")).to_have_count(1)
-    page.wait_for_timeout(300)
+    frames(page)
     assert page.evaluate("document.activeElement.matches('textarea, input')") is False
 
 
@@ -414,7 +416,7 @@ def test_cancel_while_a_card_is_corrected(page):
     assert cancelled == [f"{page.url.split('#')[0].rstrip('/')}/api/generations/{job}/cancel"]
     card = {"front": "la mère", "back": "la mamá"}
     route.fulfill(json={"card": card, "summary": "Corrigée."})  # done just before it was stopped
-    page.wait_for_timeout(300)
+    settled(page)  # its answer read
     assert back.input_value() == before
     sync_api.expect(first.locator(".card-fixed")).to_be_hidden()
     sync_api.expect(page.locator(".error")).to_be_hidden()
@@ -442,7 +444,7 @@ def test_cancel_while_a_card_correction_is_dictated(page):
     first.get_by_role("button", name="Terminé").click()
     sync_api.expect(field).to_be_hidden()
     sync_api.expect(page.locator(".card-fix")).to_have_count(0)
-    page.wait_for_timeout(300)
+    settled(page)  # the stop answered, its answer read
     assert stopped == [1] and back.input_value() == before
     sync_api.expect(page.locator(".error")).to_be_hidden()
 
@@ -833,7 +835,8 @@ def test_a_card_open_swiped_to_the_next(page):
     _swipe(second.locator(".front-row"), 150)
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     _swipe(front, 150)  # the first: none before it
-    page.wait_for_timeout(300)
+    # Let go: the card back in its place, or on to another, once its slide is over (touchCard)
+    page.wait_for_function("(card) => !card.style.transition", arg=first.element_handle())
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
 
 

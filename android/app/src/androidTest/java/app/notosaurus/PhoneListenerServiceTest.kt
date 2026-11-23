@@ -39,7 +39,7 @@ class PhoneListenerServiceTest {
     /** The microphone as the test plays it: each chunk given when the test says. */
     private class FakeSound : Sound {
         var heard: ((ByteArray) -> Unit)? = null
-        var stopped = false
+        @Volatile var stopped = false // set on the main thread, waited for on the test's
         override fun start(heard: (ByteArray) -> Unit): Boolean { this.heard = heard; return true }
         override fun stop() { stopped = true }
         fun say(text: String) = heard!!(text.toByteArray())
@@ -90,7 +90,9 @@ class PhoneListenerServiceTest {
 
     private fun answer(what: RecognitionListener.() -> Unit) {
         instrumentation.runOnMainSync { service.listener.what() }
-        Thread.sleep(400) // a restart comes after a short delay
+        // A restart is posted RESTART_MS later: due once that long has gone by, and run before
+        // the main thread is idle (waitForIdleSync runs every message due)
+        Thread.sleep(PhoneListener.RESTART_MS + 5)
         instrumentation.waitForIdleSync()
     }
 
@@ -150,7 +152,8 @@ class PhoneListenerServiceTest {
         forgotten.start("fr-FR", { heard += it }, { failed += it })
         instrumentation.waitForIdleSync()
         val source = fed(service.sent[0])!!
-        Thread.sleep(1000)
+        val deadline = System.currentTimeMillis() + 10_000 // `longest` is 500 ms: a hang fails fast
+        while (!sound.stopped && System.currentTimeMillis() < deadline) Thread.sleep(20)
         instrumentation.waitForIdleSync()
         assertTrue("the microphone stopped", sound.stopped)
         assertEquals("the pipe closed: the session ends", -1, FileInputStream(source.fileDescriptor).read())

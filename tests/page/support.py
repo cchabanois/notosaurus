@@ -4,6 +4,7 @@ them take (a lesson made, the settings' password)."""
 import base64
 import io
 import re
+import time
 from pathlib import Path
 
 from helpers import plain_image
@@ -45,6 +46,49 @@ def eventually(page, check, what: str, timeout: float = 5000) -> None:
             return
         page.wait_for_timeout(100)
     assert check(), what
+
+
+# A page → its requests not answered yet (track_requests): a route handler's answered once
+# it fulfills
+_unanswered: dict = {}
+
+
+def track_requests(page) -> None:
+    """The page's requests counted from now on, until answered (settled): the page fixture's."""
+    unanswered = _unanswered[page] = set()
+    page.on("request", lambda r: unanswered.add(r))
+    page.on("requestfinished", lambda r: unanswered.discard(r))
+    page.on("requestfailed", lambda r: unanswered.discard(r))
+
+
+def forget_requests(page) -> None:
+    _unanswered.pop(page, None)
+
+
+def settled(page, timeout: float = 30) -> None:
+    """Every request of the page answered and its answer read, so that what one would change
+    has changed: the browser's side (every request, track_requests) and the page's (api(),
+    from before it sends to its answer), twice in a row a moment apart (a request just sent,
+    not yet told to Playwright; one sent once another's answer is read). A request held by a
+    route never settles."""
+    unanswered = _unanswered.get(page, set())
+    deadline = time.monotonic() + timeout
+    quiet = 0
+    while quiet < 2:
+        idle = page.evaluate(
+            "() => new Promise((done) => setTimeout(() => done(typeof apiInFlight !== 'number' || !apiInFlight), 20))"
+        )
+        quiet = quiet + 1 if idle and not unanswered else 0
+        assert time.monotonic() < deadline, f"the page's requests never ended: {[r.url for r in unanswered]}"
+
+
+def frames(page, n: int = 2) -> None:
+    """`n` frames drawn: what the page does at the next frame (requestAnimationFrame) done."""
+    page.evaluate(
+        "(n) => new Promise((done) => {"
+        " const next = (k) => (k ? requestAnimationFrame(() => next(k - 1)) : done()); next(n); })",
+        n,
+    )
 
 
 def gone(page, url: str) -> bool:

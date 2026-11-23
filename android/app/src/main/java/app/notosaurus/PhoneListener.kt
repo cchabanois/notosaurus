@@ -250,7 +250,7 @@ class PhoneListener(
 
     companion object {
         private val QUIET = setOf(SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT, SpeechRecognizer.ERROR_RECOGNIZER_BUSY)
-        private const val RESTART_MS = 150L
+        internal const val RESTART_MS = 150L // internal: the device tests wait for a restart
         private const val MAX_RESTARTS = 40 // a quiet pause restarts it every few seconds: 2 minutes and more
         private const val LAST_WORDS_MS = 3000L // stopped: its last words waited for this long at most
         private const val SESSION_MS = 10 * 60 * 1000 // a segmented session's length, then started again

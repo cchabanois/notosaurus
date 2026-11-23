@@ -117,8 +117,9 @@ class Licensing(
 
     private var recheckedAt: Long? = null
 
-    // Work in the background (a subscription checked again): stopped with the server
-    private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // Work in the background (a subscription checked again): stopped with the server (internal:
+    // the tests wait for its work to be over)
+    internal val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
      * The relay said the subscription ended or is on hold: Google Play's purchases checked

@@ -62,8 +62,10 @@ def test_one_drawing_at_a_time_for_a_lesson(page):
     page.on("request", lambda r: asked.append(r.url) if r.url.endswith("/pictures") else None)
     generate_free(page, "Le triangle rectangle (géométrie)")
     sync_api.expect(page.locator(".card-picture.figure .drawing").first).to_be_visible()
-    page.evaluate("() => { Alpine.$data(document.querySelector('[x-data]')).drawPictures(); }")
-    page.wait_for_timeout(300)
+    # Asked again: done once the first ends, at once (a second drawing would wait for its answer)
+    again = """() => Promise.race([Alpine.$data(document.querySelector('[x-data]')).drawPictures().then(() => "back"),
+                                    new Promise((done) => setTimeout(() => done("drawing"), 5000))])"""
+    assert page.evaluate(again) == "back"
     meanwhile = len(asked)
     for route in held:
         route.continue_()

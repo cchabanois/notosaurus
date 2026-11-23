@@ -47,6 +47,15 @@ def test_lessons_grouped_by_subject(page, clock):
 def test_the_page_stays_still_under_an_open_sheet(page, clock):
     """Scrolling the lessons with a finger (here the wheel), even past their end, never
     moves the lesson behind; the page scrolls again once the sheet is closed."""
+    # The lesson shown, the page glides to its cards (show()): on a busy machine the glide went
+    # on under the sheet, past the scroll below (400 → 682), and its end is no event to wait
+    # for (no scrollend after every scroll). A jump here: what is checked is the sheet's wheel
+    page.add_init_script(
+        """const into = Element.prototype.scrollIntoView;
+           Element.prototype.scrollIntoView = function (options) {
+             return into.call(this, typeof options === "object" ? { ...options, behavior: "instant" } : options);
+           };"""
+    )
     page.goto("/")
     for n in range(12):
         made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
@@ -58,11 +67,21 @@ def test_the_page_stays_still_under_an_open_sheet(page, clock):
     before = page.evaluate("scrollY")
     listed = page.locator(".lesson-list")
     sync_api.expect(listed.locator(".lesson").first).to_be_visible()
-    box = listed.bounding_box()
-    page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+    # The wheel's turns as the page gets them: added up (Chrome merges those that queue up)
+    page.evaluate("window.wheeled = 0; addEventListener('wheel', (e) => { wheeled += e.deltaY }, { capture: true })")
+    listed.hover()  # once the sheet has slid in: still sliding, the wheel was turned below the window, lost
     for _ in range(10):
         page.mouse.wheel(0, 800)
-    page.wait_for_timeout(300)
+    # Every turn of the wheel given to the page, the list scrolled to its end by them, two
+    # frames for any scroll they would make: no fixed wait
+    page.wait_for_function("wheeled === 8000")
+    listed.evaluate(
+        """(list) => new Promise((done) => {
+             const end = () => list.scrollTop >= list.scrollHeight - list.clientHeight - 1
+               ? requestAnimationFrame(() => requestAnimationFrame(done)) : requestAnimationFrame(end);
+             end();
+           })"""
+    )
     assert page.evaluate("scrollY") == before
 
     page.keyboard.press("Escape")

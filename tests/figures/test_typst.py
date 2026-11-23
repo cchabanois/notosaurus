@@ -89,6 +89,20 @@ def test_typst_cut_when_too_long_and_nothing_loaded(monkeypatch):
         figures_typst.compile_svg("geometry", TRIANGLE)
 
 
+def test_a_runaway_compile_cut_at_the_timeout(monkeypatch):
+    """A body that never ends in time (Typst stops an endless `while` itself, not a long
+    loop): its process killed after COMPILE_S, the figure refused. Its own short timeout
+    (the tests give Typst a minute: conftest.py)."""
+    import time
+
+    monkeypatch.setattr(figures_typst, "COMPILE_S", 1)
+    body = "#let n = 0\n#for i in range(100000) { for j in range(100000) { n += 1 } }"
+    start = time.monotonic()
+    with pytest.raises(figures_typst.Unusable, match="too long"):
+        figures_typst.compile_svg("geometry", body)
+    assert time.monotonic() - start < 30  # cut, not run to its end (minutes)
+
+
 # Each word a body may not write, in the forms that reach it without calling it by its name
 # where it stands: held in a variable, its arguments given beforehand, called within a text
 LOADERS = ("read", "json", "csv", "yaml", "toml", "xml", "cbor", "plugin", "eval")

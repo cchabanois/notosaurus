@@ -111,3 +111,32 @@ def test_a_diagrams_labels_shared_with_their_image_not_the_lessons_id(client, tm
     assert fields["Masks"].count("notosaurus-mask") == 3 and len(package.media) == 1  # its image goes with it
     assert "jules" not in fields["Id"]
     assert not any("Jules" in d for d in package_decks(package))
+
+
+def test_another_profiles_private_lessons_left_out(anki, client, tmp_path):
+    """The open Anki profile shares only what it may see: another profile's private lesson,
+    ticked or part of a test, is quietly left out (as it is from the lesson list)."""
+    client.put("/api/children", json=[JULES])
+    lea = _lesson(client, "Jules::5e::Histoire::Révolution")  # private to Léa
+    common = _lesson(client, "Jules::5e::Histoire::Louis XIV")
+    assert client.put(f"/api/lessons/{common['id']}", json={**common, "shared": True}).json()["shared"] is True
+    exam = {"name": "Interro", "lessons": [{"lesson": lea["id"]}, {"lesson": common["id"]}]}
+    anki.profile = "Paul"
+    paul = _lesson(client, "Jules::5e::Histoire::Napoléon")
+    exam["lessons"].append({"lesson": paul["id"]})
+    assert client.put("/api/exams/interro", json=exam).status_code == 200
+    for name in ("ticked", "exam", "lea"):
+        (tmp_path / name).mkdir()
+
+    ticked = _shared(client, {"lessons": [lea["id"], common["id"], paul["id"]]}, tmp_path / "ticked")
+    assert _lessons_decks(ticked) == {"Histoire::Louis XIV", "Histoire::Napoléon"}
+    tested = _shared(client, {"exam": "interro"}, tmp_path / "exam")
+    assert _lessons_decks(tested) == {"Interro::Louis XIV", "Interro::Napoléon"}
+    # Nothing it may see: nothing to share (Léa's lesson not even named)
+    alone = client.post("/api/export/shared", json={"lessons": [lea["id"]]})
+    assert alone.json()["detail"]["code"] == "export.no_cards"
+
+    # Back in Léa's profile: hers are there again, Paul's private one left out
+    anki.profile = "Léa"
+    hers = _shared(client, {"exam": "interro"}, tmp_path / "lea")
+    assert _lessons_decks(hers) == {"Interro::Révolution", "Interro::Louis XIV"}

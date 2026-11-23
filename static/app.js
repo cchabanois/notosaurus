@@ -5,18 +5,26 @@ const LAST_PROMPT = "notosaurus.prompt";
 // Case- and accent-insensitive form, for search.
 const normalize = (text) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
+// The page's requests in flight (api()): the page tests wait for none left before the next test
+let apiInFlight = 0;
+
 async function api(path, options = {}) {
-  // The server uses the page's language for default prompts and AI summaries.
-  const headers = { "X-Notosaurus-Lang": I18N.lang, ...options.headers };
-  const res = await fetch(path, { ...options, headers });
-  if (!res.ok) {
-    let detail = res.statusText;
-    try { detail = (await res.json()).detail ?? detail; } catch {}
-    const error = new Error(errorMessage(detail));
-    Object.assign(error, { status: res.status, detail });
-    throw error;
+  apiInFlight++;
+  try {
+    // The server uses the page's language for default prompts and AI summaries.
+    const headers = { "X-Notosaurus-Lang": I18N.lang, ...options.headers };
+    const res = await fetch(path, { ...options, headers });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try { detail = (await res.json()).detail ?? detail; } catch {}
+      const error = new Error(errorMessage(detail));
+      Object.assign(error, { status: res.status, detail });
+      throw error;
+    }
+    return res;
+  } finally {
+    apiInFlight--;
   }
-  return res;
 }
 
 // The JSON items of an answer written as it comes (application/x-ndjson, one per line)
