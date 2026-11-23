@@ -120,6 +120,12 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 📐 Two wires of a circuit ending a hair apart are joined, instead of each moving onto the other and leaving the circuit open.
+- 📐 A figure that stays too small after being drawn again is kept as a finished drawing (a map's outlines lightened), instead of being lost.
+- 📊 A box plot whose values are all equal is drawn, instead of refused.
+- 📐 An interval on a number line is drawn where the line puts its values, even when its first value isn't given again, and an infinite end stops at the line's end.
+- 🌑 The shadow of a flat body (a bar seen edge on) ends where its rays meet, instead of crossing.
+- 📏 A figure whose positions are written with a unit ("10px") is measured, instead of failing.
 - On the phone, correcting a card of a lesson of more than 10 pages no longer fails ("too large"): its own page is sent, or, for a card made before, no page.
 - 📐 A figure drawn again keeps its layout everywhere: after a correction, or with its description changed on its picture's page, only what is asked changes (computer and Android).
 - 🐛 A PDF or photos added right as the page opens: counted against the lesson's 30 pages, not 10.
