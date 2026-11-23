@@ -1,6 +1,7 @@
 package app.notosaurus
 
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.buildJsonObject
@@ -118,5 +119,83 @@ class SharedCasesTest {
         val out = c["out"]!!.jsonArray.map { it.jsonPrimitive.content }
         val said = Speech.spokenSides(card, c["dictation"]!!.jsonPrimitive.boolean)
         assertEquals("${c.string("front")} | ${c.string("sound")}", out, listOf(said.first, said.second))
+    }
+
+    private fun strings(element: JsonElement?): List<String> = element!!.jsonArray.map { it.jsonPrimitive.content }
+
+    private fun child(element: JsonElement?): Child? = (element as? JsonObject)?.let { json.decodeFromJsonElement(Child.serializer(), it) }
+
+    private fun children(element: JsonElement?): List<Child> = element!!.jsonArray.mapNotNull(::child)
+
+    @Test
+    fun twoDeckLevelsTheSame() = cases("same_level").forEach { c ->
+        val (a, b) = c.string("a") to c.string("b")
+        assertEquals("$a | $b", c["out"]!!.jsonPrimitive.boolean, Children.same(a) == Children.same(b))
+    }
+
+    @Test
+    fun aDeckSplitIntoTheChildrensLevelsAndTheRest() = cases("split_deck").forEach { c ->
+        val (private, rest) = Children.splitDeck(c.string("deck"), children(c["children"]))
+        assertEquals(c.string("deck"), strings(c["out"]), listOf(private, rest))
+    }
+
+    @Test
+    fun aLessonsDeckInItsChildsDecks() = cases("deck_for").forEach { c ->
+        assertEquals(c.toString(), c.string("out"), Children.deckFor(child(c["child"]), c.string("deck")))
+    }
+
+    @Test
+    fun theDecksTheAiMayReuse() = cases("decks_for_ai").forEach { c ->
+        val every = children(c["children"])
+        val chosen = every.firstOrNull { it.id == c.string("child") }
+        assertEquals(c.string("child"), strings(c["out"]), Children.decksForAi(strings(c["decks"]), every, chosen))
+    }
+
+    @Test
+    fun eachLessonItsOwnDeck() = cases("new_deck_name").forEach { c ->
+        val taken = Generation.existing(strings(c["anki"]), strings(c["lessons"]), c.string("own"))
+        assertEquals(c.string("name"), c.string("out"), Generation.freeName(c.string("deck"), taken))
+    }
+
+    @Test
+    fun aLessonsDeckInASharedPackage() = cases("shared_deck").forEach { c ->
+        assertEquals(c.toString(), c.string("out"), sharedDeck(c.string("top"), c.string("rest"), c.string("common")))
+    }
+
+    @Test
+    fun aLessonsIdInASharedPackage() = cases("shared_id").forEach { c ->
+        assertEquals(c.string("in"), c.string("out"), sharedId(c.string("in")))
+    }
+
+    @Test
+    fun aPackagesFileName() = cases("package_name").forEach { c ->
+        assertEquals(c.string("in"), c.string("out"), packageName(c.string("in")))
+    }
+
+    @Test
+    fun aSharedPackagesOwnDeck() = cases("package_deck").forEach { c ->
+        assertEquals(c.toString(), c.string("out"), packageDeck(c.string("name"), c.string("default"), c.string("common")))
+    }
+
+    @Test
+    fun aLessonsSpeechRate() = cases("speech_rate").forEach { c ->
+        val rate = Speech.rate(c.string("slowed"), c.string("speed"), c["foreign"]!!.jsonPrimitive.boolean, c["dictation"]!!.jsonPrimitive.boolean)
+        assertEquals(c.toString(), c.string("out"), rate)
+    }
+
+    @Test
+    fun theLanguageBeingLearned() = cases("learned_language").forEach { c ->
+        assertEquals(c.toString(), c.string("out"), Speech.learned(c.string("language"), c.string("pupil"), c["spelling"]!!.jsonPrimitive.boolean))
+    }
+
+    @Test
+    fun thePagesTextsSentByThePage() = cases("page_texts").forEach { c ->
+        assertEquals(c.toString(), strings(c["out"]), strings(Generation.pageTexts(c.string("raw"), c["photos"]!!.jsonPrimitive.int)))
+    }
+
+    @Test
+    fun theStandingInstructionsToldTheAi() = cases("standing_instructions").forEach { c ->
+        val child = (c["child"] as? JsonObject)?.let { Child("c", "Jules", grade = it.string("grade"), instructions = it.string("instructions")) }
+        assertEquals(c.toString(), c.string("out"), Generation.standingInstructions(c.string("instructions"), Children.forAi(child)))
     }
 }

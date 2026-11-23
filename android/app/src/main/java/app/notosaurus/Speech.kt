@@ -321,15 +321,17 @@ class Speech(
 
         const val PARALLEL = 4 // sounds read at once
 
-        /** The backs' language when it is one being learned: not the pupil's own (the page's)
-         * unless the cards are for writing what is heard, as the computer (app/main.py). */
-        /** The backs' language when it is one being learned: not the pupil's own, unless the cards
-         * are for writing what is heard (a dictation): then theirs when the AI gave none (it
-         * doesn't for their own language). As the computer's (generation._learned). */
-        fun learned(language: String, pupil: String, spelling: Boolean): String = when {
-            spelling -> language.trim().ifEmpty { pupil.substringBefore('-').lowercase() }
-            language.lowercase().substringBefore('-') == pupil.substringBefore('-') -> ""
-            else -> language
+        /** The backs' language when it is one being learned: not the pupil's own (the page's,
+         * its case and region aside), unless the cards are for writing what is heard (a
+         * dictation): then theirs when the AI gave none (it doesn't for their own language). As
+         * the computer's (generation._learned, core/shared-cases.json). */
+        fun learned(language: String, pupil: String, spelling: Boolean): String {
+            val own = pupil.substringBefore('-').lowercase()
+            return when {
+                spelling -> language.trim().ifEmpty { own }
+                own.isNotEmpty() && language.trim().lowercase().substringBefore('-') == own -> ""
+                else -> language
+            }
         }
     }
 }

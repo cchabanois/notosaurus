@@ -28,7 +28,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
         making("/api/lessons/{id}/regenerate") { form, onCard ->
             switches.check("lesson.regenerate")
             val old = lesson()
-            val made = generation.make(form, onCard)
+            val made = generation.make(form, onCard, but = old.string("id"))
             (lessons.regenerated(old.string("id"), made.content, made.photos) ?: notFound()).also(::soundsSoon)
         }
         // Its next pages, days later: only they are read, the AI knowing the cards made already;
@@ -44,7 +44,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
             }
             // Its deck and voice are the lesson's: only the cards, photos and frames are taken
             val asked = GenerationForm(form.fields + mapOf("deck" to old.string("deck"), "voice" to ""), form.images, form.lang)
-            val made = generation.make(asked, onCard, existing)
+            val made = generation.make(asked, onCard, existing, but = old.string("id"))
             (lessons.completed(old.string("id"), made.content, made.photos) ?: notFound()).also(::soundsSoon)
         }
         // Asked as Relay.STREAM_TYPE: what the AI is at ({"step"}), then the answer; "Cancel"

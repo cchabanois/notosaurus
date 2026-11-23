@@ -55,8 +55,7 @@ internal fun Route.exportRoutes(server: LocalServer) {
             val rests = found.associate { (lesson, _) -> lesson.string("id") to Children.splitDeck(lesson.string("deck"), every).second }
             val common = Exams.commonDeck(rests.values.toList())
             val default = if (examId.isNotEmpty()) exams.get(examId)!!.name else ""
-            val top = req.string("name").ifBlank { default.ifBlank { common } }.replace("::", " - ").split(Regex("\\s+")).filter { it.isNotEmpty() }
-                .joinToString(" ").ifBlank { "Notosaurus" }
+            val top = packageDeck(req.string("name"), default, common)
             val parts = found.map { (lesson, cards) ->
                 val id = lesson.string("id")
                 val deck = json.decodeFromJsonElement(Deck.serializer(), buildJsonObject {
@@ -110,40 +109,67 @@ private fun Route.packageRoute(server: LocalServer, path: String, make: suspend 
  * for its voice), pictures, diagrams; `key`: the lesson's id the notes carry (a shared package:
  * one of its own). */
 internal suspend fun LocalServer.packaged(deck: Deck, req: JsonObject, lessonId: String, key: String): Part {
-    fun on(option: String) = req[option]?.jsonPrimitive?.content == "true"
-    val dictation = on("dictation") || on("dictation_only")
     soundsAhead.settle(lessonId)
     val voice = req.string("voice").takeUnless { switches.off("speech.speak") }.orEmpty()
-    val (sounds, failures) = speech.sounds(deck, voice, dictation, req.string("rate"), lessonId) { _, _ -> }
-    val pictures = deck.cards.mapNotNull { c -> this@packaged.pictures.file(lessonId, c.picture)?.let { c.picture to it } }.toMap() // ours only: no "../"
+    val (sounds, failures) = speech.sounds(deck, voice, req.dictation(), req.string("rate"), lessonId) { _, _ -> }
+    val media = lessonMedia(deck, req, lessonId, sounds, key)
+    val files = mutableSetOf<File>()
+    fun shown(file: File, kind: String) = Apkg.shown(file.also { files += it }, kind)
+    val notes = withContext(Dispatchers.IO) {
+        Anki.buildNotes(noteTypes, deck, media, req.noteOptions(), ::shown, { f, kind, _ -> shown(f, kind) }) { _, photo, box -> Anki.diagramImage(photo, box) }
+    }
+    return Part(notes, files, failures)
+}
+
+/** What a lesson's notes show and carry, sent to AnkiDroid or packaged alike: their sounds
+ * (read already), pictures (ours only: no "../"), the photos their diagrams' labels are on, the
+ * diagram frames as the page has them (the user may have moved one; else the lesson's), the tags
+ * of the tests the lesson is in (Exams.kt, as the computer's exams.card_tags); `key`: the lesson's
+ * id the notes carry (a shared package: one of its own); `sentBefore`: its notes from its last
+ * send, by card (AnkiDroid's). */
+internal fun LocalServer.lessonMedia(
+    deck: Deck, req: JsonObject, lessonId: String, sounds: Map<String, File>, key: String = lessonId, sentBefore: Map<String, Long> = emptyMap(),
+): Media {
+    val pictures = deck.cards.mapNotNull { c -> this.pictures.file(lessonId, c.picture)?.let { c.picture to it } }.toMap()
     val photos = deck.cards.mapNotNull { it.mask?.page }.distinct().mapNotNull { n -> lessons.photo(lessonId, n)?.let { n to it } }.toMap()
     val frames = (req["frames"]?.takeIf { it is JsonArray } ?: lessons.get(lessonId)?.get("frames"))
         ?.jsonArray?.associate { it.jsonObject["page"]!!.jsonPrimitive.content.toInt() to it.jsonObject["box"]!!.jsonArray.map { v -> v.jsonPrimitive.content.toDouble() } }
         .orEmpty()
-    val media = Media(sounds, pictures, photos, key, frames)
-    val options = Options(reverse = on("reverse"), typing = on("typing"), dictation = dictation, dictationOnly = on("dictation_only"))
-    val files = mutableSetOf<File>()
-    fun shown(file: File, kind: String) = Apkg.shown(file.also { files += it }, kind)
-    val notes = withContext(Dispatchers.IO) {
-        Anki.buildNotes(noteTypes, deck, media, options, ::shown, { f, kind, _ -> shown(f, kind) }) { _, photo, box -> Anki.diagramImage(photo, box) }
-    }
-    return Part(notes, files, failures)
+    val extraTags = if (lessonId.isEmpty()) emptyMap() else exams.cardTags(lessonId, deck.cards.map { it.id })
+    return Media(sounds, pictures, photos, key, frames, sentBefore, extraTags)
 }
+
+/** The page's options of a lesson sent or packaged ("true" each). */
+internal fun JsonObject.isOn(option: String) = this[option]?.jsonPrimitive?.content == "true"
+
+internal fun JsonObject.dictation() = isOn("dictation") || isOn("dictation_only")
+
+internal fun JsonObject.noteOptions(move: Boolean = true) =
+    Options(reverse = isOn("reverse"), typing = isOn("typing"), dictation = dictation(), dictationOnly = isOn("dictation_only"), move = move)
 
 /** A lesson's deck in a shared package: under the package's own deck, the levels it has after
  * those every lesson shares; the same deck as every other: the package's deck (as the computer's). */
 internal fun sharedDeck(top: String, rest: String, common: String): String {
     val levels = rest.split("::").map { it.trim() }.filter { it.isNotEmpty() }
     val shared = common.split("::").map { it.trim() }.filter { it.isNotEmpty() }
-    val inside = levels.size >= shared.size && levels.take(shared.size).map { it.lowercase() } == shared.map { it.lowercase() }
+    val inside = levels.size >= shared.size && levels.take(shared.size).map { it.casefold() } == shared.map { it.casefold() }
     return (listOf(top) + if (inside) levels.drop(shared.size) else levels).joinToString("::")
 }
 
 /** A lesson's id in a shared package (its diagrams' and cards' keys): not its own, made from its
  * deck, which may name the child (as the computer's _shared_id). */
 internal fun sharedId(lessonId: String): String =
-    "shared-" + MessageDigest.getInstance("SHA-1").digest(lessonId.toByteArray()).joinToString("") { "%02x".format(it) }.take(12)
+    "shared-" + MessageDigest.getInstance("SHA-1").digest(lessonId.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }.take(12)
 
 /** The package's file name: its deck's, without the characters a file name can't have. */
 internal fun packageName(deck: String): String =
     (deck.replace(Regex("""[\\/:*?"<>|]+"""), " - ").trim(' ', '-').ifEmpty { "notosaurus" }) + ".apkg"
+
+/** A shared package's own deck: the name asked, else `default` (the test's name), else the deck
+ * its lessons share (`common`); one level ("::" a dash), its spaces single (as the computer's
+ * _package_deck, core/shared-cases.json). */
+internal fun packageDeck(name: String, default: String, common: String): String {
+    val chosen = listOf(name, default, common).firstOrNull { it.isNotBlank() }.orEmpty()
+    val words = chosen.replace("::", " - ").map { if (it.isWhitespace()) ' ' else it }.joinToString("").split(' ').filter { it.isNotEmpty() }
+    return words.joinToString(" ").ifEmpty { "Notosaurus" }
+}

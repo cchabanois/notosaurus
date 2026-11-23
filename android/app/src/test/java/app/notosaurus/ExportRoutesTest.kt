@@ -102,6 +102,25 @@ class ExportRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun theOpenLessonsCardsWithTheirTestsTags() = app { client ->
+        // As sent to AnkiDroid (and as the computer's package): its cards' notes carry the tags of
+        // the tests the lesson is in, a test's chosen cards only
+        val lesson = client.lesson("SVT::Chapitre 1")
+        val chosen = lesson["cards"]!!.jsonArray.first().jsonObject.string("id")
+        client.put("/api/exams/interro") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"name": "Interro SVT", "date": "", "lessons": [{"lesson": "${lesson.string("id")}", "cards": ["$chosen"]}]}""")
+        }
+        val answer = client.post("/api/export") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "SVT::Chapitre 1", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "${lesson.string("id")}"}""")
+        }
+        val apkg = OpenedApkg(answer.bodyAsBytes(), folder.newFolder())
+        val tags = apkg.query("SELECT tags FROM notes ORDER BY id") { it.getString(1) }
+        assertEquals(listOf(true, false), tags.map { "Exam::Interro_SVT" in it })
+    }
+
+    @Test
     fun onlyTheLessonsOwnPicturesExported() = app { client ->
         // A card's picture is a name the page sends: one leading elsewhere ("../", a full path) exports nothing from there
         val lesson = client.lesson("Histoire")

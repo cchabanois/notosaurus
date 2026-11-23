@@ -311,6 +311,24 @@ class GenerationRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun eachLessonItsOwnDeck() = app { client ->
+        // A deck that exists already (another lesson's, the user's in AnkiDroid: "Histoire") is
+        // never a new lesson's: " (2)", " (3)"… as the computer's decks.new_name
+        suspend fun made(deck: String, path: String = "/api/extract"): JsonObject {
+            relayAnswers("""{"deck": {"deck": "$deck", "cards": [{"front": "Q", "back": "R"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+            return client.submitFormWithBinaryData(path, formData { append("prompt", "p") }) { page() }.json().jsonObject
+        }
+        val first = made("Maths::Fractions")
+        assertEquals("Maths::Fractions", first.string("deck"))
+        assertEquals("maths::fractions (2)", made("maths::fractions").string("deck")) // its case aside
+        assertEquals("Maths (2)", made("Maths").string("deck")) // a lesson's parent deck exists
+        assertEquals("Histoire (2)", made("Histoire").string("deck")) // AnkiDroid's
+        // Made again in its place: its own deck still its own
+        val again = made("Maths::Fractions", "/api/lessons/${first.string("id")}/regenerate")
+        assertEquals("Maths::Fractions", again.string("deck"))
+    }
+
+    @Test
     fun aCardsPageCountedAmongTheLessonsPhotos() = app { client ->
         // The AI numbers the photos of its call: a page past them is unknown (0); a lesson
         // completed numbers its next pages' cards after its own, its older cards untouched

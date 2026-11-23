@@ -118,8 +118,8 @@ def deck_for(child: Child | None, deck: str) -> str:
         return deck
     prefix = CLASS_TOKEN.sub(child.grade.strip(), child.decks)
     levels = [level.strip() for level in prefix.split("::") if level.strip()]
-    seen = {_same(level) for level in levels}
-    rest = [level.strip() for level in deck.split("::") if level.strip() and _same(level) not in seen]
+    seen = {same_level(level) for level in levels}
+    rest = [level.strip() for level in deck.split("::") if level.strip() and same_level(level) not in seen]
     return "::".join(levels + rest)
 
 
@@ -136,15 +136,17 @@ def decks_for_ai(decks: list[str], cards: list[Child], child: Child | None) -> l
     kept = set()
     for deck in decks:
         private, rest = split_deck(deck, cards)
-        if rest and all(_same(level) in mine for level in private.split("::") if level):
+        if rest and all(same_level(level) in mine for level in private.split("::") if level):
             kept.add(rest)
     return sorted(kept)
 
 
 def _levels(child: Child) -> set[str]:
-    """A child's own levels: its first name, its decks' levels (its class put in)."""
+    """A child's own levels: its first name, its decks' levels (its class put in); never ""
+    (a name of marks alone: no level is one)."""
     prefix = CLASS_TOKEN.sub(child.grade.strip(), child.decks)
-    return {_same(child.name)} | {_same(level) for level in prefix.split("::") if level.strip()}
+    levels = {same_level(child.name)} | {same_level(level) for level in prefix.split("::")}
+    return levels - {""}
 
 
 def split_deck(deck: str, cards: list[Child]) -> tuple[str, str]:
@@ -153,12 +155,19 @@ def split_deck(deck: str, cards: list[Child]) -> tuple[str, str]:
     private = set().union(*(_levels(c) for c in cards)) if cards else set()
     levels = [level.strip() for level in deck.split("::") if level.strip()]
     n = 0
-    while n < len(levels) and _same(levels[n]) in private:
+    while n < len(levels) and same_level(levels[n]) in private:
         n += 1
     return "::".join(levels[:n]), "::".join(levels[n:])
 
 
-def _same(level: str) -> str:
-    """A deck level as compared: no case, no accents, an ordinal's ending dropped ("5ème", "5e")."""
-    plain = unicodedata.normalize("NFKD", level).encode("ascii", "ignore").decode().casefold().strip()
-    return re.sub(r"^(\d+)\s*(e|eme|er|ere|re|de|nd|nde|st|rd|th|o|a|º|ª)$", r"\1", plain)
+# An ordinal's ending ("5ème", "5th", "5º"), ASCII digits and spaces as the phone's (Children.kt)
+ORDINAL = re.compile(r"^(\d+)\s*(e|eme|er|ere|re|de|nd|nde|st|rd|th|o|a|º|ª)$", re.ASCII)
+
+
+def same_level(level: str) -> str:
+    """A deck level as compared: no case ("ß" as "ss"), no accents (their marks dropped), an
+    ordinal's ending dropped ("5ème", "5e"); any other letter kept ("Иван" is no "Анна"): the
+    phone's Children.same and the page's sameLevel the same (core/shared-cases.json)."""
+    folded = unicodedata.normalize("NFKD", unicodedata.normalize("NFKD", level).casefold())
+    plain = "".join(c for c in folded if unicodedata.category(c) != "Mn").strip()
+    return ORDINAL.sub(r"\1", plain)
