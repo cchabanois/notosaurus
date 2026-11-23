@@ -16,6 +16,7 @@ from page.support import (  # noqa: E402
     open_card,
     open_prompt,
     png,
+    settled,
     started,
 )
 
@@ -352,8 +353,10 @@ def test_dictation_stopped_by_a_tap_elsewhere(page):
 
     revise.get_by_role("button", name="Dicter").click()
     sync_api.expect(listening).to_be_visible()
+    page.evaluate("addEventListener('scroll', () => { window.scrolled = true }, { once: true })")
     page.mouse.wheel(0, 400)  # scrolling: still listening
-    page.wait_for_timeout(300)
+    page.wait_for_function("window.scrolled")  # the page scrolled, and told so
+    settled(page)  # a stop that made, answered
     sync_api.expect(listening).to_be_visible()
     assert stopped == []
     page.locator(".count-line").click()  # elsewhere
@@ -408,7 +411,7 @@ def test_dictation_ended_by_its_fields_send(page):
     send.click()  # nothing heard
     sync_api.expect(page.get_by_text("J'écoute", exact=False).filter(visible=True)).to_have_count(0)
     assert len(stopped) == 2
-    page.wait_for_timeout(300)
+    settled(page)  # the stop's answer read: a correction it sent, sent
     assert len(revised) == 1  # nothing sent
 
     card = open_card(page.locator(".flash").first)  # a card's own correction: the same

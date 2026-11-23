@@ -15,7 +15,7 @@ from app.attempts import Attempts
 from app.main import app
 from app.routes import admin as admin_routes
 from app.routes.devices import DEVICE_COOKIE
-from notosaurus_core import prices, stock, tts
+from notosaurus_core import figures_typst, prices, stock, tts
 
 synthesized = []
 
@@ -75,6 +75,14 @@ def offline(monkeypatch):
     monkeypatch.setattr(prices, "_transport", httpx.MockTransport(model_list))
     yield pictures
     assert not pictures.asked, f"a test reached {pictures.name}: {[str(r.url) for r in pictures.asked]}"
+
+
+@pytest.fixture(autouse=True)
+def typst_unhurried(monkeypatch):
+    """Typst given a minute per figure, not production's COMPILE_S: well above a figure
+    compiled on its own, a figure that compiles timed out all the same with every core's
+    tests and a browser at once (a flaky test). The cut itself: tests/figures/test_typst.py."""
+    monkeypatch.setattr(figures_typst, "COMPILE_S", 60)
 
 
 # Notosaurus answers only to an IP address or localhost (app/hosts.py), as phones and

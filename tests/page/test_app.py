@@ -13,6 +13,7 @@ from page.support import (  # noqa: E402
     CUT,
     FRONT_PROMPT,
     android_settings,
+    eventually,
     generate_free,
     new_password,
     off_contrast,
@@ -161,8 +162,7 @@ def test_what_the_page_keeps_kept_by_the_android_app(page):
     sync_api.expect(page.get_by_role("radio", name="Soigné")).to_be_checked()
     page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].chooseChild('jules')")
     sync_api.expect(page.get_by_role("button", name="Enfants")).to_have_text(re.compile("Jules"))
-    page.wait_for_timeout(200)  # the PUT sent meanwhile
-    assert {"notosaurus.child": "jules"} in told
+    eventually(page, lambda: {"notosaurus.child": "jules"} in told, "the choice told to the app")
     assert page.evaluate("localStorage.length") == 0  # the app keeps them
 
 

@@ -76,11 +76,14 @@ def page(request, browser, server, tmp_path, monkeypatch):
     # No sound made ahead by the server (sounds.py): a job waiting its 5 s would fire in a
     # later test, then on the real edge-tts and that test's data; stopped at the end
     monkeypatch.setattr(sounds, "DELAY", 3600)
+    from page.support import forget_requests, settled, track_requests  # Playwright's: there
+
     touch = getattr(request, "param", {}).get("has_touch", False)
     context = browser.new_context(
         locale="fr-FR", viewport={"width": 390, "height": 844}, base_url=server, has_touch=touch
     )
     page = context.new_page()
+    track_requests(page)
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     # Whatever the page's Content-Security-Policy refused (app/origins.py): the page needs it
@@ -93,12 +96,14 @@ def page(request, browser, server, tmp_path, monkeypatch):
         " const data = root && window.Alpine && Alpine.$data(root); if (data?.saveDraft) await data.saveDraft(); }"
     )
     # The page's requests done first (a lesson still being saved, its pictures): else one
-    # lands after NOTOSAURUS_DATA is the next test's, a lesson made there (a flaky count)
-    page.wait_for_load_state("networkidle")
+    # lands after NOTOSAURUS_DATA is the next test's, a lesson made there (a flaky count).
+    # Each answered, not networkidle's 500 ms of silence after every test
+    settled(page)
     # A route handler still at work (route.fetch) when the context closes fails the
     # next test's new_context: "Response has been disposed"
     page.unroute_all(behavior="ignoreErrors")
     context.close()
+    forget_requests(page)
     stop_sounds_ahead()
     assert not errors, errors
 

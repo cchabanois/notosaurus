@@ -40,6 +40,7 @@ from page.support import (  # noqa: E402
     photo_not_sent,
     photo_sent,
     png,
+    settled,
     started,
     stroke,
     text_pdf,
@@ -248,7 +249,7 @@ def test_a_lesson_read_in_several_calls_has_its_pictures_drawn_once_after_the_la
     made = generate_from_photos(page, "Le triangle rectangle (géométrie)")  # figures to draw
     page.wait_for_function("() => !document.querySelector('[x-data]')._x_dataStack[0].loading")  # every call made
     assert any(c["figure"] for c in lesson(page, made["id"])["cards"])
-    page.wait_for_timeout(300)  # a drawing asked late would be seen
+    settled(page)  # a drawing asked late, once an answer is read, would be seen
     assert calls == ["extract", "complete", "pictures"]
 
 
@@ -1117,6 +1118,15 @@ def test_what_was_shared_to_the_app_becomes_the_lessons_pages(page):
     sync_api.expect(page.get_by_text("« archive.zip » n'a pas été ajouté")).to_be_visible()
 
 
+def share_pending(page) -> bool:
+    """A share left with the app, to be taken once the page is free (takeShared): still so
+    once the page's turn to take it (app.js: a setTimeout once it is free) has passed."""
+    return page.evaluate(
+        "() => new Promise((done) => setTimeout(() =>"
+        " done(Alpine.$data(document.querySelector('[x-data]')).sharePending)))"
+    )
+
+
 def _share_host(page, colors: list[str]):
     """The app's LocalServer (Shared.kt) keeping a share of one photo of each of `colors`,
     once given (`share()`), until the page takes it: what the page asked of it, in order."""
@@ -1180,12 +1190,16 @@ def test_a_share_while_a_lesson_is_made_is_taken_once_it_is(page):
     eventually(page, lambda: held, "the lesson asked")
     share()
     sync_api.expect(page.get_by_text("Partage reçu")).to_be_visible()
-    page.wait_for_timeout(300)
-    assert asked == []  # left with the app meanwhile
+    assert share_pending(page)  # left with the app meanwhile, not taken
+    assert asked == []
     held[0].continue_()
     page.wait_for_function(
-        "(d => !d.loading && !d.lessonId && d.photos.length === 1)(Alpine.$data(document.querySelector('[x-data]')))"
+        "(d => !d.loading && !d.lessonId && d.photos.length === 1 && !d.shareTaking)"
+        "(Alpine.$data(document.querySelector('[x-data]')))"
     )
+    # Its pages added, then the share told it is taken (its DELETE, sent before shareTaking
+    # ends): answered
+    settled(page)
     assert asked == ["get", "delete"]
     assert all(
         abs(a - b) < 8 for a, b in zip(_page_color(page), (0, 128, 128), strict=True)
@@ -1202,13 +1216,15 @@ def test_a_share_while_a_card_is_open_waits_for_it_to_be_closed(page):
     card = open_card(page.locator(".flash").first)
     share()
     sync_api.expect(page.get_by_text("Partage reçu")).to_be_visible()
-    page.wait_for_timeout(300)
+    assert share_pending(page)
     assert asked == []
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
     page.keyboard.press("Escape")
     page.wait_for_function(
-        "(d => !d.lessonId && d.photos.length === 1)(Alpine.$data(document.querySelector('[x-data]')))"
+        "(d => !d.lessonId && d.photos.length === 1 && !d.shareTaking)"
+        "(Alpine.$data(document.querySelector('[x-data]')))"
     )
+    settled(page)  # its DELETE, sent before shareTaking ends, answered
     assert asked == ["get", "delete"]
     assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).editing") == ""
 
@@ -1324,7 +1340,8 @@ def test_a_diagrams_card_swiped_from_its_photo_not_from_its_mask(page):
     clip.click()  # full screen: its mask dragged, not the card
     sync_api.expect(clip).to_have_class(re.compile(r"\bopen\b"))
     _swipe(first.locator(".diagram .mask.target"), -150)
-    page.wait_for_timeout(300)
+    # Not followed by the card (touchCard moves it with the finger, at once): never turned
+    assert first.evaluate("(card) => [card.style.transform, card.style.transition]") == ["", ""]
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     page.keyboard.press("Escape")  # the full screen closed: the card stays open
     sync_api.expect(clip).not_to_have_class(re.compile(r"\bopen\b"))
