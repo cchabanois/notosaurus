@@ -56,16 +56,17 @@ async function lessonAsItComes(res, onCard, onStep = () => {}) {
   throw new Error(t("errors.unreachable"));
 }
 
-// An answer told as it comes (application/x-ndjson): what the AI is at to `onStep`, then
+// An answer told as it comes (application/x-ndjson): each step to `onStep` (what the AI is
+// at; a send's or a picture's, the whole line as second argument: its count, its card), then
 // its {"result"}; null when it was cancelled. A server answering all at once (an older
 // one): its answer
-async function resultAsItComes(res, onStep) {
+async function resultAsItComes(res, onStep = () => {}) {
   if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
   for await (const item of ndjsonItems(res)) {
     if (item.result) return item.result;
     if (item.cancelled) return null;
     if (item.error) throw itemError(item.error);
-    if (item.step) onStep(item.step);
+    if (item.step) onStep(item.step, item);
   }
   throw new Error(t("errors.unreachable"));
 }

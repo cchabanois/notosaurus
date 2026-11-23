@@ -6,8 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Header
 from .. import access, ankiconnect, decks, exams, lessons, media
 from ..anki import notes
 from ..models import ExportRequest
-from .common import Step, stepped
-from .generation import NDJSON
+from .common import Step, streamed, wants_stream
 
 log = logging.getLogger("notosaurus")
 
@@ -39,9 +38,9 @@ async def anki_status() -> dict:
 @router.post("/api/anki/send")
 async def anki_send(req: ExportRequest, background: BackgroundTasks, accept: str | None = Header(None)):
     """The lesson's cards sent to Anki. Asked for as application/x-ndjson: its steps as
-    they go, then the answer (see _steps)."""
-    if NDJSON in (accept or ""):
-        return stepped(lambda step: _send(req, background, step), "Sending")
+    they go, then the answer (common.streamed)."""
+    if wants_stream(accept):
+        return streamed(lambda step: _send(req, background, step), "Sending")
     return await _send(req, background)
 
 

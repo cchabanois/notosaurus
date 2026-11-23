@@ -2986,10 +2986,10 @@
         "properties": {
           "description": {
             "type": "string",
-            "maxLength": 1000,
+            "maxLength": 4000,
             "minLength": 1,
             "title": "Description",
-            "description": "What it should show."
+            "description": "What it should show: its description; a figure without one (an SVG picture left from an older figure): what the card's picture should show, or the card itself, \"question → answer\"."
           },
           "svg": {
             "type": "string",
@@ -3035,7 +3035,7 @@
         "properties": {
           "card": {
             "type": "string",
-            "maxLength": 1000,
+            "maxLength": 4000,
             "minLength": 1,
             "title": "Card",
             "description": "The card: \"question → answer\"."
