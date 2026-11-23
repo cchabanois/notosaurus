@@ -1,6 +1,8 @@
 """A figure's text as large as a card shows it (text_size.py): measured in its SVG, whichever
 way it was drawn; a figure too small to read refused (figures_typst.TooSmall), told its size."""
 
+import re
+
 import pytest
 
 from notosaurus_core import figures, figures_typst, text_size
@@ -67,6 +69,19 @@ def test_an_svgs_text_size_read_from_its_font_sizes():
     assert text_size.smallest_px(svg) == pytest.approx(15 * 320 / 800)
     assert text_size.smallest_px(svg.replace('viewBox="0 0 800 400"', 'viewBox="0 0 320 160"')) == pytest.approx(15)
     assert text_size.smallest_px('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"/>') is None
+
+
+def test_a_texts_place_written_with_its_unit_measured():
+    """A letter's or an inner SVG's place written with its unit (x="10px", valid SVG): read
+    as a bare number, it raised, the figure's measure failing. Its number read, the unit aside."""
+    typst = figures_typst.compile_svg("geometry", "#text(size: 9pt)[Évaporation]")
+    placed = re.sub(r'(<use\b[^>]*\sx=")([-\d.]+)"', r'\1\2px"', typst)
+    assert placed != typst and text_size.smallest_px(placed) == pytest.approx(9)
+    inner = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160"><svg x="10px" y="5px" width="100px"'
+        ' height="50px" viewBox="0 0 200 100"><text x="10" y="40" font-size="30">Noyau</text></svg></svg>'
+    )
+    assert text_size.smallest_px(inner) == pytest.approx(15)
 
 
 def test_an_svgs_refusal_says_its_size_and_how_large_to_write():

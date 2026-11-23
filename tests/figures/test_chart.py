@@ -309,6 +309,14 @@ def test_box_plots_graduation_is_computed():
     assert numbers('values: (4, 9, 12, 15, 19), limits: (0, 20), written: "all"') == 16
 
 
+@pytest.mark.parametrize("value", ["5", "0", "-3", "0.002"])
+def test_a_box_plot_of_equal_values_drawn_around_them(value):
+    """Every value the same (a box flat at one value): its axis had no length, its step's
+    width divided by 0, the figure refused. Drawn on an axis around the value, its usual size."""
+    width, _ = drawn_size("chart", f'#chart(kind: "box", values: ({", ".join([value] * 5)}))')
+    assert 7 * 28.35 < width < 9.2 * 28.35
+
+
 def test_box_plots_refuse_what_they_cant_draw():
     for body, said in (
         ('#chart(kind: "box", values: (("A", (5, 9, 8, 14, 18)),))', "go up"),

@@ -2,6 +2,8 @@
 marks and new lines as meant, numbers as the figure's language writes them, symbols left
 symbols, fractional columns sized, a circuit's ends made to meet."""
 
+import re
+
 import pytest
 
 from notosaurus_core import figures, figures_typst
@@ -183,6 +185,18 @@ def test_a_branchs_ends_a_hair_from_a_junction_meet_it():
     circuit = '#circuit({{ node("n", (3, 4)); node("m", (3, 0)); branch({}, lamp("l"), lamp("k")) }})'
     apart = figures_typst.source("circuit", circuit.format("(3, 3.9), (3, 0.1)"))
     assert apart == figures_typst.source("circuit", circuit.format("(3, 4), (3, 0)"))
+
+
+def test_two_wires_ends_a_hair_apart_meet_at_one_point():
+    """Two wires' ends 0.1 apart, no component there: each end moved onto the other's, swapped,
+    the circuit still open. Both moved to one point; a component's point there kept and met."""
+    from notosaurus_core.typst_source import joined_ends
+
+    joined = joined_ends("#circuit({ wire((0, 0), (1, 0)); wire((1.1, 0), (2, 0)) })")
+    ends = re.findall(r"\(([\d.]+), 0\)", joined)
+    assert ends[1] == ends[2] and ends[1] in ("1", "1.1")
+    lamp = '#circuit({ lamp("l", (1, 0), (3, 0)); wire((0, 0), (1, 0)); wire((1.1, 0), (2, 0)) })'
+    assert joined_ends(lamp) == lamp.replace("(1.1, 0)", "(1, 0)")
 
 
 def test_a_decimal_comma_in_maths_written_in_a_string_keeps_the_string_whole():

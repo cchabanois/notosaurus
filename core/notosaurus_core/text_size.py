@@ -240,6 +240,11 @@ def _style(e: ElementTree.Element, name: str) -> str | None:
     return found[1].strip() if found else e.get(name)
 
 
+def _length(value: str | None) -> float:
+    """An SVG coordinate's number ("10", "10px": 10; a list's first), 0 when it has none."""
+    return float((_NUMBER.findall(value or "") or [0])[0])
+
+
 def runs(svg: str) -> list[Run]:
     """The figure's runs of text, each at its size, where it stands, in the figure's units."""
     root = ElementTree.fromstring(svg)
@@ -257,13 +262,12 @@ def runs(svg: str) -> list[Run]:
             if len(box) == 4 and box[2] > 0 and box[3] > 0:
                 w, h = _NUMBER.match(e.get("width") or ""), _NUMBER.match(e.get("height") or "")
                 k = min(float(w[0]) / box[2] if w else 1.0, float(h[0]) / box[3] if h else 1.0)
-                x, y = float(e.get("x") or 0), float(e.get("y") or 0)
+                x, y = _length(e.get("x")), _length(e.get("y"))
                 m = _times(m, (k, 0, 0, k, x - box[0] * k, y - box[1] * k))
         if (value := _style(e, "font-size")) is not None:
             size = _font_size(value, size)
         if tag in ("text", "tspan") and (e.text or "").strip():
-            x = float((_NUMBER.findall(e.get("x") or "") or [0])[0])
-            y = float((_NUMBER.findall(e.get("y") or "") or [0])[0])
+            x, y = _length(e.get("x")), _length(e.get("y"))
             shift = (_style(e, "baseline-shift") or "").strip()
             k = _scale(m)
             left = m[0] * x + m[2] * y + m[4]
@@ -285,7 +289,7 @@ def runs(svg: str) -> list[Run]:
                 box = symbols.get(href)
                 if box is None:
                     continue
-                x = float(use.get("x") or 0)
+                x = _length(use.get("x"))
                 left = x + box[0] if left is None else min(left, x + box[0])
                 right = x + box[2] if right is None else max(right, x + box[2])
                 for s in known.sizes(box):
