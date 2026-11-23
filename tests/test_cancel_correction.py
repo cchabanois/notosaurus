@@ -112,3 +112,47 @@ def test_corrections_asked_quick_by_the_page(client, monkeypatch):
         revised = {"deck": lesson["deck"], "cards": lesson["cards"], "instruction": "x", "quick": quick}
         assert client.post(f"/api/lessons/{lesson['id']}/revise", json=revised).status_code == 200
     assert asked == [("fix", True), ("revise", True), ("fix", False), ("revise", False)]
+
+
+def test_a_correction_cancelled_while_it_is_saved_answers_what_is_saved(client, monkeypatch):
+    """A "Cancel" landing while the corrected lesson is being saved: the save goes on (a thread),
+    so the page is given the lesson as saved, not "cancelled" over the old cards it would keep
+    (a reload showing the correction, the next save writing over it)."""
+    from app import lessons
+    from app.routes import lessons as routes
+    from notosaurus_core.models import Revision
+
+    lesson = extract_lesson(client)
+    kept = lesson["cards"][:1]
+
+    async def revise(*args, **kwargs):
+        return Revision(deck=args[3].deck, cards=kept, summary="une carte")
+
+    monkeypatch.setattr(routes, "revise_cards", revise)
+    update = lessons.update
+    for headers in (NDJSON, {}):
+        saving, go = threading.Event(), threading.Event()
+
+        def slow(*args, saving=saving, go=go, **kwargs):
+            saving.set()
+            assert go.wait(5)
+            return update(*args, **kwargs)
+
+        monkeypatch.setattr(lessons, "update", slow)
+        body = {"deck": lesson["deck"], "cards": lesson["cards"], "instruction": "garde la première carte"}
+        answer = {}
+        thread = threading.Thread(
+            target=lambda body=body, headers=headers, answer=answer: answer.update(
+                res=client.post(f"/api/lessons/{lesson['id']}/revise?job=r1", json=body, headers=headers)
+            )
+        )
+        thread.start()
+        assert saving.wait(5)
+        client.post("/api/generations/r1/cancel")
+        go.set()
+        thread.join(5)
+        res = answer["res"]
+        assert res.status_code == 200
+        said = lines(res)[-1]["result"] if headers else res.json()
+        assert [c["front"] for c in said["lesson"]["cards"]] == [kept[0]["front"]]
+        assert client.get(f"/api/lessons/{lesson['id']}").json()["cards"] == said["lesson"]["cards"]

@@ -169,7 +169,7 @@
         "new": "Nouveau sous-paquet…",
         "add": "Créer"
       },
-      "subdeckLabel": "Sous-paquet",
+      "subdeckLabel": "Sous-paquet : {name}",
       "listen": "Écouter le verso",
       "listenFront": "Écouter le recto",
       "soundFrontOn": "🔊 Lire le recto à voix haute",
@@ -652,6 +652,7 @@
     },
     "share": {
       "skipped": "Notosaurus prend les photos, les PDF et le texte : « {names} » n'a pas été ajouté.",
+      "waiting": "Partage reçu : il sera ajouté dès que la tâche en cours sera finie ou la carte fermée.",
       "cards": {
         "lessons": "📤 Partager des leçons",
         "pickHint": "Cochez les leçons dont vous voulez partager les cartes, une à une ou toute une matière.",

@@ -169,7 +169,7 @@
         "new": "Novo subbaralho…",
         "add": "Criar"
       },
-      "subdeckLabel": "Subbaralho",
+      "subdeckLabel": "Subbaralho: {name}",
       "listen": "Ouvir o verso",
       "listenFront": "Ouvir a frente",
       "soundFrontOn": "🔊 Ler a frente em voz alta",
@@ -652,6 +652,7 @@
     },
     "share": {
       "skipped": "O Notosaurus aceita fotos, PDFs e texto: “{names}” não foi adicionado.",
+      "waiting": "Compartilhamento recebido: será adicionado assim que a tarefa em andamento terminar ou o cartão for fechado.",
       "cards": {
         "lessons": "📤 Compartilhar lições",
         "pickHint": "Marque as lições cujos cartões você quer compartilhar, uma a uma ou uma disciplina inteira.",

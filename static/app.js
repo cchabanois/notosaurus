@@ -256,6 +256,8 @@ document.addEventListener("alpine:init", () => {
     ankiIconAsked: 0,
     donations: true,             // "Support Notosaurus": not where it's paid for (the app's subscription)  // the Notosaurus Android app (its WebView says so)
     profileToApply: null,        // Anki profile switch waiting for the current task to finish
+    sharePending: false,         // something shared to the app, waiting for the page to be free (takeShared)
+    shareTaking: false,          // a share being taken
     diagramWarning: false,       // the AI model places diagram masks loosely: say so
     lessonOwner: "",              // Anki profile that created the open lesson ("" = nobody: shared)
     lessonShared: false,         // visible from every profile (shared before copies: only the owner's profile can change it)
@@ -351,6 +353,11 @@ document.addEventListener("alpine:init", () => {
         this.takeShared();
         return true;
       };
+      // A share that waited for the page (takeShared): taken once nothing holds it back
+      const shareFree = () => this.sharePending && !this.shareTaking && !this.shareWaits();
+      Alpine.effect(() => {
+        if (shareFree()) setTimeout(() => shareFree() && this.takeShared());  // (once, the effect run again meanwhile)
+      });
       if (linked.has("shared")) {
         history.replaceState(null, "", location.pathname);
         await this.takeShared();

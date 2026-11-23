@@ -22,7 +22,7 @@ from ..models import (
     LessonSummary,
     RevisionRequest,
 )
-from .common import Step, cancellable, page_lang, stepped
+from .common import Step, cancellable, finished, page_lang, stepped
 
 router = APIRouter()
 
@@ -155,19 +155,22 @@ async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
             photos_sent=sent,
         )
     revision.deck = "::".join(part for part in (private, revision.deck) if part)
-    updated = await asyncio.to_thread(
-        lessons.update,
-        id,
-        LessonIn(
-            deck=revision.deck,
-            cards=revision.cards,
-            voice=req.voice,
-            # How the cards are asked: as they were, unless the correction said otherwise
-            reverse=switched(req.reverse, revision.reverse),
-            typing=switched(req.typing, revision.typing),
-            dictation=switched(req.dictation, revision.dictation),
-            dictation_only=req.dictation_only and switched(req.dictation, revision.dictation),
-        ),
+    # Saved once begun, whatever "Cancel" says meanwhile: the page shown the lesson as saved
+    updated = await finished(
+        asyncio.to_thread(
+            lessons.update,
+            id,
+            LessonIn(
+                deck=revision.deck,
+                cards=revision.cards,
+                voice=req.voice,
+                # How the cards are asked: as they were, unless the correction said otherwise
+                reverse=switched(req.reverse, revision.reverse),
+                typing=switched(req.typing, revision.typing),
+                dictation=switched(req.dictation, revision.dictation),
+                dictation_only=req.dictation_only and switched(req.dictation, revision.dictation),
+            ),
+        )
     )
     if updated:
         sounds.soon(updated.id, updated.voice)

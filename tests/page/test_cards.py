@@ -1306,3 +1306,39 @@ def test_a_read_only_lessons_cards_show_their_texts(page):
         """(c) => [c, c.querySelector('.flash-body')].map((e) => e.getBoundingClientRect().width)"""
     )
     assert body >= 0.8 * whole, (body, whole)
+
+
+@pytest.mark.parametrize("where", ["card", "end"])
+def test_a_new_lesson_from_elsewhere_leaves_nothing_full_screen(page, where):
+    """A new lesson started from elsewhere than its button (an Anki profile switched, the open
+    lesson deleted) while a card, or the lesson's end, is open full screen: the new lesson
+    shown, not the card (or the end) over it, nor its pictures kept from being pruned."""
+    generate_free(page, FRONT_PROMPT)
+    card = open_card(page.locator(".flash").first)
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+    if where == "end":
+        page.evaluate(f"{data}.moveEditing({data}.cards.length)")
+        sync_api.expect(page.get_by_text("Fin de la leçon")).to_be_visible()
+    page.evaluate(f"{data}.newLesson()")
+    page.wait_for_function(f"!{data}.lessonId")
+    assert page.evaluate(f"[{data}.editing, {data}.diagramOpen, {data}.pictureOpen, {data}.peek]") == ["", "", "", ""]
+    sync_api.expect(card).to_be_hidden()
+    sync_api.expect(page.get_by_text("Fin de la leçon")).to_be_hidden()
+
+
+def test_a_correction_coming_back_after_another_lesson_opened_stays_its_own(page):
+    """The lesson's correction answered after a new lesson was started (an Anki profile
+    switched): saved in its own lesson by the server, never written into the new one."""
+    generate_free(page, FRONT_PROMPT)
+    held = []
+    page.route("**/api/lessons/*/revise*", lambda route: held.append(route))
+    page.locator(".revise textarea").fill("Supprime la dernière carte")
+    page.locator(".revise .btn.primary").click()
+    eventually(page, lambda: held, "the correction asked")
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+    page.evaluate(f"{data}.newLesson()")
+    page.wait_for_function(f"!{data}.lessonId")
+    held[0].continue_()
+    page.wait_for_function(f"!{data}.revision.busy")
+    page.wait_for_load_state("networkidle")
+    assert page.evaluate(f"[{data}.lessonId, {data}.cards.length]") == [None, 0]

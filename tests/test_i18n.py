@@ -46,6 +46,42 @@ def test_all_error_codes_translated():
     assert missing == []
 
 
+def _translated(messages: dict, key: str) -> bool:
+    """`key` is a text of `messages`: one string, or one counted (its plural forms)."""
+    found = messages
+    for part in key.split("."):
+        if not isinstance(found, dict) or part not in found:
+            return False
+        found = found[part]
+    return isinstance(found, str) or (isinstance(found, dict) and "other" in found)
+
+
+def test_every_key_the_pages_name_is_translated():
+    """Every key the pages and their scripts name as it is ($t('…'), t("…"), a fallback
+    after ||…) has its text in every language: a key missing shows as itself."""
+    tops = "|".join(i18n.messages("en"))
+    named = re.compile(rf"""(["'`])((?:{tops})(?:\.[A-Za-z0-9_-]+)+)\1""")
+    files = [*Path("static").glob("*.html"), *Path("static").glob("*.js")]
+    keys = {
+        m[2]
+        for path in files
+        for m in named.finditer(path.read_text(encoding="utf-8"))
+        if not re.search(r"\.(html|js|css|json)$", m[2])  # a file's name (admin.html), not a key
+    }
+    assert len(keys) > 500, "no key found"
+    for lang in i18n.available():
+        messages = i18n.messages(lang)
+        assert sorted(k for k in keys if not _translated(messages, k)) == [], lang
+
+
+def test_no_punctuation_glued_to_a_text_in_the_pages():
+    """A text and what follows it are one key with a parameter ("Sub-deck: {name}"), each
+    language with its own punctuation (French puts a space before ":"), never glued in code."""
+    glued = re.compile(r"""\$?\bt\([^()]*\)\s*\+\s*["'`]\s*[:;!?«»]""")
+    for path in [*Path("static").glob("*.html"), *Path("static").glob("*.js")]:
+        assert glued.findall(path.read_text(encoding="utf-8")) == [], path
+
+
 def test_language_choice(monkeypatch):
     assert i18n.resolve("fr-FR") == "fr"
     assert i18n.resolve("pt-BR") == "pt" and i18n.resolve("pt_PT") == "pt"

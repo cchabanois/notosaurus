@@ -169,7 +169,7 @@
         "new": "Neuer Unterstapel…",
         "add": "Anlegen"
       },
-      "subdeckLabel": "Unterstapel",
+      "subdeckLabel": "Unterstapel: {name}",
       "listen": "Rückseite anhören",
       "listenFront": "Vorderseite anhören",
       "soundFrontOn": "🔊 Vorderseite vorlesen",
@@ -652,6 +652,7 @@
     },
     "share": {
       "skipped": "Notosaurus nimmt Fotos, PDFs und Text: „{names}“ wurde nicht hinzugefügt.",
+      "waiting": "Geteilte Inhalte erhalten: Sie werden hinzugefügt, sobald die laufende Aufgabe fertig oder die Karte geschlossen ist.",
       "cards": {
         "lessons": "📤 Lektionen teilen",
         "pickHint": "Haken Sie die Lektionen an, deren Karten Sie teilen möchten, einzeln oder ein ganzes Fach.",

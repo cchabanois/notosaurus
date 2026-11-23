@@ -74,6 +74,22 @@ async def cancellable[T](job: str, work: Awaitable[T]) -> T:
         raise
 
 
+async def finished[T](work: Awaitable[T]) -> T:
+    """`work` (a lesson being saved) run to its end even when "Cancel" lands meanwhile, and its
+    answer given: begun, it is done (a thread's work goes on whatever happens to the task
+    waiting for it), so the page is told what is saved, never "cancelled" over it."""
+    task = asyncio.ensure_future(work)
+    while True:
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            if task.done() and task.cancelled():
+                raise
+            current = asyncio.current_task()
+            if current:
+                current.uncancel()  # the cancel taken: what follows the save isn't stopped by it
+
+
 def stepped(work: Callable[[Step], Awaitable[dict]], what: str, job: str = "") -> StreamingResponse:
     """Work told as it goes, one JSON per line: each step `work` tells (a send's
     {"step": "sounds", "done", "total"}, a picture's {"card", "step"…}), then {"result": …}

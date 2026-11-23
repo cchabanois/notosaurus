@@ -342,8 +342,35 @@ const photosPart = {
   // What was shared to the app (Android's "Share": photos, PDFs, a text), kept by the host
   // until the page takes it. A lesson made and open: kept in My lessons, what was shared
   // starts a new one; a lesson not made yet (its photos, its prompt): added to it, nothing
-  // of it lost. A host that has no sharing (the computer's): nothing.
+  // of it lost. A host that has no sharing (the computer's): nothing. The page busy
+  // (shareWaits): left with the host, said, and taken once the page is free (app.js init)
   async takeShared() {
+    if (this.shareTaking || this.shareWaits()) {
+      if (!this.sharePending) this.notify(t("app.share.waiting"));
+      this.sharePending = true;
+      return;
+    }
+    this.sharePending = false;
+    this.shareTaking = true;
+    try {
+      await this.takeSharedNow();
+    } finally {
+      this.shareTaking = false;
+    }
+  },
+
+  // What a share must not land in the middle of: a lesson being made, corrected or sent (its
+  // answer would empty the pages added, or go to the new lesson), a card corrected, a card
+  // or a page open full screen (the user at work in it: never closed under them), pages
+  // being added
+  shareWaits() {
+    return Boolean(this.loading || this.revision.busy || this.sending || this.exporting
+      || this.cards.some((c) => c._fix?.busy)
+      || this.editing !== "" || this.diagramOpen || this.pictureOpen || this.viewer.open || this.hiding.open
+      || this.pdf.open || this.pdfBusy || this.filesReading);
+  },
+
+  async takeSharedNow() {
     let shared;
     try {
       shared = await (await api("/api/shared")).json();
