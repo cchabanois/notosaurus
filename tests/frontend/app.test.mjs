@@ -1252,6 +1252,39 @@ test("a lesson's correction changing a figure: its old one shown until drawn aga
   assert.equal(c.firstFigureUrl(c.cards[0]), "/api/lessons/L1/pictures/picture-c1-0123abcd.svg");
 });
 
+test("pictures not pruned while a figure a correction replaced is still to be drawn again from", async () => {
+  const sent = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      sent.push([url, options?.method]);
+      return new Response({ removed: 0 });
+    },
+  });
+  const c = page.component();
+  const old = {
+    front: "a", back: "b", figure: "Un carré ABCD", figure_kind: "geometry", picture: "picture-c1-0123abcd.svg",
+    picture_source: { source: "drawn", engine: "typst", sources: [{ file: "picture-c1-0123abcd.typ" }] },
+  };
+  c.show({ id: "L1", deck: "D", cards: [{ ...old, figure: "Un carré ABCD en rouge", picture: "", picture_source: null }] });
+  c.cards[0]._previous = c.previousFigure(old, c.cards[0]);
+  assert.equal(JSON.stringify(c.cards[0]._previous), JSON.stringify({ source: old.picture_source, kind: "geometry" }));
+  await c.prunePictures();
+  assert.deepEqual(sent, []);  // its sources: what it is drawn again from
+  c.cards[0].picture = "picture-c1-4567cdef.svg";  // drawn
+  await c.prunePictures();
+  assert.deepEqual(sent.filter(([url]) => url.endsWith("/prune")), [["/api/lessons/L1/pictures/prune", "POST"]]);
+});
+
+test("a figure a correction replaced is drawn again from it only when it was a figure with sources", async () => {
+  const page = await loadScripts("app.js", { routes: () => new Response({}) });
+  const c = page.component();
+  const source = { source: "drawn", engine: "typst", sources: [{ file: "picture-c1-0123abcd.typ" }] };
+  const figure = { figure: "Un carré", figure_kind: "geometry", picture_source: source };
+  assert.equal(c.previousFigure({ ...figure, picture_source: { source: "drawn", engine: "svg" } }, { figure: "x" }), null);
+  assert.equal(c.previousFigure({ picture_prompt: "a dog", picture_source: source }, { figure: "x" }), null);
+  assert.equal(c.previousFigure(figure, { picture_prompt: "a dog" }), null);
+});
+
 test("pictures pruned only once no card is edited: the first card (key 0) edited is one", async () => {
   const sent = [];
   const page = await loadScripts("app.js", {

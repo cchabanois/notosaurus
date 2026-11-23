@@ -12,7 +12,7 @@ import hashlib
 import io
 import logging
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -424,6 +424,14 @@ async def decided(
     return card
 
 
+def changed_figure(card: Card, asked: str | None) -> bool:
+    """A figure's description written anew (`asked`, the "✨ Image" button's): drawn again from
+    what it was drawn from, what is asked changed and the rest kept. The same, or none: drawn
+    anew (another drawing wanted); not a figure: decided anew (decided)."""
+    written = (asked or "").strip()
+    return bool(card.figure.strip() and written and written != card.figure.strip())
+
+
 async def figure_or_picture(
     s: AIConfig,
     folder: Path,
@@ -578,6 +586,7 @@ async def draw_all(
     step: Step | None = None,
     photos: list[llm.Image] | None = None,
     not_from_lesson: Sequence[str] = (),
+    previous: Mapping[str, tuple[PictureSource, str]] | None = None,
 ) -> Drawn:
     """The missing pictures (cards with a picture_prompt or a figure, and no picture), a few
     at a time: figures drawn, free pictures found; a picture none fits drawn by the image
@@ -588,7 +597,9 @@ async def draw_all(
     taken first for the cards whose thing they show (lesson_drawings: one call, no search,
     the pupil's own pictures; {"card", "step": "lesson"} while they are looked at), but for
     the cards in `not_from_lesson` (their ids): a correction replaced their picture, the
-    lesson's drawing would only come back; theirs looked for as any other."""
+    lesson's drawing would only come back; theirs looked for as any other. `previous`: by card
+    id, the figure a correction replaced, where it came from (its sources, kept_sources) and
+    its family: drawn again from it, what is asked changed and the rest kept."""
     # A sentence with gaps' too: its note type shows it (cloze v3), on its question or its answer
     todo = [c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture]
     if photos:
@@ -605,7 +616,18 @@ async def draw_all(
                 if step is not None:
                     tell = step  # (bound here: pyright sees it set)
                     told = lambda said, card=card: tell({"card": card.id, **said})  # noqa: E731
-                card.picture = await figure_or_picture(s, folder, card, draw=draw, find=not draw, step=told)
+                origin, kind = (previous or {}).get(card.id, (None, ""))
+                card.picture = await figure_or_picture(
+                    s,
+                    folder,
+                    card,
+                    draw=draw,
+                    find=not draw,
+                    step=told,
+                    previous=kept_sources(folder, origin) if card.figure.strip() else [],
+                    previous_kind=kind,
+                    previous_engine=origin.engine if origin else "",
+                )
                 if told is not None:  # shown at once, not when the others are done
                     told({"step": "ready", **card.model_dump(mode="json", include=READY)})
             except AppError as e:
