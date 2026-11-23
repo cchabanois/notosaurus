@@ -5,6 +5,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.text.Normalizer
+import java.util.Locale
 
 /** A child's card (as the computer's app/children.py): its first name (the parent's: never
  * sent to the AI), school class, the decks its lessons go in, standing instructions. */
@@ -42,7 +43,9 @@ class Children(private val prefs: Preferences) {
         private val ID = Regex("^[a-z0-9-]{1,40}$")
         // A class in the decks' path ("Jules::{classe}"), in any of the page's languages
         private val CLASS_TOKEN = Regex("""\{(classe|class|klasse|curso|ano)\}""", RegexOption.IGNORE_CASE)
+        // An ordinal's ending ("5ème", "5th", "5º"); ASCII digits and spaces, as the computer's
         private val ORDINAL = Regex("""^(\d+)\s*(e|eme|er|ere|re|de|nd|nde|st|rd|th|o|a|º|ª)$""")
+        private val MARKS = Regex("""\p{Mn}+""")
 
         /** What the AI is told of the child: its class and the parent's instructions; never its name. */
         fun forAi(child: Child?): String {
@@ -73,9 +76,10 @@ class Children(private val prefs: Preferences) {
             }.distinct().sorted()
         }
 
-        /** A child's own levels: its first name, its decks' levels (its class put in). */
+        /** A child's own levels: its first name, its decks' levels (its class put in); never ""
+         * (a name of marks alone: no level is one). */
         private fun levels(child: Child): Set<String> =
-            (listOf(same(child.name)) + CLASS_TOKEN.replace(child.decks, child.grade.trim()).split("::").filter { it.isNotBlank() }.map(::same)).toSet()
+            (listOf(same(child.name)) + CLASS_TOKEN.replace(child.decks, child.grade.trim()).split("::").map(::same)).filter { it.isNotEmpty() }.toSet()
 
         /** A deck's name as the children's levels it starts with ("Jules::5e") and the rest:
          * the rest is what the AI sees (no child's name), the levels are put back. */
@@ -86,10 +90,17 @@ class Children(private val prefs: Preferences) {
             return levels.take(n).joinToString("::") to levels.drop(n).joinToString("::")
         }
 
-        /** A deck level as compared: no case, no accents, an ordinal's ending dropped ("5ème", "5e"). */
-        private fun same(level: String): String {
-            val plain = Normalizer.normalize(level, Normalizer.Form.NFKD).replace(Regex("\\p{M}"), "").lowercase().trim()
-            return ORDINAL.replace(plain, "$1")
+        /** A deck level as compared: no case ("ß" as "ss"), no accents (their marks dropped), an
+         * ordinal's ending dropped ("5ème", "5e"); any other letter kept ("Иван" is no "Анна"):
+         * as the computer's children.same_level (core/shared-cases.json). */
+        internal fun same(level: String): String {
+            val folded = Normalizer.normalize(Normalizer.normalize(level, Normalizer.Form.NFKD).casefold(), Normalizer.Form.NFKD)
+            return ORDINAL.replace(MARKS.replace(folded, "").trim(), "$1")
         }
     }
 }
+
+/** The text without its case, as Python's str.casefold compares ("ß", "ẞ" and "SS" alike; the
+ * dotless "ı" its own letter): what a case can't tell apart, the computer's way. */
+internal fun String.casefold(): String =
+    split('ı').joinToString("ı") { it.lowercase(Locale.ROOT).uppercase(Locale.ROOT).lowercase(Locale.ROOT) }

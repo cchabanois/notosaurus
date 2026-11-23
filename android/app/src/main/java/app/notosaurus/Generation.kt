@@ -1,10 +1,12 @@
 package app.notosaurus
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -37,12 +39,14 @@ class Generation(
     private val relay: () -> Relay,
     private val speech: Speech,
     private val children: Children = Children(prefs),
+    private val ankiDecks: () -> List<String> = { emptyList() }, // AnkiDroid's decks (none when it can't tell)
 ) {
     private val running = ConcurrentHashMap<String, Job>() // by the page's id for each
 
     /** `existing`: the lesson's cards made already ("front [part]"), when the photos are its
-     * next pages (/v1/extract's "existing"): not made again. */
-    suspend fun make(form: GenerationForm, onCard: OnCard, existing: List<String> = emptyList()): Made {
+     * next pages (/v1/extract's "existing"): not made again. `but`: the lesson itself, made
+     * again or completed (its deck is its own, not another's). */
+    suspend fun make(form: GenerationForm, onCard: OnCard, existing: List<String> = emptyList(), but: String? = null): Made {
         // The pages of one call: more refused at once, not after sending them (the relay's limit)
         if (form.images.size > LocalServer.MAX_PER_CALL) throw BadRequest("extract.too_many", buildJsonObject { put("max", LocalServer.MAX_PER_CALL) })
         val fields = form.fields
@@ -51,7 +55,8 @@ class Generation(
         val child = every.firstOrNull { it.id == fields["child"] } // the child it is for: its class, instructions, decks
         // The decks the AI may reuse: this child's and no child's, without the children's levels
         // (no child's name to the AI, nothing of another child's lessons)
-        val decks = Children.decksForAi(lessons.list().map { it.string("deck") }, every, child)
+        val saved = lessons.list()
+        val decks = Children.decksForAi(saved.map { it.string("deck") }, every, child)
         val request = buildJsonObject {
             put("prompt", fields["prompt"] ?: "")
             put("deck", fields["deck"] ?: "")
@@ -83,8 +88,13 @@ class Generation(
         val cards = found["deck"]!!.jsonObject["cards"]!!.jsonArray.map { pageWithin(it.jsonObject, form.images.size) }
         val frames = (found["frames"] as? JsonArray)?.map { it.jsonObject }.orEmpty()
         val photos = form.images
+        // In the child's decks ("Jules::{classe}"), its own: never one that exists already
+        // (another lesson's, or the user's in AnkiDroid), as the computer's (decks.new_name)
+        val own = saved.firstOrNull { but != null && it.string("id") == but }?.string("deck").orEmpty()
+        val inAnki = withContext(Dispatchers.IO) { runCatching(ankiDecks).getOrDefault(emptyList()) }
+        val taken = existing(inAnki, saved.filter { it.string("id") != but }.map { it.string("deck") }, own)
         val content = mapOf(
-            "deck" to JsonPrimitive(Children.deckFor(child, found["deck"]!!.jsonObject.string("deck"))), // in the child's decks
+            "deck" to JsonPrimitive(freeName(Children.deckFor(child, found["deck"]!!.jsonObject.string("deck")), taken)),
             "child" to JsonPrimitive(child?.id ?: ""),
             "cards" to JsonArray(cards),
             "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
@@ -131,6 +141,44 @@ class Generation(
         fun revisePhotos(photos: Int): Pair<List<Int>, String> =
             if (photos <= LocalServer.MAX_PER_CALL) (1..photos).toList() to "all" else emptyList<Int>() to "none"
 
+        /** The decks that exist: AnkiDroid's (but its own, `own`: the deck of the lesson made
+         * again, and its subdecks: they are its own, not another's), the lessons' with their
+         * parents. As the computer's decks.existing (core/shared-cases.json). */
+        fun existing(anki: List<String>, lessonDecks: List<String>, own: String = ""): Set<String> {
+            val mine = own.trim().casefold()
+            val names = anki.filter { n ->
+                n != "Default" && !(mine.isNotEmpty() && (n.casefold() == mine || n.casefold().startsWith("$mine::")))
+            }.toMutableSet()
+            for (deck in lessonDecks) {
+                val levels = deck.split("::").map { it.trim() }.filter { it.isNotEmpty() }
+                for (n in levels.indices) names += levels.take(n + 1).joinToString("::")
+            }
+            return names
+        }
+
+        /** `deck`, or the first of "deck (2)", "deck (3)"… none of `taken` is: two lessons never
+         * write into the same deck. AnkiDroid doesn't tell decks apart by case: neither does this.
+         * As the computer's decks.free_name (core/shared-cases.json). */
+        fun freeName(deck: String, taken: Set<String>): String {
+            val name = deck.trim()
+            val names = taken.map { it.casefold() }.toSet()
+            if (name.isEmpty() || name.casefold() !in names) return name
+            var n = 2
+            while ("$name ($n)".casefold() in names) n++
+            return "$name ($n)"
+        }
+
+        /** What the parent set, for everyone (`text`) and for this child (`child`: what the AI is
+         * told of it, Children.forAi), put before the request to the AI: as the computer's
+         * settings.standing_instructions (core/shared-cases.json). */
+        fun standingInstructions(text: String, child: String): String {
+            val parts = mutableListOf<String>()
+            if (text.isNotBlank()) parts += "Standing instructions, for every lesson:\n${text.trim()}"
+            if (child.isNotBlank()) parts += "Standing instructions for this pupil:\n${child.trim()}"
+            if (parts.isEmpty()) return ""
+            return parts.joinToString("\n\n") + "\n(The request below wins if it says otherwise.)\n\n"
+        }
+
         /** The pages' texts sent by the page (JSON, one string per photo: a PDF page's text, "" for
          * a photo); anything else (not JSON, not strings, not one per photo): none, as the computer
          * (app/routes/generation.py, _page_texts). A list of the wrong length would give a page's
@@ -149,15 +197,7 @@ class Generation(
 
     /** The settings' standing instructions and the child's (its class, instructions: never its
      * name), put before every request to the AI (app/settings.py, standing_instructions). */
-    fun instructions(child: Child? = null): String {
-        val parts = mutableListOf<String>()
-        val text = prefs[LocalServer.INSTRUCTIONS].orEmpty().trim()
-        if (text.isNotEmpty()) parts += "Standing instructions, for every lesson:\n$text"
-        val own = Children.forAi(child)
-        if (own.isNotEmpty()) parts += "Standing instructions for this pupil:\n$own"
-        if (parts.isEmpty()) return ""
-        return parts.joinToString("\n\n") + "\n(The request below wins if it says otherwise.)\n\n"
-    }
+    fun instructions(child: Child? = null): String = standingInstructions(prefs[LocalServer.INSTRUCTIONS].orEmpty(), Children.forAi(child))
 
     /** `work`, stopped by "Cancel" (`job`: the page's id for it): Cancelled then. */
     internal suspend fun <T> cancellable(job: String?, work: suspend () -> T): T = coroutineScope {

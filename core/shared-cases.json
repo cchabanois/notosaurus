@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by its number of photos: their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's number of photos: each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by its number of photos: their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's number of photos: each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level: Python and Kotlin only.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -1006,6 +1006,1391 @@
     "picture-c1-ab12cd34.typ.bak",
     "picture-c2-ab12cd34.jpg"
    ]
+  }
+ ],
+ "same_level": [
+  {
+   "a": "5ème",
+   "b": "5e",
+   "out": true
+  },
+  {
+   "a": "5e",
+   "b": "5",
+   "out": true
+  },
+  {
+   "a": "5 ÈME",
+   "b": "5",
+   "out": true
+  },
+  {
+   "a": "1st",
+   "b": "1",
+   "out": true
+  },
+  {
+   "a": "2nd",
+   "b": "2nde",
+   "out": true
+  },
+  {
+   "a": "5º",
+   "b": "5",
+   "out": true
+  },
+  {
+   "a": "5ª",
+   "b": "5o",
+   "out": true
+  },
+  {
+   "a": "Jules",
+   "b": "jules",
+   "out": true
+  },
+  {
+   "a": "  Jules ",
+   "b": "JULES",
+   "out": true
+  },
+  {
+   "a": "Léa",
+   "b": "Lea",
+   "out": true
+  },
+  {
+   "a": "LÉA",
+   "b": "léa",
+   "out": true
+  },
+  {
+   "a": "Chloë",
+   "b": "chloe",
+   "out": true
+  },
+  {
+   "a": "Иван",
+   "b": "Анна",
+   "out": false
+  },
+  {
+   "a": "Иван",
+   "b": "иван",
+   "out": true
+  },
+  {
+   "a": "Йошка",
+   "b": "Иошка",
+   "out": true
+  },
+  {
+   "a": "Ελένη",
+   "b": "ΕΛΈΝΗ",
+   "out": true
+  },
+  {
+   "a": "Ελένη",
+   "b": "Ελενη",
+   "out": true
+  },
+  {
+   "a": "ΟΔΟΣ",
+   "b": "οδοσ",
+   "out": true
+  },
+  {
+   "a": "ゆき",
+   "b": "はな",
+   "out": false
+  },
+  {
+   "a": "ゆき",
+   "b": "ゆき",
+   "out": true
+  },
+  {
+   "a": "数学",
+   "b": "英語",
+   "out": false
+  },
+  {
+   "a": "Straße",
+   "b": "STRASSE",
+   "out": true
+  },
+  {
+   "a": "Straße",
+   "b": "Strasse",
+   "out": true
+  },
+  {
+   "a": "ẞ",
+   "b": "ss",
+   "out": true
+  },
+  {
+   "a": "ﬁn",
+   "b": "fin",
+   "out": true
+  },
+  {
+   "a": "Ⅻ",
+   "b": "xii",
+   "out": true
+  },
+  {
+   "a": "Maths",
+   "b": "Math",
+   "out": false
+  },
+  {
+   "a": "5e",
+   "b": "6e",
+   "out": false
+  },
+  {
+   "a": "e5",
+   "b": "5",
+   "out": false
+  },
+  {
+   "a": "",
+   "b": " ",
+   "out": true
+  }
+ ],
+ "split_deck": [
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    }
+   ],
+   "deck": "Jules::5e::Anglais::Food",
+   "out": [
+    "Jules::5e",
+    "Anglais::Food"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    }
+   ],
+   "deck": "jules::5ème::Anglais::Food",
+   "out": [
+    "jules::5ème",
+    "Anglais::Food"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    }
+   ],
+   "deck": "Maths::Fractions",
+   "out": [
+    "",
+    "Maths::Fractions"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    }
+   ],
+   "deck": "Mathilde::3e::SVT",
+   "out": [
+    "Mathilde::3e",
+    "SVT"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    }
+   ],
+   "deck": " Jules :: 5e :: Maths ",
+   "out": [
+    "Jules::5e",
+    "Maths"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "ivan",
+     "name": "Иван",
+     "grade": "5 класс",
+     "decks": "Иван::{klasse}"
+    }
+   ],
+   "deck": "Иван::5 класс::Математика",
+   "out": [
+    "Иван::5 класс",
+    "Математика"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "ivan",
+     "name": "Иван",
+     "grade": "5 класс",
+     "decks": "Иван::{klasse}"
+    }
+   ],
+   "deck": "Анна::Математика",
+   "out": [
+    "",
+    "Анна::Математика"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "ivan",
+     "name": "Иван",
+     "grade": "5 класс",
+     "decks": "Иван::{klasse}"
+    },
+    {
+     "id": "eleni",
+     "name": "Ελένη",
+     "grade": "",
+     "decks": "Ελένη"
+    }
+   ],
+   "deck": "Ελένη::Ιστορία",
+   "out": [
+    "Ελένη",
+    "Ιστορία"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "yuki",
+     "name": "ゆき",
+     "grade": "",
+     "decks": "ゆき::{curso}"
+    }
+   ],
+   "deck": "ゆき::数学",
+   "out": [
+    "ゆき",
+    "数学"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "yuki",
+     "name": "ゆき",
+     "grade": "",
+     "decks": "ゆき::{curso}"
+    }
+   ],
+   "deck": "はな::数学",
+   "out": [
+    "",
+    "はな::数学"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "grete",
+     "name": "Grete",
+     "grade": "",
+     "decks": "STRASSE"
+    }
+   ],
+   "deck": "Straße::Maths",
+   "out": [
+    "Straße",
+    "Maths"
+   ]
+  },
+  {
+   "children": [],
+   "deck": "Jules::Maths",
+   "out": [
+    "",
+    "Jules::Maths"
+   ]
+  }
+ ],
+ "deck_for": [
+  {
+   "child": {
+    "id": "jules",
+    "name": "Jules",
+    "grade": "5e",
+    "decks": "Jules::{classe}"
+   },
+   "deck": "Anglais::School subjects",
+   "out": "Jules::5e::Anglais::School subjects"
+  },
+  {
+   "child": {
+    "id": "jules",
+    "name": "Jules",
+    "grade": "5e",
+    "decks": "Jules::{classe}"
+   },
+   "deck": "Anglais::5ème::School subjects",
+   "out": "Jules::5e::Anglais::School subjects"
+  },
+  {
+   "child": {
+    "id": "jules",
+    "name": "Jules",
+    "grade": "5e",
+    "decks": "Jules::{classe}"
+   },
+   "deck": "jules::Maths",
+   "out": "Jules::5e::Maths"
+  },
+  {
+   "child": {
+    "id": "m",
+    "name": "M",
+    "grade": "",
+    "decks": "Mathilde"
+   },
+   "deck": "SVT",
+   "out": "Mathilde::SVT"
+  },
+  {
+   "child": {
+    "id": "m",
+    "name": "M",
+    "grade": "",
+    "decks": "Mathilde::{class}"
+   },
+   "deck": "SVT",
+   "out": "Mathilde::SVT"
+  },
+  {
+   "child": {
+    "id": "m",
+    "name": "M",
+    "grade": "",
+    "decks": ""
+   },
+   "deck": "SVT",
+   "out": "SVT"
+  },
+  {
+   "child": null,
+   "deck": "SVT",
+   "out": "SVT"
+  },
+  {
+   "child": {
+    "id": "ivan",
+    "name": "Иван",
+    "grade": "5 класс",
+    "decks": "Иван::{klasse}"
+   },
+   "deck": "Математика",
+   "out": "Иван::5 класс::Математика"
+  },
+  {
+   "child": {
+    "id": "ivan",
+    "name": "Иван",
+    "grade": "5 класс",
+    "decks": "Иван::{klasse}"
+   },
+   "deck": "иван::Математика",
+   "out": "Иван::5 класс::Математика"
+  },
+  {
+   "child": {
+    "id": "ivan",
+    "name": "Иван",
+    "grade": "5 класс",
+    "decks": "Иван::{klasse}"
+   },
+   "deck": "Анна::Математика",
+   "out": "Иван::5 класс::Анна::Математика"
+  },
+  {
+   "child": {
+    "id": "eleni",
+    "name": "Ελένη",
+    "grade": "",
+    "decks": "Ελένη"
+   },
+   "deck": "ΕΛΕΝΗ::Ιστορία",
+   "out": "Ελένη::Ιστορία"
+  },
+  {
+   "child": {
+    "id": "yuki",
+    "name": "ゆき",
+    "grade": "",
+    "decks": "ゆき::{curso}"
+   },
+   "deck": "数学",
+   "out": "ゆき::数学"
+  },
+  {
+   "child": {
+    "id": "grete",
+    "name": "Grete",
+    "grade": "",
+    "decks": "STRASSE"
+   },
+   "deck": "strasse::Deutsch",
+   "out": "STRASSE::Deutsch"
+  },
+  {
+   "child": {
+    "id": "grete",
+    "name": "Grete",
+    "grade": "",
+    "decks": "STRASSE"
+   },
+   "deck": "Straße::Deutsch",
+   "out": "STRASSE::Deutsch"
+  }
+ ],
+ "decks_for_ai": [
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    },
+    {
+     "id": "ivan",
+     "name": "Иван",
+     "grade": "5 класс",
+     "decks": "Иван::{klasse}"
+    },
+    {
+     "id": "yuki",
+     "name": "ゆき",
+     "grade": "",
+     "decks": "ゆき::{curso}"
+    }
+   ],
+   "child": "jules",
+   "decks": [
+    "Jules::5e::Anglais::Food",
+    "Mathilde::3e::SVT::La cellule",
+    "Maths::Fractions",
+    "Jules::5e::Maths::Fractions",
+    "Иван::5 класс::Математика",
+    "Анна::История",
+    "ゆき::数学",
+    "はな::国語"
+   ],
+   "out": [
+    "Anglais::Food",
+    "Maths::Fractions",
+    "Анна::История",
+    "はな::国語"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    },
+    {
+     "id": "ivan",
+     "name": "Иван",
+     "grade": "5 класс",
+     "decks": "Иван::{klasse}"
+    },
+    {
+     "id": "yuki",
+     "name": "ゆき",
+     "grade": "",
+     "decks": "ゆき::{curso}"
+    }
+   ],
+   "child": "mathilde",
+   "decks": [
+    "Jules::5e::Anglais::Food",
+    "Mathilde::3e::SVT::La cellule",
+    "Maths::Fractions",
+    "Jules::5e::Maths::Fractions",
+    "Иван::5 класс::Математика",
+    "Анна::История",
+    "ゆき::数学",
+    "はな::国語"
+   ],
+   "out": [
+    "Maths::Fractions",
+    "SVT::La cellule",
+    "Анна::История",
+    "はな::国語"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    },
+    {
+     "id": "ivan",
+     "name": "Иван",
+     "grade": "5 класс",
+     "decks": "Иван::{klasse}"
+    },
+    {
+     "id": "yuki",
+     "name": "ゆき",
+     "grade": "",
+     "decks": "ゆき::{curso}"
+    }
+   ],
+   "child": "ivan",
+   "decks": [
+    "Jules::5e::Anglais::Food",
+    "Mathilde::3e::SVT::La cellule",
+    "Maths::Fractions",
+    "Jules::5e::Maths::Fractions",
+    "Иван::5 класс::Математика",
+    "Анна::История",
+    "ゆき::数学",
+    "はな::国語"
+   ],
+   "out": [
+    "Maths::Fractions",
+    "Анна::История",
+    "Математика",
+    "はな::国語"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    },
+    {
+     "id": "ivan",
+     "name": "Иван",
+     "grade": "5 класс",
+     "decks": "Иван::{klasse}"
+    },
+    {
+     "id": "yuki",
+     "name": "ゆき",
+     "grade": "",
+     "decks": "ゆき::{curso}"
+    }
+   ],
+   "child": "yuki",
+   "decks": [
+    "Jules::5e::Anglais::Food",
+    "Mathilde::3e::SVT::La cellule",
+    "Maths::Fractions",
+    "Jules::5e::Maths::Fractions",
+    "Иван::5 класс::Математика",
+    "Анна::История",
+    "ゆき::数学",
+    "はな::国語"
+   ],
+   "out": [
+    "Maths::Fractions",
+    "Анна::История",
+    "はな::国語",
+    "数学"
+   ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    },
+    {
+     "id": "mathilde",
+     "name": "Mathilde",
+     "grade": "3ème",
+     "decks": "Mathilde::{class}"
+    },
+    {
+     "id": "ivan",
+     "name": "Иван",
+     "grade": "5 класс",
+     "decks": "Иван::{klasse}"
+    },
+    {
+     "id": "yuki",
+     "name": "ゆき",
+     "grade": "",
+     "decks": "ゆき::{curso}"
+    }
+   ],
+   "child": "",
+   "decks": [
+    "Jules::5e::Anglais::Food",
+    "Mathilde::3e::SVT::La cellule",
+    "Maths::Fractions",
+    "Jules::5e::Maths::Fractions",
+    "Иван::5 класс::Математика",
+    "Анна::История",
+    "ゆき::数学",
+    "はな::国語"
+   ],
+   "out": [
+    "Maths::Fractions",
+    "Анна::История",
+    "はな::国語"
+   ]
+  },
+  {
+   "children": [],
+   "child": "",
+   "decks": [
+    "Jules::5e::Anglais::Food",
+    "Mathilde::3e::SVT::La cellule",
+    "Maths::Fractions",
+    "Jules::5e::Maths::Fractions",
+    "Иван::5 класс::Математика",
+    "Анна::История",
+    "ゆき::数学",
+    "はな::国語"
+   ],
+   "out": [
+    "Jules::5e::Anglais::Food",
+    "Jules::5e::Maths::Fractions",
+    "Mathilde::3e::SVT::La cellule",
+    "Maths::Fractions",
+    "Анна::История",
+    "Иван::5 класс::Математика",
+    "はな::国語",
+    "ゆき::数学"
+   ]
+  }
+ ],
+ "new_deck_name": [
+  {
+   "name": "a new deck",
+   "deck": "Maths::Fractions",
+   "anki": [],
+   "lessons": [],
+   "own": "",
+   "out": "Maths::Fractions"
+  },
+  {
+   "name": "another lesson's deck",
+   "deck": "Maths::Fractions",
+   "anki": [],
+   "lessons": [
+    "Maths::Fractions"
+   ],
+   "own": "",
+   "out": "Maths::Fractions (2)"
+  },
+  {
+   "name": "its case aside",
+   "deck": "maths::fractions",
+   "anki": [],
+   "lessons": [
+    "Maths::Fractions"
+   ],
+   "own": "",
+   "out": "maths::fractions (2)"
+  },
+  {
+   "name": "a deck of the user's in Anki",
+   "deck": "Anglais",
+   "anki": [
+    "Anglais",
+    "Default"
+   ],
+   "lessons": [],
+   "own": "",
+   "out": "Anglais (2)"
+  },
+  {
+   "name": "Anki's own deck is no lesson's",
+   "deck": "Default",
+   "anki": [
+    "Default"
+   ],
+   "lessons": [],
+   "own": "",
+   "out": "Default"
+  },
+  {
+   "name": "a parent may exist",
+   "deck": "Maths",
+   "anki": [],
+   "lessons": [
+    "Maths::Fractions"
+   ],
+   "own": "",
+   "out": "Maths (2)"
+  },
+  {
+   "name": "the next number free",
+   "deck": "Maths",
+   "anki": [
+    "Maths",
+    "Maths (2)"
+   ],
+   "lessons": [
+    "Maths (3)"
+   ],
+   "own": "",
+   "out": "Maths (4)"
+  },
+  {
+   "name": "made again: its own deck and subdecks",
+   "deck": "Maths",
+   "anki": [
+    "Maths",
+    "maths::Fractions",
+    "Anglais"
+   ],
+   "lessons": [],
+   "own": "Maths",
+   "out": "Maths"
+  },
+  {
+   "name": "made again into another lesson's deck",
+   "deck": "Anglais",
+   "anki": [
+    "Maths",
+    "Anglais"
+   ],
+   "lessons": [],
+   "own": "Maths",
+   "out": "Anglais (2)"
+  },
+  {
+   "name": "its spaces trimmed",
+   "deck": "  Maths  ",
+   "anki": [],
+   "lessons": [
+    "Maths"
+   ],
+   "own": "",
+   "out": "Maths (2)"
+  },
+  {
+   "name": "no deck",
+   "deck": "",
+   "anki": [
+    "Maths"
+   ],
+   "lessons": [],
+   "own": "",
+   "out": ""
+  },
+  {
+   "name": "ß as ss",
+   "deck": "STRASSE",
+   "anki": [],
+   "lessons": [
+    "Straße"
+   ],
+   "own": "",
+   "out": "STRASSE (2)"
+  },
+  {
+   "name": "another script",
+   "deck": "Математика",
+   "anki": [
+    "математика"
+   ],
+   "lessons": [],
+   "own": "",
+   "out": "Математика (2)"
+  }
+ ],
+ "shared_deck": [
+  {
+   "top": "Interro",
+   "rest": "Histoire::Révolution",
+   "common": "Histoire",
+   "out": "Interro::Révolution"
+  },
+  {
+   "top": "Interro",
+   "rest": "histoire::Révolution",
+   "common": "Histoire",
+   "out": "Interro::Révolution"
+  },
+  {
+   "top": "Interro",
+   "rest": "Histoire",
+   "common": "Histoire",
+   "out": "Interro"
+  },
+  {
+   "top": "Interro",
+   "rest": "Géo::Fleuves",
+   "common": "Histoire",
+   "out": "Interro::Géo::Fleuves"
+  },
+  {
+   "top": "Interro",
+   "rest": "Maths::Fractions",
+   "common": "",
+   "out": "Interro::Maths::Fractions"
+  },
+  {
+   "top": "Test",
+   "rest": "STRASSE::Kapitel 1",
+   "common": "Straße",
+   "out": "Test::Kapitel 1"
+  },
+  {
+   "top": "Тест",
+   "rest": "ИСТОРИЯ::Петр",
+   "common": "История",
+   "out": "Тест::Петр"
+  },
+  {
+   "top": "Interro",
+   "rest": " Histoire :: Révolution ",
+   "common": "Histoire",
+   "out": "Interro::Révolution"
+  }
+ ],
+ "shared_id": [
+  {
+   "in": "20240101-120000-abcd",
+   "out": "shared-bb7e3063d7bd"
+  },
+  {
+   "in": "",
+   "out": "shared-da39a3ee5e6b"
+  },
+  {
+   "in": "leçon-é",
+   "out": "shared-cd8b9dbb3886"
+  },
+  {
+   "in": "урок",
+   "out": "shared-b958563d088d"
+  }
+ ],
+ "package_name": [
+  {
+   "in": "Maths::Fractions",
+   "out": "Maths - Fractions.apkg"
+  },
+  {
+   "in": "Anglais: \"Food\"",
+   "out": "Anglais -   - Food.apkg"
+  },
+  {
+   "in": "a/b\\c*d?e<f>g|h",
+   "out": "a - b - c - d - e - f - g - h.apkg"
+  },
+  {
+   "in": "::",
+   "out": "notosaurus.apkg"
+  },
+  {
+   "in": "",
+   "out": "notosaurus.apkg"
+  },
+  {
+   "in": "  Révolution  ",
+   "out": "Révolution.apkg"
+  },
+  {
+   "in": "Тест",
+   "out": "Тест.apkg"
+  }
+ ],
+ "package_deck": [
+  {
+   "name": "Mon paquet",
+   "default": "Interro",
+   "common": "Histoire",
+   "out": "Mon paquet"
+  },
+  {
+   "name": "",
+   "default": "Interro",
+   "common": "Histoire",
+   "out": "Interro"
+  },
+  {
+   "name": "  ",
+   "default": "Interro",
+   "common": "Histoire",
+   "out": "Interro"
+  },
+  {
+   "name": "",
+   "default": "",
+   "common": "Histoire::Révolution",
+   "out": "Histoire - Révolution"
+  },
+  {
+   "name": "",
+   "default": "  ",
+   "common": "Histoire",
+   "out": "Histoire"
+  },
+  {
+   "name": "",
+   "default": "",
+   "common": "",
+   "out": "Notosaurus"
+  },
+  {
+   "name": "Interro   de\tlundi",
+   "default": "",
+   "common": "",
+   "out": "Interro de lundi"
+  },
+  {
+   "name": "Interro SVT",
+   "default": "",
+   "common": "",
+   "out": "Interro SVT"
+  },
+  {
+   "name": " :: ",
+   "default": "",
+   "common": "",
+   "out": "-"
+  }
+ ],
+ "speech_rate": [
+  {
+   "slowed": "-25%",
+   "speed": "",
+   "foreign": false,
+   "dictation": false,
+   "out": "+0%"
+  },
+  {
+   "slowed": "-25%",
+   "speed": "",
+   "foreign": true,
+   "dictation": false,
+   "out": "-25%"
+  },
+  {
+   "slowed": "-25%",
+   "speed": "",
+   "foreign": false,
+   "dictation": true,
+   "out": "-25%"
+  },
+  {
+   "slowed": "-25%",
+   "speed": "slow",
+   "foreign": false,
+   "dictation": false,
+   "out": "-25%"
+  },
+  {
+   "slowed": "-25%",
+   "speed": "slow",
+   "foreign": true,
+   "dictation": false,
+   "out": "-25%"
+  },
+  {
+   "slowed": "-25%",
+   "speed": "slow",
+   "foreign": false,
+   "dictation": true,
+   "out": "-25%"
+  },
+  {
+   "slowed": "-25%",
+   "speed": "normal",
+   "foreign": false,
+   "dictation": false,
+   "out": "+0%"
+  },
+  {
+   "slowed": "-25%",
+   "speed": "normal",
+   "foreign": true,
+   "dictation": false,
+   "out": "+0%"
+  },
+  {
+   "slowed": "-25%",
+   "speed": "normal",
+   "foreign": false,
+   "dictation": true,
+   "out": "+0%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "",
+   "foreign": false,
+   "dictation": false,
+   "out": "+0%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "",
+   "foreign": true,
+   "dictation": false,
+   "out": "+0%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "",
+   "foreign": false,
+   "dictation": true,
+   "out": "+0%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "slow",
+   "foreign": false,
+   "dictation": false,
+   "out": "-10%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "slow",
+   "foreign": true,
+   "dictation": false,
+   "out": "-10%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "slow",
+   "foreign": false,
+   "dictation": true,
+   "out": "-10%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "normal",
+   "foreign": false,
+   "dictation": false,
+   "out": "+0%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "normal",
+   "foreign": true,
+   "dictation": false,
+   "out": "+0%"
+  },
+  {
+   "slowed": "+0%",
+   "speed": "normal",
+   "foreign": false,
+   "dictation": true,
+   "out": "+0%"
+  }
+ ],
+ "learned_language": [
+  {
+   "language": "",
+   "pupil": "fr",
+   "spelling": true,
+   "out": "fr"
+  },
+  {
+   "language": "",
+   "pupil": "fr-FR",
+   "spelling": true,
+   "out": "fr"
+  },
+  {
+   "language": "es-ES",
+   "pupil": "fr",
+   "spelling": true,
+   "out": "es-ES"
+  },
+  {
+   "language": "fr-FR",
+   "pupil": "fr",
+   "spelling": true,
+   "out": "fr-FR"
+  },
+  {
+   "language": " en ",
+   "pupil": "fr",
+   "spelling": true,
+   "out": "en"
+  },
+  {
+   "language": "fr-FR",
+   "pupil": "fr",
+   "spelling": false,
+   "out": ""
+  },
+  {
+   "language": "",
+   "pupil": "fr",
+   "spelling": false,
+   "out": ""
+  },
+  {
+   "language": "FR",
+   "pupil": "fr-FR",
+   "spelling": false,
+   "out": ""
+  },
+  {
+   "language": " fr ",
+   "pupil": "fr",
+   "spelling": false,
+   "out": ""
+  },
+  {
+   "language": "fr",
+   "pupil": "FR",
+   "spelling": false,
+   "out": ""
+  },
+  {
+   "language": "en-GB",
+   "pupil": "fr",
+   "spelling": false,
+   "out": "en-GB"
+  },
+  {
+   "language": "en",
+   "pupil": "",
+   "spelling": false,
+   "out": "en"
+  },
+  {
+   "language": "",
+   "pupil": "",
+   "spelling": false,
+   "out": ""
+  },
+  {
+   "language": "",
+   "pupil": "",
+   "spelling": true,
+   "out": ""
+  }
+ ],
+ "page_texts": [
+  {
+   "raw": "[\"a\", \"b\"]",
+   "photos": 2,
+   "out": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "raw": "[\"a\", \"\"]",
+   "photos": 2,
+   "out": [
+    "a",
+    ""
+   ]
+  },
+  {
+   "raw": "[\"a\"]",
+   "photos": 2,
+   "out": []
+  },
+  {
+   "raw": "[\"a\", 1]",
+   "photos": 2,
+   "out": []
+  },
+  {
+   "raw": "[\"a\", null]",
+   "photos": 2,
+   "out": []
+  },
+  {
+   "raw": "{\"a\": 1}",
+   "photos": 1,
+   "out": []
+  },
+  {
+   "raw": "\"a\"",
+   "photos": 1,
+   "out": []
+  },
+  {
+   "raw": "not json",
+   "photos": 1,
+   "out": []
+  },
+  {
+   "raw": "",
+   "photos": 0,
+   "out": []
+  },
+  {
+   "raw": "   ",
+   "photos": 2,
+   "out": []
+  },
+  {
+   "raw": "[]",
+   "photos": 0,
+   "out": []
+  },
+  {
+   "raw": "[\"Größe: 5 µm\"]",
+   "photos": 1,
+   "out": [
+    "Größe: 5 µm"
+   ]
+  }
+ ],
+ "standing_instructions": [
+  {
+   "instructions": "",
+   "child": null,
+   "out": ""
+  },
+  {
+   "instructions": "  ",
+   "child": null,
+   "out": ""
+  },
+  {
+   "instructions": "Pas de dates.",
+   "child": null,
+   "out": "Standing instructions, for every lesson:\nPas de dates.\n(The request below wins if it says otherwise.)\n\n"
+  },
+  {
+   "instructions": "  Pas de dates.\n",
+   "child": null,
+   "out": "Standing instructions, for every lesson:\nPas de dates.\n(The request below wins if it says otherwise.)\n\n"
+  },
+  {
+   "instructions": "",
+   "child": {
+    "grade": "5e",
+    "instructions": ""
+   },
+   "out": "Standing instructions for this pupil:\nThe pupil's school class: 5e (word the cards and helps for that level).\n(The request below wins if it says otherwise.)\n\n"
+  },
+  {
+   "instructions": "",
+   "child": {
+    "grade": "",
+    "instructions": "  Il confond b et d. "
+   },
+   "out": "Standing instructions for this pupil:\nIl confond b et d.\n(The request below wins if it says otherwise.)\n\n"
+  },
+  {
+   "instructions": "Pas de dates.",
+   "child": {
+    "grade": " 5e ",
+    "instructions": "Il confond b et d."
+   },
+   "out": "Standing instructions, for every lesson:\nPas de dates.\n\nStanding instructions for this pupil:\nThe pupil's school class: 5e (word the cards and helps for that level).\nIl confond b et d.\n(The request below wins if it says otherwise.)\n\n"
+  },
+  {
+   "instructions": "Pas de dates.",
+   "child": {
+    "grade": "  ",
+    "instructions": "  "
+   },
+   "out": "Standing instructions, for every lesson:\nPas de dates.\n(The request below wins if it says otherwise.)\n\n"
   }
  ]
 }

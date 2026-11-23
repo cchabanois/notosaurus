@@ -351,6 +351,14 @@ def _shared_deck(top: str, rest: str, common: str) -> str:
     return "::".join([top, *levels])
 
 
+def _package_deck(name: str, default: str, common: str) -> str:
+    """A shared package's own deck: the name asked, else `default` (the test's name), else the
+    deck its lessons share (`common`); one level ("::" a dash), its spaces single. The phone's
+    packageDeck the same (core/shared-cases.json)."""
+    chosen = next((n for n in (name, default, common) if n.strip()), "")
+    return " ".join(chosen.replace("::", " - ").split()) or "Notosaurus"
+
+
 def _shared_id(lesson_id: str) -> str:
     """A lesson's id as a shared package carries it (in its diagrams' and cards' keys): not
     its own, made from its deck, which may name the child."""
@@ -382,7 +390,7 @@ async def export_shared(req: ShareRequest, background: BackgroundTasks) -> FileR
     every = await asyncio.to_thread(children.list_all)
     rests = {lesson.id: children.split_deck(lesson.deck, every)[1] for lesson, _ in found}
     common = exams.common_deck(list(rests.values()))
-    top = " ".join((req.name or default or common).replace("::", " - ").split()) or "Notosaurus"
+    top = _package_deck(req.name, default, common)
     sounded, failures = [], 0
     for lesson, cards in found:
         own = export_request(lesson)

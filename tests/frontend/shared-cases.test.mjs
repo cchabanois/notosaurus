@@ -42,3 +42,11 @@ test("a card's sound: what it says, as tts.spoken", async () => {
     assert.equal(component.spokenText({ front: c.front, back: c.back }), c.out, `${c.front} | ${c.back}`);
   }
 });
+
+test("two deck levels the same, as children.same_level", async () => {
+  const page = await loadScripts("app.js");
+  for (const c of cases.same_level) {
+    const same = page.run(`sameLevel(${JSON.stringify(c.a)}) === sameLevel(${JSON.stringify(c.b)})`);
+    assert.equal(same, c.out, `${c.a} | ${c.b}`);
+  }
+});
