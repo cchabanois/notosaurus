@@ -139,6 +139,13 @@ class Card(BaseModel):
         default=None,
         description="Only when the lesson itself is clearly wrong on this card (see the rules); otherwise null.",
     )
+    # The lesson's photo it was made from (1 = its first; 0 unknown: a card from the instructions
+    # alone, or made before cards knew theirs): correcting the card sends that photo alone
+    page: int = Field(
+        default=0,
+        description="Number of the photo this card's content is taken from, counting the photos given from 1 "
+        "in their order (the one most of it comes from, when several do); 0 when it comes from no photo.",
+    )
     # Set by Notosaurus, not by the AI:
     picture: str = Field(default="", description="Leave empty.")  # file in the lesson's images/ folder
     picture_source: PictureSource | None = Field(default=None, description="Leave empty.")
@@ -236,6 +243,11 @@ class Revision(Deck):
         description='"on" when the correction asks for a dictation of each card (hear the back, write it), '
         '"off" when it asks for none; otherwise empty. Anki makes that card: never write it yourself.',
     )
+
+
+# What the photos sent to correct one card are of the lesson's (correction.fix_photos): all of
+# them, the card's own page alone, or none (the lesson has more than a call takes)
+PhotosSent = Literal["all", "card", "none"]
 
 
 class CardFix(BaseModel):

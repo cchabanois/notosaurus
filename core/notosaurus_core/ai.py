@@ -33,10 +33,10 @@ SLOW_THINKING_S = 45  # the same when the model thinks (a careful lesson): longe
 
 
 # Claude's structured outputs refuse a schema past 20 optional fields ("Schema is too
-# complex"): for Claude, these card fields are required, written empty ("", false) when
+# complex"): for Claude, these card fields are required, written empty ("", false, 0) when
 # they don't apply, as they read when left out. Not the helps and the fun fact: required,
 # a model would write one on every card.
-CLAUDE_REQUIRED = ("subdeck", "info", "figure", "picture_search", "picture_on_back")
+CLAUDE_REQUIRED = ("subdeck", "info", "figure", "picture_search", "picture_on_back", "page")
 
 
 def for_claude(s: AIConfig) -> bool:
@@ -54,13 +54,21 @@ TAGS_ASKED = re.compile(r"\btags?\b|étiquette|etikett|etiqueta|etichett", re.IG
 
 @cache
 def ai_schema(
-    base: type[BaseModel], fun_facts: bool = False, helps: bool = False, claude: bool = False, tags: bool = True
+    base: type[BaseModel],
+    fun_facts: bool = False,
+    helps: bool = False,
+    claude: bool = False,
+    tags: bool = True,
+    page: bool = True,
 ) -> type[BaseModel]:
     """`base` (Extraction, Revision) as the AI fills it: another model, turned back into
     `base` with `base.model_validate(answer.model_dump())`. `claude`: within Claude's limit
-    (CLAUDE_REQUIRED). `tags`: the cards' tags in it (see TAGS_ASKED)."""
+    (CLAUDE_REQUIRED). `tags`: the cards' tags in it (see TAGS_ASKED). `page`: the cards'
+    photo in it (not for one card corrected: it stays the card's, the photos it sees may be
+    that one alone)."""
     left_out = set(SET_BY_NOTOSAURUS)
     left_out |= set() if tags else {"tags"}
+    left_out |= set() if page else {"page"}
     left_out |= set() if fun_facts else {"fun_fact"}
     left_out |= set() if helps else {"explanation", "mnemonic"}
     # Field name → (annotation, FieldInfo), as create_model takes them

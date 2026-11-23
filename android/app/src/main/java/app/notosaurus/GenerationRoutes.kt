@@ -85,14 +85,17 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("summary", revised["summary"]!!)
             }
         }
-        // One card corrected as asked, seeing the lesson's photos (relay_api.FixCardRequest), and
-        // its figure as drawn when it has one (a request about the drawing understood: told back
-        // in figure_problem, for the page to draw it again): the card answered, not saved here
+        // One card corrected as asked, seeing the lesson's photos (its own page alone, when known:
+        // relay_api.FixCardRequest), and its figure as drawn when it has one (a request about the
+        // drawing understood: told back in figure_problem, for the page to draw it again): the card answered, not saved here
         // (the page puts it in place, and can undo it); "Cancel" (?job=) stops it: 409 extract.cancelled
         api("POST", "/api/lessons/{id}/fix-card") {
             val lesson = lesson()
             val req = body()
             val card = req["card"] as? JsonObject
+            // The page the card comes from alone, when known (Generation.fixPhotos): not the whole lesson
+            val page = (card?.get("page") as? JsonPrimitive)?.intOrNull ?: 0
+            val (pages, sent) = Generation.fixPhotos(page, lesson["photo_count"]?.jsonPrimitive?.intOrNull ?: 0)
             val figure = card?.takeIf { it.string("figure").isNotBlank() }
                 ?.let { pictures.file(lesson.string("id"), it.string("picture")) }?.takeIf { it.extension == "svg" }
             val request = buildJsonObject {
@@ -105,9 +108,11 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
                 if (figure != null) put("figure_svg", figure.readText())
                 if (req["quick"]?.jsonPrimitive?.booleanOrNull == true) put("quick", true)
+                put("photos_sent", sent)
             }
+            val photos = pages.mapNotNull { lessons.photo(lesson.string("id"), it)?.readBytes() }
             val fixed = generation.cancellable(call.request.queryParameters["job"]) {
-                relay().withPhotos("fix-card", request, lessons.photos(lesson.string("id")))
+                relay().withPhotos("fix-card", request, photos)
             }
             JsonObject(fixed - "usage")
         }

@@ -124,6 +124,14 @@ def plain_cards(cards: list[Card]) -> None:
                 setattr(card.doubt, name, plain(getattr(card.doubt, name)))
 
 
+def pages_within(cards: list[Card], photos: int) -> None:
+    """Each card's page (the photo it was made from, counted from 1) as the AI gave it, kept
+    only when it is one of the `photos` it was given: 0 (unknown) otherwise, in place."""
+    for card in cards:
+        if not 1 <= card.page <= photos:
+            card.page = 0
+
+
 # An AI caught in a loop: one card written over and over (a diagram's label 43 times), or
 # tags without end (1,866 on one card, the lesson's other cards never written)
 TAGS_MOST = 8

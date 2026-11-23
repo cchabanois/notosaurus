@@ -635,6 +635,19 @@ const photosPart = {
     this.viewer = { open: true, list, index, touchX: 0, card, photos, ...UNZOOMED };
   },
 
+  // The page a card was made from (its `page`, from 1), among the photos shown: its index there;
+  // -1 when unknown, or not one of the lesson's (a card older than pages, a page removed)
+  cardPageIndex(card) {
+    if (!this.lessonId || !(card.page > 0)) return -1;
+    return this.photos.findIndex((p) => p.sent && p.n === card.page);
+  },
+
+  // "📄 p. 3": the lesson's photos in full, at the page the card comes from
+  showCardPage(card) {
+    const i = this.cardPageIndex(card);
+    if (i !== -1) this.openViewer([], i, null, true);
+  },
+
   viewerList() {
     return this.viewer.photos ? this.photos.map((p) => p.url) : this.viewer.list;
   },

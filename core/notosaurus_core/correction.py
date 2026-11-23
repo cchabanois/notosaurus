@@ -6,13 +6,26 @@ import asyncio
 from collections.abc import Sequence
 
 from . import ai, diagrams
-from .calls import ExtractionError, Image
-from .cards import matching, plain_cards
+from .calls import MAX_IMAGES, ExtractionError, Image
+from .cards import matching, pages_within, plain_cards
 from .cards import plain as plain_text
 from .config import AIConfig
-from .models import Card, CardFix, Deck, FixedCard, Revision
+from .models import Card, CardFix, Deck, FixedCard, PhotosSent, Revision
 from .prompts import _fix_text, _revision_text
 from .providers import demo as demo_ai
+
+
+def fix_photos(page: int, photos: int) -> tuple[list[int], PhotosSent]:
+    """The lesson's photos sent to correct one card (their numbers, from 1), and what they
+    are: the card's own when its page is one of the lesson's `photos` ("card"); else every
+    one, when a call takes them all ("all"); else none ("none": a card made before cards knew
+    their page, in a lesson longer than a call takes). The same rule on the phone
+    (Generation.fixPhotos: core/shared-cases.json)."""
+    if 1 <= page <= photos:
+        return [page], "card"
+    if photos <= MAX_IMAGES:
+        return list(range(1, photos + 1)), "all"
+    return [], "none"
 
 
 async def revise_cards(
@@ -59,6 +72,7 @@ async def revise_cards(
     )
     revision = Revision.model_validate(ai._accepted(answer).model_dump())
     plain_cards(revision.cards)
+    pages_within(revision.cards, len(images))  # the lesson's photos, all of them: its own numbers
     revision.summary = plain_text(revision.summary)
     _keep_masks(revision.cards, deck.cards, sizes, fmt)
     return revision
@@ -77,6 +91,7 @@ async def fix_card(
     demo: dict[str, str] | None = None,
     figure_svg: str = "",
     quick: bool = False,
+    photos_sent: PhotosSent = "all",
 ) -> FixedCard:
     """One card corrected by a natural-language request ("the answer is 1789"), seeing the
     lesson's photos: the only card the AI writes, so no other changes. `others`: the other
@@ -85,19 +100,23 @@ async def fix_card(
     picture too, unless what to draw changed. `figure_svg`: its figure as drawn, shown after
     the photos: a request about the drawing ("E is on the wrong side") is seen, and said in
     figure_problem for it to be drawn again (its picture kept until then); left out when it
-    can't be drawn (_drawn). `quick`: as revise_cards'."""
+    can't be drawn (_drawn). `quick`: as revise_cards'. `photos_sent`: what `images` are of the
+    lesson's photos (fix_photos): all, the card's own page, or none of a lesson that has some.
+    Its page stays its own: the AI isn't asked for it."""
     images, _ = ai._prepare(images)
     photos = len(images)
     drawn = await asyncio.to_thread(_drawn, figure_svg) if figure_svg.strip() and card.figure.strip() else None
     if drawn is not None:
         images.append(Image(drawn, "image/png"))
-    text = instructions + _fix_text(prompt, deck, card, others, instruction, language, photos, drawn is not None)
+    text = instructions + _fix_text(
+        prompt, deck, card, others, instruction, language, photos, drawn is not None, photos_sent
+    )
     texts = {**demo_ai.DEMO, **(demo or {})}
     answer = await ai._ask_provider(
         s,
         images,
         text,
-        ai.ai_schema(CardFix, fun_facts=True, helps=True, claude=ai.for_claude(s)),
+        ai.ai_schema(CardFix, fun_facts=True, helps=True, claude=ai.for_claude(s), page=False),
         quick=quick,
         demo=lambda: demo_ai.fixed_card(card, instruction, texts),
     )
@@ -106,7 +125,7 @@ async def fix_card(
         raise ExtractionError("llm.invalid_answer")
     fixed = fix.cards[0]
     plain_cards([fixed])
-    fixed.mask = card.mask
+    fixed.mask, fixed.page = card.mask, card.page
     _same_card(fixed, card)
     problem = plain_text(fix.figure_problem).strip() if drawn is not None and fixed.figure.strip() else ""
     if problem:
@@ -129,10 +148,12 @@ def _drawn(figure_svg: str) -> bytes | None:
 def _keep_ids(revised: list[Card], before: list[Card]) -> None:
     """A revised card keeps the id and the picture of the card it was (cards.matching, in any
     part of the deck: a correction may move it): Anki updates its note, the picture stays,
-    unless what to draw changed (the picture's subject, the figure's description)."""
+    unless what to draw changed (the picture's subject, the figure's description); its page
+    too, unless the AI gave one."""
     for card, match in zip(revised, matching(revised, before, any_part=True), strict=True):
         if match:
             _same_card(card, match)
+            card.page = card.page or match.page
         else:
             card.id, card.picture, card.picture_source = "", "", None  # a new card: its id comes when saved
 

@@ -406,9 +406,10 @@ def regenerated(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson |
 
 def completed(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson | None:
     """The lesson's next pages added: their photos after its own, their cards after its
-    cards (those untouched: their ids, so their notes in Anki, stay). `g`'s cards and frames
-    count pages from the first new photo; numbered here from the lesson's own. Only its
-    cards, photos, frames and page texts are taken (the deck, voice… stay the lesson's)."""
+    cards (those untouched: their ids, so their notes in Anki, stay). `g`'s cards (their page,
+    their mask) and frames count pages from the first new photo; numbered here from the
+    lesson's own. Only its cards, photos, frames and page texts are taken (the deck, voice…
+    stay the lesson's)."""
     cards = g.content.cards
     with storage.lock:
         path = folder(id)
@@ -421,6 +422,8 @@ def completed(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson | N
         for card in cards:
             if card.mask:
                 card.mask.page += before
+            if card.page:  # 0: unknown, stays so
+                card.page += before
         texts = old.page_texts
         if any(g.page_texts):  # one per photo: the earlier pages' ("" without a PDF), then these
             texts = [*old.page_texts, *[""] * (before - len(old.page_texts)), *g.page_texts]

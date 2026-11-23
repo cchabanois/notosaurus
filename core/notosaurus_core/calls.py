@@ -15,6 +15,9 @@ from .config import AIConfig
 from .errors import AppError
 from .models import AiCall, CallKind
 
+# The photos one call to the AI takes at most (the relay's cap: relay_api): a lesson holds more
+MAX_IMAGES = 10
+
 # What the user is told while waiting (relay_api.AiStep), set by `telling`.
 _telling: ContextVar[Callable[[dict], object] | None] = ContextVar("notosaurus_ai_steps", default=None)
 

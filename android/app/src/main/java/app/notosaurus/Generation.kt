@@ -10,6 +10,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -77,7 +78,9 @@ class Generation(
         }
         // The photos as taken: one sideways is turned with ↻ (no turn guessed: the AI named a
         // line's direction wrongly, a photo turned upside down)
-        val cards = found["deck"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+        // Each card's page among this call's photos (0 unknown: from an older relay too); a lesson
+        // completed numbers them from its own (Lessons.completed)
+        val cards = found["deck"]!!.jsonObject["cards"]!!.jsonArray.map { pageWithin(it.jsonObject, form.images.size) }
         val frames = (found["frames"] as? JsonArray)?.map { it.jsonObject }.orEmpty()
         val photos = form.images
         val content = mapOf(
@@ -104,6 +107,23 @@ class Generation(
     }
 
     companion object {
+        /** The card's page (the photo it was made from, counted from 1) as the AI gave it, kept
+         * only when it is one of the call's `photos`: 0 (unknown) otherwise (cards.pages_within). */
+        fun pageWithin(card: JsonObject, photos: Int): JsonObject {
+            val page = (card["page"] as? JsonPrimitive)?.intOrNull ?: 0
+            return card.with("page" to JsonPrimitive(if (page in 1..photos) page else 0))
+        }
+
+        /** The lesson's photos sent to correct one card (their numbers, from 1), and what they are,
+         * as the computer (correction.fix_photos, core/shared-cases.json): the card's own page when
+         * known ("card"); else all, when one call takes them ("all"); else none ("none": an older
+         * card, a lesson longer than the relay takes at once, relay.too_large otherwise). */
+        fun fixPhotos(page: Int, photos: Int): Pair<List<Int>, String> = when {
+            page in 1..photos -> listOf(page) to "card"
+            photos <= LocalServer.MAX_PER_CALL -> (1..photos).toList() to "all"
+            else -> emptyList<Int>() to "none"
+        }
+
         /** The pages' texts sent by the page (JSON, one string per photo: a PDF page's text, "" for
          * a photo); anything else (not JSON, not strings, not one per photo): none, as the computer
          * (app/routes/generation.py, _page_texts). A list of the wrong length would give a page's

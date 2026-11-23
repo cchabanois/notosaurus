@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import diagrams
-from .models import SET_BY_NOTOSAURUS, Card, Deck
+from .models import SET_BY_NOTOSAURUS, Card, Deck, PhotosSent
 
 # The fixed rules, in rules/<name>.md: a paragraph or a bullet per line, read as they are
 # (what each call adds to them, the lesson, the cards, a language: the _…_text functions)
@@ -201,21 +201,33 @@ def _fix_text(
     language: str,
     photos: int,
     figure: bool = False,
+    sent: PhotosSent = "all",
 ) -> str:
     """One card corrected, or written when it is still empty (a card just added): the
     others' fronts shown, not to repeat one of them. `figure`: its figure as drawn is the
-    last image, after the photos."""
+    last image, after the photos. `sent`: what the photos are of the lesson's
+    (correction.fix_photos); its page never shown (numbered among the lesson's photos, not
+    the ones sent)."""
     source = "these photos with these instructions" if photos else "these instructions (no photo)"
+    seen = ""
+    if sent == "card" and photos:
+        source = "photos with these instructions"
+        seen = "\nThe photo shown is the lesson's page this card comes from; its other pages are not shown."
+    elif sent == "none":
+        source = "photos with these instructions"
+        seen = "\nThe lesson's photos are not shown here."
     listed = "\n".join(f"- {front.strip()}" for front in others if front.strip()) or "(none)"
     if not (card.front.strip() or card.back.strip()):
+        lesson = "the photos, the instructions" if photos else "the instructions"
         asked = f"""\
 A card to write for this lesson (still empty): {instruction.strip()}
 
-Write this card, as the one card in "cards", from the request and the lesson (the photos, \
-the instructions): what the request asks for, not one of the other cards above."""
+Write this card, as the one card in "cards", from the request and the lesson ({lesson}): \
+what the request asks for, not one of the other cards above."""
         done = "what the card asks"
     else:
-        current = json.dumps(card.model_dump(exclude=SET_BY_NOTOSAURUS | {"mask"}), ensure_ascii=False, indent=1)
+        shown = card.model_dump(exclude=SET_BY_NOTOSAURUS | {"mask", "page"})
+        current = json.dumps(shown, ensure_ascii=False, indent=1)
         asked = f"""\
 The card to correct (JSON):
 {current}
@@ -225,10 +237,11 @@ Requested correction for this card: {instruction.strip()}
 Apply this request to this card only and return it, as the one card in "cards". Only change \
 what the request is about; keep the rest of the card as it is."""
         if figure:
+            where = "image after the photo" if photos == 1 else "image after the lesson's photos"
             asked += f"""
 
 The last image is this card's figure as drawn now, from its "figure" description \
-(the {"image after the lesson's photos" if photos else "only image"}). The request may be about \
+(the {where if photos else "only image"}). The request may be about \
 the card's text or about this figure. The drawing may be wrong: "figure" says what it should \
 show, never rewritten after what the drawing shows, and left as it is by a request about the \
 card's text. When the request is about the figure: change "figure" when what it should show \
@@ -241,7 +254,7 @@ Otherwise "figure_problem" stays empty."""
         done = "what you changed"
     return f"""\
 The lesson "{deck}" was made from {source}:
-{prompt.strip()}
+{prompt.strip()}{seen}
 
 Its other cards (their fronts):
 {listed}

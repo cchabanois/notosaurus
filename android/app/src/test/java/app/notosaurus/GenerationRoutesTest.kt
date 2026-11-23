@@ -259,6 +259,85 @@ class GenerationRoutesTest : LocalServerTestBase() {
         assertEquals("the cat, cut out", client.get("/api/lessons/$id/pictures/${cat.string("picture")}") { page() }.bodyAsText())
     }
 
+    /** Pages `numbers` as the page sends them, each "page #n;" (found again in what the relay gets). */
+    private fun pageForm(numbers: IntRange) = formData {
+        for (n in numbers) {
+            append("images", "page #$n;".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"page-$n.jpg\"")
+            })
+        }
+        append("prompt", "p")
+    }
+
+    @Test
+    fun aCardsPageCountedAmongTheLessonsPhotos() = app { client ->
+        // The AI numbers the photos of its call: a page past them is unknown (0); a lesson
+        // completed numbers its next pages' cards after its own, its older cards untouched
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "le chat", "back": "the cat", "page": 3},
+            {"front": "le chien", "back": "the dog"},
+            {"front": "l'oiseau", "back": "the bird", "page": 11}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val id = client.submitFormWithBinaryData("/api/extract", pageForm(1..10)) { page() }.json().jsonObject.string("id")
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "le ciel", "back": "the sky", "page": 2},
+            {"front": "la mer", "back": "the sea", "page": 3},
+            {"front": "la terre", "back": "the earth", "page": 0}]}, "turns": [], "usage": {"credits": 1, "credits_left": 98}}""")
+        val lesson = client.submitFormWithBinaryData("/api/lessons/$id/complete", pageForm(11..12)) { page() }.json().jsonObject
+        assertEquals(listOf(3, 0, 0, 12, 0, 0), lesson.cards().map { it["page"]!!.jsonPrimitive.int })
+        assertEquals("page #3;", folder.root.resolve("lessons/$id/page-3.jpg").readText()) // the older card's page still its photo
+        // Made again: from 1
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le chat", "back": "the cat", "page": 2}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 97}}""")
+        val again = client.submitFormWithBinaryData("/api/lessons/$id/regenerate", pageForm(1..2)) { page() }.json().jsonObject
+        assertEquals(listOf(2), again.cards().map { it["page"]!!.jsonPrimitive.int })
+    }
+
+    @Test
+    fun aCardCorrectedWithItsOwnPageAlone() = app { client ->
+        // A lesson of 12 pages (more than the relay takes at once): a card corrected sends the
+        // page it comes from alone; an older card's (no page) sends none, rather than all 12
+        // (relay.too_large); a short lesson's older card, all of them, as before
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le chat", "back": "the cat"}]}, "turns": [],
+            "usage": {"credits": 1, "credits_left": 99}}""")
+        val id = client.submitFormWithBinaryData("/api/extract", pageForm(1..10)) { page() }.json().jsonObject.string("id")
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le ciel", "back": "the sky", "page": 2}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 98}}""")
+        val long = client.submitFormWithBinaryData("/api/lessons/$id/complete", pageForm(11..12)) { page() }.json().jsonObject
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le chat", "back": "the cat"}]}, "turns": [],
+            "usage": {"credits": 1, "credits_left": 97}}""")
+        val short = client.submitFormWithBinaryData("/api/extract", pageForm(1..3)) { page() }.json().jsonObject
+
+        val sent = mutableListOf<Pair<List<Int>, String>>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                if (request.url.encodedPath != "/v1/fix-card") return MockResponse.Builder().code(404).build()
+                val body = request.body!!.utf8()
+                val asked = request.multipartRequest()
+                sent += (1..12).filter { body.contains("page #$it;") } to asked.string("photos_sent")
+                if (sent.last().first.size > 10) return MockResponse.Builder().code(413).body("""{"code": "relay.too_large"}""").build()
+                val card = JsonObject(asked["card"]!!.jsonObject + ("back" to JsonPrimitive("fixed")))
+                return MockResponse.Builder().body("""{"card": $card, "summary": "ok", "usage": {"credits": 1, "credits_left": 90}}""").build()
+            }
+        }
+        suspend fun fix(lesson: JsonObject, card: JsonObject): JsonObject {
+            val res = client.post("/api/lessons/${lesson.string("id")}/fix-card") {
+                page(); contentType(ContentType.Application.Json)
+                setBody("""{"card": $card, "instruction": "x", "others": []}""")
+            }
+            assertEquals(HttpStatusCode.OK, res.status)
+            return res.json().jsonObject["card"]!!.jsonObject
+        }
+        val (older, known) = long.cards()
+        assertEquals(12, known["page"]!!.jsonPrimitive.int)
+        assertEquals(12, fix(long, known)["page"]!!.jsonPrimitive.int) // its page kept
+        assertEquals(listOf(12) to "card", sent.last())
+        assertEquals("fixed", fix(long, older).string("back")) // corrected all the same
+        assertEquals(emptyList<Int>() to "none", sent.last())
+        fix(short, short.cards()[0])
+        assertEquals((1..3).toList() to "all", sent.last())
+    }
+
     @Test
     fun theLessonsOwnDrawingsLookedForTenPagesAtATime() = app { client ->
         // A lesson of 12 pages: 10 read at once, then its 2 next ones

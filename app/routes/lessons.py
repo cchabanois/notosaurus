@@ -173,14 +173,16 @@ async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
 @router.post("/api/lessons/{id}/fix-card")
 async def fix_card(id: str, req: FixCardRequest, lang: str = Depends(page_lang), job: str = Query("")) -> llm.FixedCard:
     """One card corrected by the AI as asked ("the answer is 1789"), seeing the lesson's
-    photos; the lesson isn't saved here: the page puts the card in place (and can undo it).
-    `job`: "Cancel" stops it (409 extract.cancelled)."""
+    photos (the page it comes from alone, when known); the lesson isn't saved here: the page
+    puts the card in place (and can undo it). `job`: "Cancel" stops it (409 extract.cancelled)."""
     return await cancellable(job, _fixed(id, req, lang))
 
 
 async def _fixed(id: str, req: FixCardRequest, lang: str) -> llm.FixedCard:
     lesson = await access.editable(id)
-    photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
+    # The page the card comes from alone, when known (llm.fix_photos): not the whole lesson
+    pages, sent = llm.fix_photos(req.card.page, lesson.photo_count)
+    photos = [Image(lessons.photo(id, n), "image/jpeg") for n in pages]
     every = await asyncio.to_thread(children.list_all)
     child = children.chosen(every, lesson.child, lesson.owner)
     figure = await asyncio.to_thread(_drawn_figure, id, req.card)
@@ -199,6 +201,7 @@ async def _fixed(id: str, req: FixCardRequest, lang: str) -> llm.FixedCard:
             demo=i18n.get(lang, "demo"),
             figure_svg=figure,
             quick=req.quick,
+            photos_sent=sent,
         )
 
 

@@ -50,8 +50,11 @@ async def _demo[T: BaseModel](s: AIConfig, answer: Callable[[], T] | None, on_ca
 
 
 def extraction(images: list[Image], prompt: str, fun_facts: bool = False, helps: bool = False) -> Extraction:
-    """The demo's lesson (see _fake), with a fun fact and helps when asked for."""
+    """The demo's lesson (see _fake), with a fun fact and helps when asked for; its cards
+    shared out among the photos, each its page (a diagram's label: its photo's)."""
     found = _fake(images, prompt)
+    for i, card in enumerate(found.cards):
+        card.page = card.mask.page if card.mask else i % len(images) + 1 if images else 0
     if fun_facts:  # the demo's "did you know" on its first card
         found.cards[0].fun_fact = "Le savais-tu ? Ce mot vient du latin."
     if helps:  # the demo's helps: an explanation on the first card, a mnemonic on the second
