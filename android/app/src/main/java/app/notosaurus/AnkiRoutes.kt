@@ -52,8 +52,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                     step(buildJsonObject { put("step", "sounds"); put("done", done); put("total", total) })
                 }
                 step(buildJsonObject { put("step", "cards") })
-                val folder = lessons.images(lessonId)
-                val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()
+                val pictures = deck.cards.mapNotNull { c -> server.pictures.file(lessonId, c.picture)?.let { c.picture to it } }.toMap() // ours only: no "../"
                 // The diagrams: the photos their labels are on
                 val photos = deck.cards.mapNotNull { it.mask?.page }.distinct().mapNotNull { n -> lessons.photo(lessonId, n)?.let { n to it } }.toMap()
                 // The diagram frames as the page has them (the user may have moved one), else the lesson's

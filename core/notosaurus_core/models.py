@@ -3,7 +3,7 @@ corrections, explanations, and the record of each call."""
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .figures_typst import KINDS, FigureKind
 
@@ -33,7 +33,7 @@ class PictureSource(BaseModel):
 
     source: Literal["commons", "openverse", "pixabay", "drawn", "photo", "lesson"]  # lesson: its own pages' drawing
     licence: str = ""  # a free picture's: "Public domain", "CC0", "Pixabay"
-    page: str = ""  # its page at its source
+    page: str = ""  # its page at its source: an https: address, else none
     title: str = ""
     model: str = ""  # a drawing's: the model that drew it
     # A figure's: drawn in Typst or as SVG; Typst's and its packages' names and versions
@@ -44,6 +44,15 @@ class PictureSource(BaseModel):
     # A figure's: what it was drawn from, in the language of its engine and with its family
     # (Card.figure_kind), in the order they are used
     sources: list[SourceFile] = []
+
+    @field_validator("page", mode="before")
+    @classmethod
+    def https_only(cls, page: object) -> object:
+        """A link in the page and in the Anki note: an imported or shared lesson could hold
+        anything there (javascript:…). Dropped, not refused: the lesson still loads."""
+        if isinstance(page, str) and not page.strip().lower().startswith("https://"):
+            return ""
+        return page.strip() if isinstance(page, str) else page
 
 
 class Doubt(BaseModel):

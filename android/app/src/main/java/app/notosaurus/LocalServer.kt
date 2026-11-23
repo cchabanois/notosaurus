@@ -205,7 +205,10 @@ class LocalServer(
             val path = call.parameters.getAll("path").orEmpty().joinToString("/").ifEmpty { "index.html" }
             val bytes = path.takeUnless { ".." in it }?.let(web)
             if (bytes == null) call.respondText("", status = HttpStatusCode.NotFound)
-            else call.respondBytes(bytes, ContentType.defaultForFilePath(path))
+            else {
+                call.response.headers.append("Content-Security-Policy", PAGE_POLICY)
+                call.respondBytes(bytes, ContentType.defaultForFilePath(path))
+            }
         }
     }
 
@@ -352,6 +355,12 @@ class LocalServer(
 
     companion object {
         const val COOKIE = "notosaurus_app"
+
+        // The page's files: its own scripts only, as the computer serves them (app/origins.py, PAGE_POLICY)
+        const val PAGE_POLICY = "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; " +
+            "connect-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; " +
+            "form-action 'self'; frame-ancestors 'none'"
         const val MAX_PHOTOS = 30 // a lesson's pages, as on the computer (MAX_PAGES)
         const val MAX_PER_CALL = 10 // read in one call (the relay's cap): the page sends more in several
 

@@ -1102,6 +1102,9 @@
     "host": {
       "not_allowed": "Notosaurus risponde solo all'indirizzo IP del computer o a localhost: aprilo così, oppure indica {host} in NOTOSAURUS_PUBLIC_URL."
     },
+    "origin": {
+      "not_allowed": "Solo la pagina di Notosaurus può fare questa richiesta: l'ha inviata un altro sito, quindi è stata rifiutata."
+    },
     "draft": {
       "too_large": "La lezione in corso è troppo pesante per essere conservata.",
       "invalid": "Non è stato possibile conservare la lezione in corso."

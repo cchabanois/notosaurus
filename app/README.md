@@ -22,7 +22,7 @@ Docker. The Android app doesn't use it: it answers the same `/api` on the phone 
 | `prompts.py` | Notosaurus's prompts (`builtinPrompts` in the i18n files) and the user's |
 | `children.py` | the children's cards: first name (never sent to the AI), class, decks, instructions |
 | `exams.py` | the tests to prepare: lessons or some of their cards, under an `Exam::<name>` tag in Anki |
-| `access.py`, `hosts.py`, `attempts.py` | who may do what: paired devices and Anki profiles; the host names answered (DNS rebinding); wrong admin passwords slowed down |
+| `access.py`, `hosts.py`, `origins.py`, `attempts.py` | who may do what: paired devices and Anki profiles; the host names answered (DNS rebinding); changes only from the page itself, its Content-Security-Policy; wrong admin passwords slowed down |
 | `anki.py`, `note_types/` | the notes a lesson gives and the `.apkg` (genanki); the note types, one module per family (text, cloze, choice, diagram, picture) |
 | `ankiconnect.py` | the direct send: AnkiConnect, or the add-on's bridge |
 | `lesson_notes.py`, `decks.py` | a lesson's notes found in Anki, and deleted with it; the decks that exist, given to the AI |

@@ -1,9 +1,13 @@
 """The phones: pairing by the QR code's token, the cookie it becomes, unpairing,
 the link the QR code carries, and the QR codes themselves."""
 
+import re
+from pathlib import Path
+
 from conftest import ADMIN, on_the_computer
 
 from app import settings
+from app.origins import PAGE_POLICY
 from app.routes.devices import DEVICE_COOKIE
 
 
@@ -134,3 +138,67 @@ def test_only_its_own_addresses_answered(client, monkeypatch):
         monkeypatch.setenv("NOTOSAURUS_PUBLIC_URL", "https://pc.example.ts.net/")
         assert local.get("/api/lessons", headers={"Host": "pc.example.ts.net"}).status_code == 200
         assert local.get("/api/lessons", headers={"Host": "other.example.ts.net"}).status_code == 421
+
+
+def test_other_sites_change_nothing(client, monkeypatch):
+    """A website open on the computer sends a form, or a request without a body, to
+    127.0.0.1: its Host is allowed and the computer needs no token. The browser says where
+    it comes from (Origin, Sec-Fetch-Site): refused for anything but reading."""
+    monkeypatch.setenv("NOTOSAURUS_EMBEDDED", "1")  # the add-on: its settings need no password here
+    refused = {"code": "origin.not_allowed", "params": {}}
+    with on_the_computer() as local:
+        for headers in (
+            {"Origin": "https://evil.example"},
+            {"Origin": "http://127.0.0.1:3000"},  # another server on the computer
+            {"Origin": "http://192.168.1.20:8000"},  # the same port, another address
+            {"Origin": "null"},  # a sandboxed frame, a file
+            {"Sec-Fetch-Site": "cross-site"},
+        ):
+            for path in ("/api/admin/phone/unpair", "/api/admin/test", "/api/admin/transfer"):
+                r = local.post(path, headers=headers)
+                assert (r.status_code, r.json()["detail"]) == (403, refused), (path, headers)
+            r = local.post("/api/extract", data={"prompt": "x"}, headers=headers)
+            assert r.status_code == 403, headers
+            assert local.get("/api/lessons", headers=headers).status_code == 200  # reading: no harm
+
+        # The page itself (by 127.0.0.1, localhost, an IPv6 address), and what sends no
+        # Origin (curl, the phone app's own calls)
+        for headers in (
+            {"Origin": "http://127.0.0.1:8000", "Sec-Fetch-Site": "same-origin"},
+            {"Origin": "http://LOCALHOST:8000", "Host": "localhost:8000"},
+            {"Origin": "http://[::1]:8000", "Host": "[::1]:8000"},
+            {},
+        ):
+            assert local.post("/api/admin/phone/unpair", headers=headers).status_code == 200, headers
+        # A phone's browser, the app's WebView on the computer's page: by its address
+        phone = {"Origin": "http://192.168.1.20:8000", "Host": "192.168.1.20:8000"}
+        assert local.post("/api/admin/phone/unpair", headers=phone).status_code == 200
+        # Behind a proxy (https, its default port), the name of NOTOSAURUS_PUBLIC_URL
+        inside = {"Origin": "https://pc.example.ts.net", "Host": "127.0.0.1:8000"}  # a proxy giving its own Host
+        assert local.post("/api/admin/phone/unpair", headers=inside).status_code == 403
+        monkeypatch.setenv("NOTOSAURUS_PUBLIC_URL", "https://pc.example.ts.net/")
+        assert local.post("/api/admin/phone/unpair", headers=inside).status_code == 200
+        proxied = {"Origin": "https://pc.example.ts.net", "Host": "pc.example.ts.net"}
+        assert local.post("/api/admin/phone/unpair", headers=proxied).status_code == 200
+        plain = {**inside, "Origin": "http://pc.example.ts.net"}  # not its scheme
+        assert local.post("/api/admin/phone/unpair", headers=plain).status_code == 403
+
+
+DIRECTIVES = ("script-src 'self' 'unsafe-eval';", "object-src 'none'", "base-uri 'none'", "frame-ancestors 'none'")
+
+
+def test_the_page_runs_only_its_own_scripts(client):
+    """The page's files carry a Content-Security-Policy: no other site's script, no
+    javascript: link, no plugin, no frame around the page. An SVG keeps its own, stricter."""
+    for path in ("/", "/index.html", "/admin.html", "/app-cards.js"):
+        policy = client.get(path).headers["content-security-policy"]
+        for directive in DIRECTIVES:
+            assert directive in policy, (path, directive)
+        assert "unsafe-inline" not in policy.split("script-src")[1].split(";")[0]
+
+
+def test_the_app_serves_the_page_with_the_same_policy():
+    """The phone app serves the same page (LocalServer.kt): the same policy."""
+    kotlin = (Path(__file__).parent.parent / "android/app/src/main/java/app/notosaurus/LocalServer.kt").read_text()
+    declared = re.search(r"const val PAGE_POLICY = (.*?)\n\n", kotlin, re.S)
+    assert declared and "".join(re.findall(r'"([^"]*)"', declared[1])) == PAGE_POLICY

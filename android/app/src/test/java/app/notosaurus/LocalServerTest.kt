@@ -205,6 +205,11 @@ class LocalServerTest : LocalServerTestBase() {
         assertEquals(HttpStatusCode.OK, index.status)
         assertTrue(index.headers[HttpHeaders.ContentType]!!.startsWith("text/html"))
         assertTrue("app.js" in index.bodyAsText())
+        // Its own scripts only: no other site's, no javascript: link, no plugin, no frame around it
+        val policy = index.headers["Content-Security-Policy"]!!
+        for (directive in listOf("script-src 'self' 'unsafe-eval';", "object-src 'none'", "base-uri 'none'", "frame-ancestors 'none'")) {
+            assertTrue(directive, directive in policy)
+        }
         assertEquals(HttpStatusCode.OK, client.get("/i18n/fr.json").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/../build.gradle.kts").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/nope.js").status)
