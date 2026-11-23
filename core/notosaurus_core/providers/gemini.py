@@ -88,9 +88,11 @@ LIGHT_ANSWER_S = 30
 
 # What makes the next model tried, unless it was the last: overloaded (a 5xx still there
 # after the SDK's retries), no quota (a free key has none for the latest models, and a
-# quota of its own for each model: the next one may still answer), stopped answering.
+# quota of its own for each model: the next one may still answer), stopped answering, not
+# reached (a connection refused or dropped, still so after the SDK's retries: another route
+# may be reachable, and a try that reached nothing costs nothing).
 # Anything else (a wrong key, a request refused) stops at once.
-_NEXT_MODEL = {"llm.overloaded", "llm.gemini_quota", "llm.timeout"}
+_NEXT_MODEL = {"llm.overloaded", "llm.gemini_quota", "llm.timeout", "llm.unreachable"}
 
 # Each error is the route's or the answer's; a new code goes on one side
 # (test_every_gemini_error_on_one_side). The route's own (its key, its quota or credits, a
@@ -100,6 +102,24 @@ _NEXT_MODEL = {"llm.overloaded", "llm.gemini_quota", "llm.timeout"}
 # the route not counted.
 _ROUTE_ERRORS = _NEXT_MODEL | {"llm.invalid_key", "llm.missing_key", "llm.api_error"}
 _ANSWER_ERRORS = {"llm.refused", "llm.empty_answer", "llm.truncated", "llm.invalid_answer"}
+
+
+def _network_errors() -> tuple[type[Exception], ...]:
+    """What the SDK lets through when Gemini is not reached (its HTTP client's: httpx or
+    httpx2, aiohttp with mTLS; Vertex AI's credentials not refreshed): no errors.APIError."""
+    import httpx
+    from google.auth.exceptions import TransportError
+
+    found: list[type[Exception]] = [httpx.TransportError, TransportError]
+    with suppress(ImportError):
+        import httpx2
+
+        found.append(httpx2.TransportError)
+    with suppress(ImportError):
+        import aiohttp
+
+        found += [aiohttp.ClientConnectionError, aiohttp.ClientPayloadError]
+    return tuple(found)
 
 
 class _Stalled(Exception):
@@ -253,7 +273,7 @@ async def _gemini[T: BaseModel](
 async def _fallback(request: _Request, models: list[str], routes: list[_Route] | None = None):
     """The answer of the first try that gives one: the configured model on each route
     (resting ones left out), then the fallback models on the first. Overloaded, without
-    quota or stalled, the next try; any other error stops, as does the last try's, except
+    quota, stalled or not reached, the next try; any other error stops, as does the last try's, except
     the route's own on another route than the config's (its key, its credits: the next try
     may work), never the answer's (_ROUTE_ERRORS, _ANSWER_ERRORS).
     Another route is tried only within the routing's budget."""
@@ -318,6 +338,9 @@ async def _call_one_model(request: _Request, model: str):
             response = await _generate(request, model)
     except errors.APIError as e:
         raise _api_error(model, e) from e
+    except _network_errors() as e:
+        log.warning("Gemini %s not reached: %s", model, type(e).__name__)  # its type, never its message
+        raise ExtractionError("llm.unreachable", provider="Gemini") from e
     except _Stalled:
         log.warning("Gemini %s stopped answering", model)
         raise ExtractionError("llm.timeout", provider="Gemini") from None

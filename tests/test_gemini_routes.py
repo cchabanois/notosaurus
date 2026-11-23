@@ -167,6 +167,24 @@ def test_another_routes_own_failure_counted_toward_its_rest(monkeypatch):
     assert gemini._HEALTH["key"].rest_until  # failed twice (stalls=2): rests
 
 
+def test_a_route_not_reached_the_next_tried_and_counted(monkeypatch):
+    """No connection to a route (the config's own, or another with the first resting): the
+    same model asked on the next route, the route counted toward its rest."""
+    clients = _routed(monkeypatch, eu=Scripted(a="unreachable"))
+    response, _ = _ask()
+    assert response.text == SVG and _asked(clients) == [("eu", "a"), ("key", "a")]
+    assert len(gemini._HEALTH["eu"].stalled) == 1
+
+    three = ROUTED.model_copy(
+        update={"gemini_routing": ROUTED.gemini_routing.model_copy(update={"routes": "key, global"})}
+    )
+    clients = _routed(monkeypatch, key=Scripted(a="unreachable"))
+    gemini._HEALTH["eu"] = gemini._Health(rest_until=time.monotonic() + 60)
+    response, _ = _ask(three)
+    assert response.text == SVG and _asked(clients) == [("global", "a"), ("key", "a")]
+    assert len(gemini._HEALTH["key"].stalled) == 1
+
+
 def test_every_gemini_error_on_one_side():
     """Each code Gemini's call may fail with is the route's or the answer's, never both."""
     raised = set(re.findall(r'ExtractionError\("(llm\.[a-z_]+)"', inspect.getsource(gemini)))

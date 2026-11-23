@@ -4,6 +4,7 @@ import asyncio
 import types as py_types
 from contextlib import suppress
 
+import httpx
 import pytest
 from google.genai import errors, types
 from helpers import run
@@ -341,8 +342,9 @@ def test_search_words_with_gemini(monkeypatch):
 
 
 class Scripted(FakeGemini):
-    """A Gemini whose models each do as told (`by_model`): "stall" (never answers), an
-    HTTP status (an error still there after the SDK's retries), or answer (by default)."""
+    """A Gemini whose models each do as told (`by_model`): "stall" (never answers),
+    "unreachable" (no connection), an HTTP status (an error still there after the SDK's
+    retries), or answer (by default)."""
 
     def __init__(self, **by_model):
         super().__init__()
@@ -353,6 +355,8 @@ class Scripted(FakeGemini):
         what = self.by_model.get(model)
         if what == "stall":
             await asyncio.sleep(3600)
+        if what == "unreachable":
+            raise httpx.ConnectError("[Errno 111] Connection refused")
         if isinstance(what, int):
             error = errors.ClientError if what < 500 else errors.ServerError
             message = "API key not valid" if model == "bad-key" else "no"
@@ -410,6 +414,31 @@ def test_other_errors_stop_at_the_first_model():
     assert _failure(gemini._fallback(_request(fake), ["bad-key", "b"]))[0] == "llm.invalid_key"
     assert fake.models == ["bad-key"]
     assert _failure(gemini._fallback(_request(fake), [])) == ("llm.empty_answer", {"provider": "Gemini"})
+
+
+def test_gemini_not_reached_said_as_such():
+    """No connection (still none after the SDK's retries): the fallback model tried, then
+    the page says Gemini can't be reached, not a raw network error."""
+    fake = Scripted(a="unreachable")
+    assert run(gemini._fallback(_request(fake), ["a", "b"])).text == SVG
+    fake = Scripted(a="unreachable", b="unreachable")
+    assert _failure(gemini._fallback(_request(fake), ["a", "b"])) == ("llm.unreachable", {"provider": "Gemini"})
+    assert fake.models == ["a", "b"]
+
+
+def test_a_cancelled_call_stays_cancelled():
+    """A call cancelled (the user gone) is not taken for a failure: no other model tried."""
+    fake = Scripted(a="stall")
+
+    async def cancelled():
+        task = asyncio.ensure_future(gemini._fallback(_request(fake), ["a", "b"]))
+        await asyncio.sleep(0.05)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    run(cancelled())
+    assert fake.models == ["a"]
 
 
 def test_one_models_answer_is_recorded():
