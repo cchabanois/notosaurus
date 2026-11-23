@@ -55,6 +55,13 @@ class SharedCasesTest {
     }
 
     @Test
+    fun theCallsLookingForTheLessonsDrawings() = cases("drawing_calls").forEach { c ->
+        fun ints(numbers: JsonArray) = numbers.map { it.jsonPrimitive.int }
+        val out = c["out"]!!.jsonArray.map { it.jsonObject }.map { ints(it["pages"]!!.jsonArray) to ints(it["cards"]!!.jsonArray) }
+        assertEquals(c.string("name"), out, Pictures.drawingCalls(ints(c["pages"]!!.jsonArray), c["photos"]!!.jsonPrimitive.int))
+    }
+
+    @Test
     fun aCardsInfoField() = cases("info_field").forEach { c ->
         val card = Card(front = "f", back = "b", info = c.string("info"), funFact = c.string("fun_fact"))
         assertEquals(c.string("name"), c.string("out"), Anki.info(card))

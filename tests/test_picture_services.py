@@ -496,6 +496,44 @@ def test_a_picture_a_correction_replaced_not_cut_out_of_the_lesson_again(monkeyp
     assert cards[0].picture == "t.jpg"  # looked for as any other
 
 
+def test_a_cards_lesson_drawing_looked_for_on_its_page_and_its_neighbours(monkeypatch, tmp_path):
+    """A 25-page lesson: the cards whose page is known looked for on theirs and the pages
+    around (one call while they fit in one), each drawing cut out of its own photo; a card
+    whose page is unknown on every page, ten at a time, until found."""
+    sent = []
+    where = {"le chat": 4, "l'oiseau": 21, "le chien": 13}  # the page each drawing is on
+
+    async def find_drawings(s, images, cards):
+        pages = [int(image.data.decode().removeprefix("page #")) for image in images]
+        fronts = [card.split(" → ")[0] for card in cards]
+        sent.append((pages, fronts))
+        return {i: (pages.index(where[f]), [0.1, 0.1, 0.5, 0.5]) for i, f in enumerate(fronts) if where[f] in pages}
+
+    monkeypatch.setattr(llm, "find_drawings", find_drawings)
+    cut = {}
+
+    def save(folder, card, data):
+        cut[card.id] = data
+        return f"{card.id}.jpg"
+
+    monkeypatch.setattr(pictures, "cut_out", lambda photo, box: photo)  # the photo it is cut out of
+    monkeypatch.setattr(pictures, "save", save)
+    cards = [
+        Card(front="le chat", back="the cat", picture_prompt="a cat", page=4, id="c"),
+        Card(front="le chien", back="the dog", picture_prompt="a dog", id="d"),  # its page unknown
+        Card(front="l'oiseau", back="the bird", picture_prompt="a bird", page=20, id="b"),
+    ]
+    photos = [llm.Image(f"page #{n}".encode(), "image/jpeg") for n in range(1, 26)]
+    run(pictures.draw_all(AIConfig(), tmp_path / "images", cards, photos=photos))
+    assert sent == [
+        ([3, 4, 5, 19, 20, 21], ["le chat", "l'oiseau"]),
+        (list(range(1, 11)), ["le chien"]),
+        (list(range(11, 21)), ["le chien"]),  # found: pages 21 to 25 not sent
+    ]
+    assert cut == {"c": b"page #4", "d": b"page #13", "b": b"page #21"}
+    assert all(c.picture_source and c.picture_source.source == "lesson" for c in cards)
+
+
 def test_no_lesson_drawing_when_the_call_fails(monkeypatch, tmp_path):
     async def answer(s, images, text, schema, system=None, light=False, **options):
         raise llm.ExtractionError("llm.overloaded", provider="Gemini")

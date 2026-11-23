@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from . import config, figures, files, images, llm, recommended, stock
+from .calls import MAX_IMAGES
 from .config import AIConfig
 from .errors import AppError, loggable
 from .models import Card, PictureSource, SourceFile
@@ -550,10 +551,42 @@ def cut_out(photo: bytes, box: list[float]) -> bytes:
     return out.getvalue()
 
 
+class DrawingCall(NamedTuple):
+    pages: list[int]  # the lesson's photos sent, their numbers (from 1)
+    cards: list[int]  # the cards asked (their indexes), but those an earlier call found
+
+
+def drawing_calls(pages: Sequence[int], photos: int, per_call: int = MAX_IMAGES) -> list[DrawingCall]:
+    """The calls looking for the lesson's own drawings of cards whose pages are `pages` (each
+    card's, from 1; 0 unknown) among the lesson's `photos`. A card's drawing is looked for on
+    its own page and its neighbours (the page before, the page after, within the lesson): the
+    cards taken by their page, each call sends the pages around as many as fit in `per_call`
+    photos. The cards whose page is unknown (0, or not one of the lesson's): every page, at
+    most `per_call` at a time, one call after another, each asked only for those still without
+    a drawing. The same rule on the phone (Pictures.drawingCalls: core/shared-cases.json)."""
+    calls: list[DrawingCall] = []
+    sent: set[int] = set()
+    asked: list[int] = []
+    for page, i in sorted((page, i) for i, page in enumerate(pages) if 1 <= page <= photos):
+        near = set(range(max(1, page - 1), min(photos, page + 1) + 1))
+        if asked and len(sent | near) > per_call:
+            calls.append(DrawingCall(sorted(sent), sorted(asked)))
+            sent, asked = set(), []
+        sent |= near
+        asked.append(i)
+    if asked:
+        calls.append(DrawingCall(sorted(sent), sorted(asked)))
+    unknown = [i for i, page in enumerate(pages) if not 1 <= page <= photos]
+    if unknown:
+        for first in range(1, photos + 1, per_call):
+            calls.append(DrawingCall(list(range(first, min(photos, first + per_call - 1) + 1)), unknown))
+    return calls
+
+
 async def lesson_drawings(s: AIConfig, photos: list[llm.Image], cards: list[Card]) -> dict[int, bytes]:
-    """The drawings of their own the lesson's photos show for these cards, cut out (one
-    light call, llm.find_drawings): {card's index: its JPEG}. None, or the call failing: {}
-    (the cards' pictures then looked for or drawn, as without)."""
+    """The drawings of their own these photos (the lesson's, or some of them) show for these
+    cards, cut out (one light call, llm.find_drawings): {card's index: its JPEG}. None, or the
+    call failing: {} (the cards' pictures then looked for or drawn, as without)."""
     try:
         found = await llm.find_drawings(s, photos, [f"{c.front.strip()} → {c.back.strip()}" for c in cards])
     except AppError as e:
@@ -594,10 +627,11 @@ async def draw_all(
     without its picture is still a card. `step`: told each card's steps as they begin,
     {"card": its id, …relay_api.PictureStep's fields}, then {"card", "step": "ready", its
     picture's fields (READY)} as soon as it has it. `photos`: the lesson's, its own drawings
-    taken first for the cards whose thing they show (lesson_drawings: one call, no search,
-    the pupil's own pictures; {"card", "step": "lesson"} while they are looked at), but for
-    the cards in `not_from_lesson` (their ids): a correction replaced their picture, the
-    lesson's drawing would only come back; theirs looked for as any other. `previous`: by card
+    taken first for the cards whose thing they show (lesson_drawings: each card's on its page
+    and its neighbours, drawing_calls; no search, the pupil's own pictures; {"card", "step":
+    "lesson"} while they are looked at), but for the cards in `not_from_lesson` (their ids): a
+    correction replaced their picture, the lesson's drawing would only come back; theirs
+    looked for as any other. `previous`: by card
     id, the figure a correction replaced, where it came from (its sources, kept_sources) and
     its family: drawn again from it, what is asked changed and the rest kept."""
     # A sentence with gaps' too: its note type shows it (cloze v3), on its question or its answer
@@ -648,19 +682,31 @@ async def _from_the_lesson(
     s: AIConfig, folder: Path, cards: list[Card], photos: list[llm.Image], step: Step | None
 ) -> None:
     """The pictures (not the figures: those are drawn exact) the lesson's own drawings
-    give, saved and told at once (draw_all)."""
+    give, saved and told at once (draw_all). Each card's looked for on its page and its
+    neighbours, a page unknown on all of them (drawing_calls), one call after another."""
     wanted = [c for c in cards if c.picture_prompt.strip() and not c.figure.strip()]
     if not wanted:
         return
     for card in wanted:
         if step:
             step({"card": card.id, "step": "lesson"})
-    for i, jpeg in (await lesson_drawings(s, photos, wanted)).items():
-        card = wanted[i]
-        card.picture = save(folder, card, jpeg)
-        card.picture_source = PictureSource(source="lesson")
-        if step:
-            step({"card": card.id, "step": "ready", **card.model_dump(mode="json", include=READY)})
+    found: set[int] = set()
+    for call in drawing_calls([c.page for c in wanted], len(photos)):
+        asked = [i for i in call.cards if i not in found]  # the drawings' indexes: into these
+        if not asked:
+            continue
+        sent = [photos[page - 1] for page in call.pages]  # a drawing cut out of its own photo
+        for j, jpeg in (await lesson_drawings(s, sent, [wanted[i] for i in asked])).items():
+            found.add(asked[j])
+            _from_its_page(folder, wanted[asked[j]], jpeg, step)
+
+
+def _from_its_page(folder: Path, card: Card, jpeg: bytes, step: Step | None) -> None:
+    """A card's picture cut out of the lesson's page, saved and told at once."""
+    card.picture = save(folder, card, jpeg)
+    card.picture_source = PictureSource(source="lesson")
+    if step:
+        step({"card": card.id, "step": "ready", **card.model_dump(mode="json", include=READY)})
 
 
 def prune(folder: Path, cards: list[Card]) -> int:
