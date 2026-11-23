@@ -118,6 +118,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A lesson of many pages, read in several calls, has its pictures drawn once, after the last call: the next pages' cards are no longer dropped from the saved lesson, and the first pages' pictures are no longer drawn (and paid for) twice.
+- A picture drawn while the lesson is changed elsewhere (the next pages added, a card edited) keeps those changes.
+- A figure whose name ends in digits only keeps its Typst source.
+- A picture just drawn is no longer removed by a prune asked at the same moment (computer and Android).
 - In the app, lessons moved from the computer can be edited and deleted: they were read only, for an Anki profile the phone doesn't have.
 - 🎤 On Android, the phone's speech recognition stopping on an error no longer wipes what it had already written: the text stays in the field, the error is said.
 - 📷 On Android, tapping 📷 again while the pages just scanned were still being added no longer makes them "unreadable"; the camera's photos are no longer kept on the phone when the document scanner is turned off.
