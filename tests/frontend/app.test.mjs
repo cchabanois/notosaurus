@@ -432,7 +432,9 @@ test("dictation: listen, then the text said comes after what was written", async
   assert.equal(c.error, "Nothing heard: try again, closer to the microphone.");
 });
 
-test("dictation heard by the phone: its text in the field as it comes, then the whole of it", async () => {
+test("dictation heard by the phone: its text in the field as it comes, then the whole of it", async (t) => {
+  // Timers mocked before the scripts load: the page asks every HEARD_EVERY (300 ms), on the test's clock
+  t.mock.timers.enable({ apis: ["setTimeout"] });
   let heard = "Douze cartes";
   const page = await loadScripts("app.js", {
     routes: (url) => new Response(
@@ -442,17 +444,24 @@ test("dictation heard by the phone: its text in the field as it comes, then the 
     ),
   });
   const c = page.component();
+  // A turn of the clock, then its answer read (its fetch's promises settled)
+  const asked = async (ms) => {
+    t.mock.timers.tick(ms);
+    await new Promise((done) => setImmediate(done));
+  };
   c.form.text = "Vocabulaire";
   await c.dictate("prompt");
-  await new Promise((done) => setTimeout(done, 450));  // the phone asked what it heard
+  await asked(299);
+  assert.equal(c.form.text, "Vocabulaire");  // not asked yet
+  await asked(1);  // the phone asked what it heard
   assert.equal(c.form.text, "Vocabulaire\nDouze cartes");
   heard = "Douze cartes sur el";
-  await new Promise((done) => setTimeout(done, 350));
+  await asked(300);
   assert.equal(c.form.text, "Vocabulaire\nDouze cartes sur el");  // replaced, not added again
   await c.dictate("prompt");
   assert.equal(c.form.text, "Vocabulaire\nDouze cartes sur el abuelo");
   heard = "late";
-  await new Promise((done) => setTimeout(done, 350));
+  await asked(300);
   assert.equal(c.form.text, "Vocabulaire\nDouze cartes sur el abuelo");  // stopped: no longer asked
 });
 

@@ -1,5 +1,6 @@
-"""Fixtures shared by the tests: a paired phone on fresh data, the demo AI (fake
-provider), TTS and AnkiConnect faked, and an in-memory AnkiConnect (FakeAnki)."""
+"""Fixtures shared by the tests: no outside service reached (every test), a paired phone
+on fresh data, the demo AI (fake provider), TTS and AnkiConnect faked, and an in-memory
+AnkiConnect (FakeAnki)."""
 
 import base64
 import json
@@ -14,7 +15,7 @@ from app.attempts import Attempts
 from app.main import app
 from app.routes import admin as admin_routes
 from app.routes.devices import DEVICE_COOKIE
-from notosaurus_core import prices, tts
+from notosaurus_core import prices, stock, tts
 
 synthesized = []
 
@@ -48,6 +49,34 @@ def anki_unreachable(request):
     raise httpx.ConnectError("refused")
 
 
+class Unreachable:
+    """A service no test may reach unless it fakes it: refused loudly, and each request
+    kept, since the code asking may well swallow the error (a picture source that fails
+    leaves the others)."""
+
+    def __init__(self, name: str):
+        self.name, self.asked = name, []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.asked.append(request)
+        raise AssertionError(f"a test reached {self.name} ({request.url}): fake it")
+
+
+@pytest.fixture(autouse=True)
+def offline(monkeypatch):
+    """No outside service reached by any test, the page tests' server included (it runs
+    in this process): the free pictures' sources refuse (and fail the test), AnkiConnect
+    is closed, OpenRouter's prices are a fixed list. A test fakes any of them over this;
+    the pictures' answers kept by another test are never seen."""
+    pictures = Unreachable("the free pictures' sources (stock)")
+    monkeypatch.setattr(stock, "_transport", httpx.MockTransport(pictures))
+    monkeypatch.setattr(stock, "_cache", {})
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
+    monkeypatch.setattr(prices, "_transport", httpx.MockTransport(model_list))
+    yield pictures
+    assert not pictures.asked, f"a test reached {pictures.name}: {[str(r.url) for r in pictures.asked]}"
+
+
 # Notosaurus answers only to an IP address or localhost (app/hosts.py), as phones and
 # the computer itself reach it: never to TestClient's default "testserver"
 PHONE = "http://192.168.1.20:8000"  # a phone on the Wi-Fi, by the computer's address
@@ -71,9 +100,7 @@ def client(tmp_path, monkeypatch):
     # No sound made ahead while a test runs, unless it says so (tests/test_sounds_ahead.py):
     # what a test sees synthesized is its own doing
     monkeypatch.setattr(sounds, "DELAY", 3600)
-    # Never reach a real Anki from the tests: AnkiConnect is "unreachable" unless a test fakes it.
-    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
-    monkeypatch.setattr(prices, "_transport", httpx.MockTransport(model_list))
+    # Never a real Anki, OpenRouter or picture source: the `offline` fixture (every test)
     monkeypatch.setattr(admin_routes, "attempts", Attempts())  # no wrong password left by another test
     synthesized.clear()
     with TestClient(app, base_url=PHONE) as c:

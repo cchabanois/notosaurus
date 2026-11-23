@@ -11,7 +11,9 @@ sync_api = pytest.importorskip("playwright.sync_api")
 from page.support import (  # noqa: E402
     FRONT_PROMPT,
     add_photo,
+    draft_kept,
     generate_free,
+    lesson_made,
     lessons,
     started,
 )
@@ -175,14 +177,15 @@ def test_the_lesson_in_progress_found_again(page):
 
     page.get_by_role("button", name="✨ Générer les cartes").click()
     page.locator(".flash").first.wait_for()
+    lesson_made(page)
     deck = page.locator("input[list=decks]").input_value()
-    page.wait_for_timeout(800)  # (kept a moment after the change)
+    draft_kept(page)  # (kept a moment after the change)
     page.reload()
     sync_api.expect(page.locator("input[list=decks]")).to_have_value(deck)  # the lesson made, open again
     sync_api.expect(page.locator(".flash").first).to_be_visible()
 
     page.get_by_role("button", name="Nouvelle leçon").click()
-    page.wait_for_timeout(800)
+    draft_kept(page)
     page.reload()
     sync_api.expect(page.locator(".flash")).to_have_count(0)
     sync_api.expect(page.locator(".thumb img")).to_have_count(0)
@@ -199,7 +202,8 @@ def test_a_lesson_made_open_again_in_the_same_session_only(page, browser, server
     add_photo(page, plain_image(400, 300, "red"))
     page.get_by_role("button", name="✨ Générer les cartes").click()
     page.locator(".flash").first.wait_for()
-    page.wait_for_timeout(800)  # (kept a moment after the change)
+    lesson_made(page)
+    draft_kept(page)  # (kept a moment after the change)
     page.get_by_role("link", name="Réglages").click()
     page.wait_for_url("**/admin.html")
     page.goto("/")
@@ -213,7 +217,7 @@ def test_a_lesson_made_open_again_in_the_same_session_only(page, browser, server
         sync_api.expect(other.locator(".thumb img")).to_have_count(0)
         other.locator("textarea[x-ref=promptText]").fill("Une autre leçon")
         add_photo(other, plain_image(400, 300, "blue"))
-        other.wait_for_timeout(800)
+        draft_kept(other)
     finally:
         other.context.close()
     again = browser.new_context(locale="fr-FR", base_url=server).new_page()

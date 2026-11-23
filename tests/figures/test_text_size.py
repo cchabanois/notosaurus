@@ -3,7 +3,6 @@ way it was drawn; a figure too small to read refused (figures_typst.TooSmall), t
 
 import pytest
 
-from figures.support import rule_example
 from notosaurus_core import figures, figures_typst, text_size
 
 MARGIN = 12  # a Typst figure's page: 6 pt each side
@@ -33,10 +32,8 @@ def test_every_familys_text_too_small_to_read_refused(family):
     assert figures_typst.compile_svg(family, _wide(_width_for(least + 0.2))).startswith("<svg")
 
 
-@pytest.mark.parametrize("family", sorted(figures_typst.FAMILIES))
-def test_every_familys_example_readable_on_a_card(family):
-    """The example each rule shows the AI: read on a card, never refused."""
-    figures_typst.compile_svg(family, rule_example(family))
+# The example each rule shows the AI, read on a card (never refused): compile_svg refuses a
+# text too small, in test_typst.py's test_each_familys_rule_example_compiles
 
 
 def test_a_typst_texts_size_read_from_its_letters():
