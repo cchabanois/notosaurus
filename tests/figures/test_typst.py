@@ -50,9 +50,12 @@ def test_typst_packages_of_other_archives_removed(monkeypatch, tmp_path):
     elsewhere.mkdir()
     (elsewhere / "kept.txt").write_text("")
     (cache / "typst-aaaaaaaaaaaa").symlink_to(elsewhere, target_is_directory=True)
-    (stuck / "preview").chmod(0o500)  # its file can't be removed
+    # Its file can't be removed: its folder read-only (Linux, macOS), the file open as another
+    # process reading it holds it (Windows, where a folder's mode doesn't keep its files)
+    (stuck / "preview").chmod(0o500)
     try:
-        folder = figures_typst.packages()
+        with (stuck / "preview" / "typst.toml").open("rb"):
+            folder = figures_typst.packages()
     finally:
         (stuck / "preview").chmod(0o700)
     assert folder.parent == cache and (folder / "preview").is_dir()
