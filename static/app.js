@@ -225,7 +225,8 @@ document.addEventListener("alpine:init", () => {
     loading: false,
     exporting: false,
     lessonsOpen: false,
-    maxPhotos: 10,       // pages per lesson (the server's limit, from /api/config)
+    // The server's limits, from /api/config: these only for one that doesn't say (its lessons held 10 pages)
+    maxPhotos: 10,       // pages per lesson (MAX_PAGES, LocalServer.MAX_PHOTOS)
     perCall: 10,         // pages read in one call to the AI: more sent in several (extract)
     batch: null,         // the pages being read, when sent in several calls: { from, to, total }
     stripColumns: 3,     // the photos' grid's columns, the add buttons' one with them (watchStrip)

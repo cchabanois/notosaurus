@@ -608,6 +608,28 @@ test("a picture's source: said in its panel, kept when the pictures come", async
   assert.equal(c.pictureSourcePage({}), "");
 });
 
+test("a picture drawn with the lesson's: all its fields taken as it is ready, where it shows too", async () => {
+  // "ready" left picture_on_back out: a picture meant for the answer shown on the question,
+  // and the next save gave the server the card without it
+  const ready = { card: "c1", step: "ready", picture: "picture-c1.svg", picture_source: { source: "drawn" },
+    figure: "un triangle", figure_kind: "geometry", picture_prompt: "", picture_search: "", picture_on_back: true };
+  const page = await loadScripts("app.js", { routes: () => Response.ndjson([ready, { result: { lesson: { cards: [] }, failures: 0 } }]) });
+  const c = page.component();
+  c.lessonId = "L1";
+  c.cards = [{ id: "c1", front: "f", back: "b", figure: "un triangle", picture: "", picture_on_back: false }];
+  await c.drawPictures();
+  const { step, card, ...fields } = ready;
+  for (const [field, value] of Object.entries(fields)) assert.deepEqual(plain(c.cards[0][field]), value, field);
+
+  // An older server, all at once: the same from the lesson's cards
+  const older = await loadScripts("app.js", { routes: () => new Response({ lesson: { cards: [{ id: "c1", ...fields }] }, failures: 0 }) });
+  const o = older.component();
+  o.lessonId = "L1";
+  o.cards = [{ id: "c1", front: "f", back: "b", figure: "un triangle", picture: "", picture_on_back: false }];
+  await o.drawPictures();
+  for (const [field, value] of Object.entries(fields)) assert.deepEqual(plain(o.cards[0][field]), value, field);
+});
+
 test("a figure's credits link each project to its page as the credits give it (the maps' data is no Typst package)", async () => {
   const credits = [{ name: "notosaurus-atlas", version: "0.3.0", licence: "AGPL-3.0-or-later", url: "https://example.org/atlas" }];
   const page = await loadScripts("app.js", { routes: () => new Response(credits) });

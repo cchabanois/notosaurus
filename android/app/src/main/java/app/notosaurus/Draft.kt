@@ -66,6 +66,7 @@ class Draft(private val dir: File) {
         }
 
         private const val DRAFT = "draft.json"
+        // As the computer's (app/draft.py; tests/test_android_mirrors.py checks they are the same)
         const val MAX_TEXT = 200_000 // a prompt and its photos' PDF texts
         const val MAX_PHOTO_BYTES = 10 * 1024 * 1024 // a photo as the page prepared it weighs a few hundred KB
     }

@@ -116,9 +116,9 @@ class Shared(private val dir: File) {
 
     companion object {
         const val PDF = "application/pdf"
-        const val MAX_ITEMS = 30 // a lesson holds 10 pages: the page says which didn't fit
+        const val MAX_ITEMS = LocalServer.MAX_PHOTOS // a lesson's pages: the page says which didn't fit
         const val MAX_BYTES = 50L * 1024 * 1024 // a school's PDF, a phone's photo (the page shrinks it)
-        const val MAX_TEXT = 100_000 // characters: the page makes pages of it, 10 at most
+        const val MAX_TEXT = 100_000 // characters: the page makes pages of it, as many as the lesson has room for
         private const val FILES = "files.json"
         private const val TEXT = "text.txt"
         private const val SKIPPED = "skipped.json"

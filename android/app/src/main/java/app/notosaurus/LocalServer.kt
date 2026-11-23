@@ -384,8 +384,9 @@ class LocalServer(
             "img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; " +
             "connect-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; " +
             "form-action 'self'; frame-ancestors 'none'"
-        const val MAX_PHOTOS = 30 // a lesson's pages, as on the computer (MAX_PAGES)
-        const val MAX_PER_CALL = 10 // read in one call (the relay's cap): the page sends more in several
+        // As the computer's and the relay's (tests/test_android_mirrors.py checks they are the same)
+        const val MAX_PHOTOS = 30 // a lesson's pages (app/routes/common.py, MAX_PAGES)
+        const val MAX_PER_CALL = 10 // read in one call, the relay's cap (calls.MAX_IMAGES): the page sends more in several
         const val MAX_IMAGE_BYTES = 4 * 1024 * 1024 // a photo sent, as the relay caps it (relay_api.MAX_IMAGE_BYTES)
 
         /** One more photo for the AI, `kept` already read, as the computer reads them

@@ -2,6 +2,12 @@
 // among free pictures, the user's own photo; where each comes from.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// A card's picture fields, as the server tells them (core's pictures.READY): its answer to a
+// card's picture, a "ready" step, a lesson's cards (takePicture)
+const PICTURE_FIELDS = ["picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"];
+// The free pictures' sources, as their credit line says them
+const SOURCE_NAMES = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
+
 const picturesPart = {
   pictureUrl(card) {
     return `/api/lessons/${this.lessonId}/pictures/${card.picture}`;
@@ -34,13 +40,7 @@ const picturesPart = {
         (step) => Object.assign(card, { _step: step.step, _problem: step.problem ?? "", _first: step.first ?? "" }),
       );
       if (!res) return null;  // cancelled: the card as it was
-      card.picture = res.card.picture;
-      card.picture_source = res.card.picture_source ?? null;
-      card.picture_prompt = res.card.picture_prompt;
-      card.picture_search = res.card.picture_search ?? "";
-      card.figure = res.card.figure;
-      card.figure_kind = res.card.figure_kind ?? "";
-      card.picture_on_back = res.card.picture_on_back ?? card.picture_on_back;  // showing the answer: with it
+      this.takePicture(card, res.card);
       return res;
     } catch (e) {
       this.error = e.message;
@@ -49,6 +49,14 @@ const picturesPart = {
       Object.assign(card, { _drawing: false, _step: "", _problem: "", _first: "" });
       this.pictureJobs--;
     }
+  },
+
+  // A card's picture fields taken from the server's (`from`): one an older server leaves out
+  // kept as the card has it; no picture_source said, where it comes from isn't known
+  takePicture(card, from) {
+    for (const field of PICTURE_FIELDS) card[field] = from[field] ?? (field === "picture_source" ? null : card[field]);
+    card.figure_kind ??= "";
+    card.picture_search ??= "";
   },
 
   // "✨ Image", the cheapest first: the AI decides from what was written (any language; none:
@@ -191,8 +199,7 @@ const picturesPart = {
     if (origin.source === "photo") return t("app.pictures.sourcePhoto");
     if (origin.source === "lesson") return t("app.pictures.sourceLesson");
     if (origin.source === "drawn") return origin.model ? t("app.pictures.sourceDrawnBy", { model: origin.model }) : t("app.pictures.sourceDrawn");
-    const names = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
-    return t("app.pictures.sourceFound", { source: names[origin.source] ?? origin.source, licence: origin.licence });
+    return t("app.pictures.sourceFound", { source: SOURCE_NAMES[origin.source] ?? origin.source, licence: origin.licence });
   },
 
   // The picture's page at its source, as a link: an https: address only (a lesson imported
@@ -231,8 +238,7 @@ const picturesPart = {
 
   // The sources of the pictures found, as their credit line says them
   foundSources(card) {
-    const names = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
-    return [...new Set((card._found ?? []).map((f) => names[f.source]))].join(", ");
+    return [...new Set((card._found ?? []).map((f) => SOURCE_NAMES[f.source]))].join(", ");
   },
 
   async chooseFound(card, found) {
@@ -295,7 +301,8 @@ const picturesPart = {
       this.cards.forEach((c) => {
         const made = drawn.get(c.id);
         if (!c.picture && made?.picture) {
-          Object.assign(c, { picture: made.picture, picture_source: made.picture_source ?? null, _replacing: "", _previous: null });
+          this.takePicture(c, made);
+          Object.assign(c, { _replacing: "", _previous: null });
         }
       });
       this.toDraw = res.to_draw ?? [];
@@ -333,12 +340,8 @@ const picturesPart = {
       if (!card) return;
       if (step === "ready") {  // its picture, shown at once: not when the others are done
         if (!card.picture) {
-          Object.assign(card, {
-            picture: item.picture, picture_source: item.picture_source ?? null, figure: item.figure ?? card.figure,
-            figure_kind: item.figure_kind ?? card.figure_kind ?? "",
-            picture_prompt: item.picture_prompt ?? card.picture_prompt, picture_search: item.picture_search ?? card.picture_search,
-            _previous: null,
-          });
+          this.takePicture(card, item);
+          card._previous = null;
         }
         Object.assign(card, { _step: "", _problem: "", _first: "" });
       } else Object.assign(card, { _step: step, _problem: item.problem ?? "", _first: item.first ?? "" });
