@@ -186,6 +186,22 @@ def test_an_intervals_brackets_turned_by_its_bounds():
     assert figures_typst.compile_svg("geometry", line).startswith("<svg")
 
 
+def test_an_interval_drawn_on_its_lines_measure():
+    """An interval on a line from -5, its first not given again: placed from 0 (-1 to 3 drawn
+    at -6 to -2), its infinite end going past the line's when its step was not 1. Placed by the
+    line it is drawn on, as when its first and last are given; an infinite end stopping at the
+    line's end."""
+    line = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(-5, 5{}){} }})"
+    given = figures_typst.compile_svg("geometry", line.format("", "; ctz-draw-interval(-1, 3, first: -5, last: 5)"))
+    assert figures_typst.compile_svg("geometry", line.format("", "; ctz-draw-interval(-1, 3)")) == given
+    halves = ", step: 0.5"
+    bare, _ = drawn_size("geometry", line.format(halves, ""))
+    infinite = ("ctz-draw-interval(2, none)", "ctz-draw-interval(none, 2)", "ctz-draw-interval(2, none, first: -5)")
+    for interval in infinite:
+        width, _ = drawn_size("geometry", line.format(halves, "; " + interval))
+        assert width == pytest.approx(bare, abs=0.5), interval
+
+
 def test_the_trigonometric_circles_points_placed_by_their_angles():
     """The trigonometric circle drawn by the preamble from the angles' values (by eye, the AI
     placed them wrongly and wrote its points' names, "Ppi_2"): an angle changed, the drawing
@@ -918,6 +934,21 @@ def test_a_shadows_rays_tangent_to_the_source_and_the_body():
         assert start == pytest.approx([0, 0])
         assert _distance_to_line((4, 0), start, contact) == pytest.approx(1)
     assert _measured(f"{point}.apex") is None
+
+
+def test_a_flat_bodys_shadow_cone_ends_where_its_rays_meet():
+    """A flat body (a bar seen edge on): its cone's apex taken as a disc's, D × R / (R − r),
+    though its rays, through its ends, meet sooner (4.8 drawn, 4.52 true): with no screen they
+    ran past each other, the shadow a crossed bow-tie. Its apex where its rays cross the axis,
+    the cone ending there."""
+    layout = f'_shadow-layout({SUN}, (centre: (3, 0), r: 0.75, shape: "segment"))'
+    ext, apex = _measured(f"{layout}.ext"), _measured(f"{layout}.apex")
+    assert apex == pytest.approx(_crossing(*ext)) and apex[1] == pytest.approx(0)
+    assert apex[0] == pytest.approx(4.52, abs=0.01)
+    assert _measured(f"{layout}.ext-ends") == [pytest.approx(apex)] * 2
+    # a disc's, as it was
+    disc = _measured(f"_shadow-layout({SUN}, (centre: (3, 0), r: 0.75)).apex")
+    assert disc == pytest.approx([3 * 2 / 1.25, 0])
 
 
 def test_a_shadow_behind_its_body_cast_on_its_screen():

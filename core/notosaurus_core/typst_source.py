@@ -401,14 +401,24 @@ def joined_ends(body: str) -> str:
         if name and "." not in name:  # zap's, not a shape drawn with cetz
             points.append((m, (float(m[1]), float(m[2])), name in CONNECTORS))
     targets = sorted({p for _, p, _ in points}, key=lambda p: min(c for _, q, c in points if q == p))
-    moved: dict[int, tuple[float, float]] = {}
-    for m, point, connector in points:
-        if connector:
-            near = [t for t in targets if 0 < math.dist(point, t) < JOIN]
+    # Where each point ends up: two connector ends a hair apart both go to the one met first,
+    # never each onto the other's (swapped, still apart); a component's point never moves.
+    onto: dict[tuple[float, float], tuple[float, float]] = {}
+
+    def final(p: tuple[float, float]) -> tuple[float, float]:
+        while p in onto:
+            p = onto[p]
+        return p
+
+    fixed = {p for _, p, connector in points if not connector}
+    for _, point, connector in points:
+        if connector and point not in onto and point not in fixed:
+            near = [t for t in targets if 0 < math.dist(point, t) < JOIN and final(t) != point]
             if near:
-                moved[m.start()] = near[0]
-    if not moved:
+                onto[point] = near[0]
+    if not onto:
         return body
+    moved = {m.start(): final(p) for m, p, connector in points if connector and p in onto}
     out, i = [], 0
     for m in POINT.finditer(body):
         if m.start() in moved:

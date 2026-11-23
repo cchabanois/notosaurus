@@ -83,7 +83,13 @@
   let num(x) = written-number(x, digits: 3)
   let all = boxes.map(b => b.at(1)).flatten()
   let (lo, hi) = if limits == auto { (calc.min(..all), calc.max(..all)) } else { limits }
-  let span = calc.max(hi - lo, 1e-9)
+  // every value the same (a box flat at one value): the axis around it, a tenth of it each
+  // side (1 around 0), never an axis of no length
+  if hi <= lo {
+    let pad = if lo == 0 { 1 } else { calc.abs(lo) / 10 }
+    (lo, hi) = (lo - pad, hi + pad)
+  }
+  let span = hi - lo
   let names = boxes.map(b => b.at(0)).filter(n => n != none)
   let left = if names.len() == 0 { 0 } else { calc.max(..names.map(n => measure(txt(n)).width / 1cm)) + 0.3 }
   let w = calc.max(6, 7.8 - left)

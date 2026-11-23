@@ -800,16 +800,26 @@ def compile_svg(family: str, body: str) -> str:
         svg = _without_if_arrows(svg)
     svg = _fitted(svg)
     if refused := too_small(family, body, svg):
+        # kept when no drawing again does better: finished as any figure is, its icons grown
+        # as much as they may be
+        refused.svg = _finished(family, refused.svg, strict=False)
         raise refused
+    return _finished(family, svg)
+
+
+def _finished(family: str, svg: str, strict: bool = True) -> str:
+    """The figure as a card shows it: its icons not drawn dropped, its small icons grown (an
+    icon too small even so refused, Unusable, when `strict`; else grown all it may be), a map's
+    outlines rounded."""
     svg = _icons_missing(svg)
     if (icons := text_size.icons_px(svg)) and min(icons) < MIN_ICON_PX:
-        if MIN_ICON_PX / min(icons) > MAX_ICON_GROWTH:
+        if MIN_ICON_PX / min(icons) > MAX_ICON_GROWTH and strict:
             raise Unusable(
                 f"An icon is too small to see on a card: fitted to a phone ({CARD_PX[0]} px wide), it is "
                 f"{min(icons):.1f} px high, {MIN_ICON_PX:g} at least. Give the icons a larger size (icon(…, size: "
                 "2em)) or draw the figure more compactly."
             )
-        svg = _icons_grown(svg, MIN_ICON_PX / min(icons))
+        svg = _icons_grown(svg, min(MIN_ICON_PX / min(icons), MAX_ICON_GROWTH))
     # A map's outlines: thousands of points, each written to the billionth of a point by
     # Typst: kept to the tenth (nothing seen changes), the figure several times lighter
     return _rounded_paths(svg) if family == "map" else svg

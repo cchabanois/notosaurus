@@ -270,11 +270,15 @@
     if log { cetz.draw.line((x(shown.at(k).at(0)), -0.15), (x(shown.at(k).at(0)), 0.15)) }
     number-at(k)
   }
-  // where it ends, kept for an interval drawn on it: its measure (a logarithmic line's
-  // values placed again), the bottom of its numbers (a zone's name written under them)
+  // where it ends, kept for an interval drawn on it: its measure (its first and last values,
+  // its scale and how far it goes past them; a logarithmic line's values placed again), the
+  // bottom of its numbers (a zone's name written under them)
   let low = -0.25 - rows.fold(0, calc.max) * 0.5 - 0.5
+  let measure = if log { (lo: m.lo, hi: m.hi, scale: m.scale, reach: reach) } else {
+    (first: bounds.pos().first(), last: bounds.pos().last(), scale: scale, reach: reach)
+  }
   cetz.draw.set-ctx(ctx => {
-    ctx.shared-state.insert("number-line", (log: if log { (lo: m.lo, hi: m.hi, scale: m.scale, reach: reach) }, low: low, zones: ()))
+    ctx.shared-state.insert("number-line", (log: if log { measure }, line: if not log { measure }, low: low, zones: ()))
     ctx
   })
   let placed = named.map(((_, v, body)) => (x: x(v), w: 0.24 * _name-chars(body)))
@@ -325,22 +329,22 @@
   for x in (xa, xc, xb) { cetz.draw.line((x, 0.32), (x, 0.65), stroke: (paint: luma(120), thickness: 0.4pt, dash: "dashed")) }
 }
 #let _zone-colours = (rgb("#0072d6"), rgb("#e07b00"), rgb("#2e9e44"), rgb("#8a4fd0"), rgb("#c8323c"), rgb("#00949a"))
-#let ctz-draw-interval(a, b, closed: (true, true), first: 0, last: none, scale: 1, log: false, label: none, color: auto, centre: false) = {
+#let ctz-draw-interval(a, b, closed: (true, true), first: auto, last: auto, scale: auto, log: false, label: none, color: auto, centre: false) = {
   assert(not centre or (a != none and b != none and not log), message: "centre: an interval with its two bounds, on a line that is not logarithmic")
   assert(closed == none or (type(closed) == array and closed.len() == 2), message: "closed is (true, false), each bound's, or none (no bracket)")
-  let x(v) = (v - first) * scale
-  assert(a != none or b != none or last != none or log, message: "an interval has a bound, a or b a value; both none (the whole line): give the line's first and last")
-  // its line's end (a logarithmic line's its own)
-  let end = if last != none { last } else if a != none or b != none { calc.max(..(a, b).filter(v => v != none)) + 1 }
-  if not log and label == none {
-    let (xa, xb) = (if a == none { x(first) - 0.5 * scale } else { x(a) }, if b == none { x(end) + 0.5 * scale } else { x(b) })
-    let color = if color == auto { _zone-colours.first() } else { color }
-    _interval(xa, xb, a, b, closed, color)
-    if centre { _centre-distances(xa, xb, a, b, color) }
-    return
-  }
   cetz.draw.get-ctx(ctx => {
     let line = ctx.shared-state.at("number-line", default: none)
+    // the measure of the line it is drawn on (its first, last and scale, each unless given),
+    // else (no line drawn before it) the first 0, the scale 1, the last past its bounds
+    let on = if line != none and line.at("line", default: none) != none { line.line }
+    let first = if first != auto { first } else if on != none { on.first } else { 0 }
+    let scale = if scale != auto { scale } else if on != none { on.scale } else { 1 }
+    let last = if last != auto { last } else if on != none { on.last } else { none }
+    let x(v) = (v - first) * scale
+    assert(a != none or b != none or last != none or log, message: "an interval has a bound, a or b a value; both none (the whole line): give the line's first and last")
+    // its line's end, where an infinite end stops: the line's own, else past its bound
+    let end = if last != none { last } else if a != none or b != none { calc.max(..(a, b).filter(v => v != none)) + 1 }
+    let reach = if on != none and first == on.first and scale == on.scale { on.reach } else { 0.5 * scale }
     let (xa, xb) = if log {
       assert(line != none and line.log != none, message: "an interval on a logarithmic line is drawn after its line, ctz-draw-number-line(log: true, …)")
       assert((a, b).all(v => v == none or (type(v) in (int, float) and v > 0)), message: "a logarithmic line's bounds are values above 0, or none")
@@ -348,7 +352,7 @@
       let x(v) = (calc.log(v, base: 10) - m.lo) * m.scale
       // an infinite end to the line's, short of its arrow
       (if a == none { -m.reach } else { x(a) }, if b == none { (m.hi - m.lo) * m.scale + 0.6 * m.reach } else { x(b) })
-    } else { (if a == none { x(first) - 0.5 * scale } else { x(a) }, if b == none { x(end) + 0.5 * scale } else { x(b) }) }
+    } else { (if a == none { x(first) - reach } else { x(a) }, if b == none { x(end) + reach } else { x(b) }) }
     let zones = if line == none { () } else { line.zones }
     let color = if color != auto { color } else if label == none { _zone-colours.first() } else { _zone-colours.at(calc.rem(zones.len(), _zone-colours.len())) }
     _interval(xa, xb, a, b, closed, color)
@@ -1124,8 +1128,15 @@
   let ext = if segment { (0, 1).map(i => (_shadow-tangent-through(c1, r1, ends.at(i), if i == 0 { 1 } else { -1 }, v), ends.at(i))) } else { _shadow-tangents(c1, r1, c2, r2) }
   let pen = penumbra and r1 > 0
   let inner-rays = if not pen { none } else if segment { (0, 1).map(i => (_shadow-tangent-through(c1, r1, ends.at(i), if i == 0 { -1 } else { 1 }, v), ends.at(i))) } else { _shadow-tangents(c1, r1, c2, r2, internal: true) }
-  // the cone's apex along the axis, a source larger than the body
-  let apex = if r1 > r2 + 1e-6 { D * r1 / (r1 - r2) } else { none }
+  // the cone's apex along the axis, a source larger than the body: where a disc's tangents
+  // meet; a flat body's, where its rays (through its ends, tangent to the source, met sooner
+  // than a disc's) cross the axis, none when they go apart
+  let apex = if segment {
+    let (p, q) = ext.at(0)
+    let (vp, vq) = (_dot(_sub(p, c1), v), _dot(_sub(q, c1), v))
+    let slope = (vq - vp) / (ax(q) - ax(p))
+    if vq * slope < -1e-9 { ax(q) - vq / slope } else { none }
+  } else if r1 > r2 + 1e-6 { D * r1 / (r1 - r2) } else { none }
   let back = D + r2 // the body's far side
   let free = if apex != none { apex } else { back + calc.max(0.8 * D, 4 * r2, 2) }
   // the screen: a line across the axis, or a circle (a planet)

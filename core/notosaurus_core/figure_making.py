@@ -349,7 +349,10 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
         # than one drawn as SVG
         if small is not None:
             log.warning("Figure kept too small: %.1f px", small.px)
-            return MadeFigure(figures.clean(small.svg), "typst", family, not light, small_body)
+            try:
+                return MadeFigure(figures.clean(small.svg), "typst", family, not light, small_body)
+            except figures.FigureError as e:  # refused by the cleaning: drawn as SVG, as when Typst refuses it
+                _refused(family, small_body, _unusable_svg(e))
         log.warning("Figure drawn as SVG: Typst refused it")
     demo = lambda: demo_ai.figure(description)  # noqa: E731
     drawing = await ai._ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)

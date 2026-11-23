@@ -911,6 +911,25 @@ def test_any_familys_figure_too_small_drawn_again_the_more_readable_kept(monkeyp
     assert 'viewBox="0 0 612' in svg
 
 
+def _too_small_map(countries: str) -> str:
+    return f"#map(countries: ({countries}), insets: false, names: true)\n#block(width: 1500pt)[]"
+
+
+def test_a_map_kept_too_small_is_finished_as_any_map(monkeypatch):
+    """A map still too small after being drawn again, kept: its SVG was Typst's raw one, its
+    outlines unrounded (twice too heavy for a card: refused by the cleaning, the figure lost).
+    Kept finished as any map is, rounded, within a figure's size; one too heavy even so drawn
+    as SVG, never an error."""
+    body = _too_small_map('"Amérique latine", "Canada"')
+    svg, calls = typst_drawing(monkeypatch, [body, body], kind="map")
+    assert [c["schema"] for c in calls] == ["Figure", "Figure"]
+    assert "<use" in svg and len(svg) < figures.MAX_SIZE
+    assert not re.search(r' d="[^"]*\d\.\d\d', svg)
+    heavy = _too_small_map('"Europe de l\'Ouest", "Afrique subsaharienne"')
+    svg, calls = typst_drawing(monkeypatch, [heavy, heavy], kind="map")
+    assert [c["schema"] for c in calls][-1] == "Drawing" and "<use" not in svg
+
+
 # a chloroplast, what enters it and what leaves it: arrows whose words the AI wrote by eye
 CHLOROPLAST = (
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
