@@ -9,6 +9,8 @@ from .models import Card
 
 # A gap in a text: {{c1::1789}}, {{c2::la Bastille::lieu}} (Anki's cloze syntax)
 CLOZE = re.compile(r"\{\{c\d+::")
+# A text with gaps' gap ("{{c1::1789::a year}}"): its answer, or its blank with its hint
+GAP = re.compile(r"\{\{c\d+::(.*?)(?:::(.*?))?\}\}", re.S)
 
 # Markup the AI writes now and then despite its rules (a letter underlined, a word in bold):
 # the fields are plain text (escaped, as any text, before Anki shows them), so a tag would
@@ -183,6 +185,12 @@ def blank_dictations(cards: list[Card]) -> None:
 def is_cloze(text: str) -> bool:
     """A text with gaps: a cloze card, one Anki card per gap number."""
     return bool(CLOZE.search(text))
+
+
+def cloze_question(text: str) -> str:
+    """A text with gaps as its question shows it: each gap hidden, "[…]", or its hint,
+    "[a year]"; its answers nowhere."""
+    return GAP.sub(lambda m: f"[{(m[2] or '').strip() or '…'}]", text)
 
 
 def is_choice(card: Card) -> bool:

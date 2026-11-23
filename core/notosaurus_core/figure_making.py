@@ -115,6 +115,7 @@ async def made_figure(
     front: str = "",
     previous: str = "",
     previous_kind: str = "",
+    gaps: bool = False,
 ) -> MadeFigure:
     """A figure, its SVG cleaned (figures.clean) and how it was made, drawn by the cards' AI: in Typst
     (figures_typst.py: a curve computed from its function, marks from their points, angles
@@ -127,7 +128,8 @@ async def made_figure(
     begins (relay_api.PictureStep). `kind`: its family, when the AI that described it said it
     (Card.figure_kind): not asked again. `front`: the card it goes on the front of, "question →
     answer": told, nothing written on it gives the answer away (its description, written once
-    for cards that share it, may write it). `previous`: its Typst when drawn before
+    for cards that share it, may write it); with `gaps`, a text with gaps as its question
+    shows it (cards.cloze_question), its answers the words hidden in them. `previous`: its Typst when drawn before
     (kept_source), in the family `previous_kind`, drawn again after a correction: the AI
     starts from it, changing what is asked and keeping the rest (another family by now:
     drawn anew). Refused when figures are turned off (s.figures)."""
@@ -137,7 +139,14 @@ async def made_figure(
         raise AppError("relay.feature_off", 403, feature="figures.draw")
     tell = step or (lambda _: None)
     text = f"Figure to draw: {description.strip()}"
-    if front.strip():
+    if front.strip() and gaps:
+        text += (
+            f"\n\nIt goes on the front of a card, a text with gaps, each shown hidden ([…], or its hint in "
+            f"brackets): {front.strip()}. The words hidden in its gaps are the answers. Write nothing on the "
+            "figure that fills a gap or gives its words away (a name, a date, a count, a measure), even where "
+            "the description writes it."
+        )
+    elif front.strip():
         text += (
             f"\n\nIt goes on the front of a card, with its question; the answer is on the back: {front.strip()}. "
             "Write nothing on the figure that gives this answer away (a name, a count, a measure), "
@@ -147,7 +156,7 @@ async def made_figure(
     if family == "panels":
         parts = await _panels(s, description)
         if parts:
-            return await _in_panels(s, parts, step, problem, careful, front)
+            return await _in_panels(s, parts, step, problem, careful, front, gaps)
         family = "other"  # not split: drawn as one SVG
     if previous.strip() and previous_kind == family:
         text += _from_previous(previous.strip())
@@ -185,14 +194,20 @@ async def _panels(s: AIConfig, description: str) -> list:
 
 
 async def _in_panels(
-    s: AIConfig, parts: list, step: Callable[[dict], Any] | None, problem: str, careful: bool, front: str
+    s: AIConfig,
+    parts: list,
+    step: Callable[[dict], Any] | None,
+    problem: str,
+    careful: bool,
+    front: str,
+    gaps: bool = False,
 ) -> MadeFigure:
     """Each panel drawn by its own kind, at once (what a check found told to each), then set
     side by side (figures.side_by_side): Typst's when one of them is."""
     from . import figures
 
     made = await asyncio.gather(
-        *(made_figure(s, p.description, step, p.family, problem, careful, front) for p in parts)
+        *(made_figure(s, p.description, step, p.family, problem, careful, front, gaps=gaps) for p in parts)
     )
     svg = await asyncio.to_thread(figures.side_by_side, [m.svg for m in made])
     engine = "typst" if any(m.engine == "typst" for m in made) else "svg"
