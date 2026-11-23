@@ -255,10 +255,19 @@ abstract class LocalServerTestBase {
         relay.enqueue(MockResponse.Builder().code(code).body(body).build())
 
     /** The relay's /v1/card-picture, as the core: the card's picture decided (`decide`, from the
-     * request), then a figure (an SVG) or a picture (a "JPEG" holding the request). */
-    protected fun cardPicture(request: RecordedRequest, decide: (JsonObject) -> Map<String, String> = { emptyMap() }): MockResponse {
+     * request), then a figure (an SVG) or a picture (a "JPEG" holding the request). A figure
+     * drawn in Typst from `sources`: told where it comes from (none of them named: the app
+     * keeps them) and what it was drawn from. */
+    protected fun cardPicture(
+        request: RecordedRequest,
+        sources: List<String> = emptyList(),
+        decide: (JsonObject) -> Map<String, String> = { emptyMap() },
+    ): MockResponse {
         val asked = json.parseToJsonElement(request.body!!.utf8()).jsonObject
-        val card = JsonObject(asked["card"]!!.jsonObject + decide(asked).mapValues { JsonPrimitive(it.value) })
+        var card = JsonObject(asked["card"]!!.jsonObject + decide(asked).mapValues { JsonPrimitive(it.value) })
+        if (sources.isNotEmpty()) {
+            card = JsonObject(card + ("picture_source" to json.parseToJsonElement("""{"source": "drawn", "model": "m", "engine": "typst", "sources": []}""")))
+        }
         val figure = card.string("figure").isNotBlank()
         if (!figure && asked["draw"]?.jsonPrimitive?.content == "false") { // as the core: no free one fits, not drawn
             val params = buildJsonObject { put("description", card.string("picture_prompt")); put("search", card.string("picture_search")) }
@@ -269,6 +278,7 @@ abstract class LocalServerTestBase {
             put("card", card)
             put("data", Base64.getEncoder().encodeToString(data.toByteArray()))
             put("media_type", if (figure) "image/svg+xml" else "image/jpeg")
+            if (figure && sources.isNotEmpty()) put("sources", JsonArray(sources.map(::JsonPrimitive)))
             put("usage", buildJsonObject { put("credits", 1); put("credits_left", 97) })
         }.toString()).build()
     }

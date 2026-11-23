@@ -73,10 +73,17 @@ class Lessons(private val root: File) {
             val fresh = UUID.randomUUID().toString().replace("-", "").take(12)
             val picture = card.string("picture")
             val file = dir.resolve("images").resolve(picture)
-            val renamed = if (PICTURE.matches(picture) && file.isFile) {
-                picture.replaceFirst(Regex("^picture-[a-z0-9]+-"), "picture-$fresh-").also { moved(file, file.resolveSibling(it)) }
-            } else ""
-            card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(renamed))
+            if (!PICTURE.matches(picture) || !file.isFile) return@map card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(""))
+            val renamed = picture.replaceFirst(Regex("^picture-[a-z0-9]+-"), "picture-$fresh-").also { moved(file, file.resolveSibling(it)) }
+            val copied = card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(renamed))
+            val origin = card["picture_source"] as? JsonObject
+            val files = (origin?.get("sources") as? JsonArray).orEmpty().map { (it as? JsonObject)?.string("file").orEmpty() }
+            if (origin == null || files.isEmpty()) return@map copied
+            // A figure's sources, named after it too (as the computer's lessons.copy); the copied
+            // ones, under its old name, gone
+            val kept = Pictures.keptSources(source.resolve("images"), origin)
+            files.filter { Pictures.SOURCE_NAME.matches(it) }.forEach { dir.resolve("images").resolve(it).delete() }
+            copied.with("picture_source" to origin.with("sources" to Pictures.keepSources(dir.resolve("images"), renamed, kept)))
         }
         val now = now()
         val copy = JsonObject(
