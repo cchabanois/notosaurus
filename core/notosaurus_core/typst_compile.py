@@ -4,12 +4,30 @@ Typst's message on stderr and exit code 1.
 
 Run as a script, `-P` (its folder never on sys.path: `typst/` there is the packages'
 archives, not the library): `python -P typst_compile.py <memory> <figure.typ> <root>
-<packages> <fonts>`. Only the standard library and typst: nothing of notosaurus_core."""
+<packages> <fonts>`. Offline (offline()): no package but the shipped ones. Only the standard
+library and typst: nothing of notosaurus_core."""
 
+import os
 import sys
+
+# Where Typst would download a package it doesn't find among ours (Typst Universe's @preview):
+# through a proxy that answers nothing (a closed port of this computer), so that nothing is
+# ever fetched, whatever a figure imports: the packages shipped are all it finds. Typst has
+# no offline switch; it reads these as every download tool does
+NOWHERE = "http://127.0.0.1:9"
+PROXIES = ("HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY", "https_proxy", "http_proxy", "all_proxy")
+
+
+def offline() -> None:
+    """Every download of this process sent to NOWHERE (no host spared: NO_PROXY dropped)."""
+    for name in ("NO_PROXY", "no_proxy"):
+        os.environ.pop(name, None)
+    for name in PROXIES:
+        os.environ[name] = NOWHERE
 
 
 def main(memory: int, path: str, root: str, packages: str, fonts: str) -> int:
+    offline()
     import typst
 
     try:  # the memory it may take, where the system lets us say so (not on Windows: no resource)

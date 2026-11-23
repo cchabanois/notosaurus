@@ -36,6 +36,9 @@ RULES = SVG_FIGURE_RULES
 # arc on the other side of its line); looking at it tells, where its coordinates don't
 CHECK_RULES = FIGURE_CHECK_RULES
 PNG_WIDTH = 600  # pixels: what the check sees
+# A figure ten times taller than wide at most drawn at PNG_WIDTH: a taller one scaled down to
+# this height. Its width alone set, a viewBox of 1 × 300 was drawn 180,000 pixels high (867 MB)
+PNG_MAX_HEIGHT = 10 * PNG_WIDTH
 FONT = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"  # its licence beside it
 
 
@@ -523,8 +526,9 @@ def _framed(svg: str, viewbox: str, x: float, y: float, w: float, h: float) -> s
 
 
 def to_png(svg: str) -> bytes | None:
-    """The cleaned figure as a PNG on white, as the check sees it; None when it can't be
-    made (resvg not installed, or it fails on this figure)."""
+    """The cleaned figure as a PNG on white, as the check sees it: PNG_WIDTH wide (narrower
+    when it would pass PNG_MAX_HEIGHT), whatever its shape; None when it can't be made (resvg not installed, or it
+    fails on this figure)."""
     try:
         import resvg_py
     except ImportError:
@@ -539,6 +543,7 @@ def to_png(svg: str) -> bytes | None:
                 svg_string=svg,
                 background="#ffffff",
                 width=PNG_WIDTH,
+                height=PNG_MAX_HEIGHT,  # both given: fitted within them, its proportions kept
                 font_files=[font],
                 font_family="DejaVu Sans",
                 sans_serif_family="DejaVu Sans",

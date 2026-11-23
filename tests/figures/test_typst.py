@@ -71,12 +71,100 @@ def test_typst_cut_when_too_long_and_nothing_loaded(monkeypatch):
     def slow(*args, **kwargs):
         raise subprocess.TimeoutExpired("typst", figures_typst.COMPILE_S)
 
-    for bad in ('read("/etc/passwd")', 'image("x.png")', 'plugin("p.wasm")', '#include "x.typ"', 'eval("read(1)")'):
+    for bad in ('#read("/etc/passwd")', '#plugin("p.wasm")', '#include "x.typ"', '#eval("read(1)")'):
         with pytest.raises(figures_typst.Unusable):
             figures_typst.source("geometry", bad)
     monkeypatch.setattr(subprocess, "run", slow)
     with pytest.raises(figures_typst.Unusable, match="too long"):
         figures_typst.compile_svg("geometry", TRIANGLE)
+
+
+# Each word a body may not write, in the forms that reach it without calling it by its name
+# where it stands: held in a variable, its arguments given beforehand, called within a text
+LOADERS = ("read", "json", "csv", "yaml", "toml", "xml", "cbor", "plugin", "eval")
+ALIASED = ('#let f = {w}\n#f("x")', '#let f = {w}.with("x")\n#f()', '#{{ let f = {w}; f("x") }}')
+
+
+@pytest.mark.parametrize(
+    "body",
+    [form.format(w=w) for w in LOADERS for form in ALIASED]
+    + [
+        '#let p = "@preview/no-such-package:1.0.0"\n#{ import p }',  # a package's name held in a variable
+        '#let p = "@preview/no-such-package:1.0.0"\n#import p: *',
+        '#let p = "x.typ"\n#include p',
+        '#read("x")',  # code in a text
+        'A text, then #read("x") in it',
+        '#{ read("x") }',
+        '#strong[a text #read("x")]',
+        '$ read("x") $',  # a formula's names are code
+        '#if true {\n  1\n}\nelse { read("x") }',
+        '#let r = std.read\n#r("x")',  # Typst's own library
+        '#std.image("x.png")',
+        # a module's name given a string, then imported from
+        '#{ cetz = (draw: "@preview/no-such-package:1.0.0") }\n#{ import cetz.draw: * }',
+        '#let f(cetz) = { import cetz.draw: * }\n#f((draw: "@preview/no-such-package:1.0.0"))',
+    ],
+)
+def test_nothing_loaded_or_read_however_written(body):
+    """A body never loads nor reads anything, whatever it holds the loading in: a name refused
+    as it is, not only called (`#let r = read` then `r("…")`; a package's name in a string,
+    then imported from: Typst would fetch it)."""
+    with pytest.raises(figures_typst.Unusable, match="Only drawing commands"):
+        figures_typst.source("geometry", body)
+
+
+@pytest.mark.parametrize("form", ALIASED)
+def test_no_image_drawn_however_written(form):
+    """`image`, a word a label or a comment says (l'image A'B'), isn't refused as a name: the
+    body's draws nothing however it is reached, and says so; the preamble's icons still drawn
+    (theirs is Typst's)."""
+    with pytest.raises(figures_typst.Unusable, match="No image: only drawing commands"):
+        figures_typst.compiled(figures_typst.source("geometry", form.format(w="image")))
+    assert figures_typst.compile_svg("diagram", '#scheme(boxes: (a: [#icon("farm") Ferme]))')
+
+
+# Each forbidden word where it is no code: a comment, a text, a label, a string
+SAID = """// {w} in a comment
+/* {w} in a block of comment */
+{w} in the text
+#cetz.canvas({{ import cetz.draw: *
+  // {w}, said in the code's comment
+  content((0, 0), [{w} in a label, "quoted"])
+  content((0, 2), "{w} \\" in a string")
+}})"""
+
+
+def test_a_labels_or_a_comments_words_never_refused():
+    """A word a label or a comment says ("import / export", "the json format", "read the
+    graph") is never refused: only a name Typst reads as code is; what the body says compiled."""
+    for word in figures_typst.FORBIDDEN_WORDS:
+        assert not figures_typst.forbidden(SAID.format(w=word)), word
+    said = "\n".join(SAID.format(w=word) for word in figures_typst.FORBIDDEN_WORDS)
+    assert figures_typst.compiled(figures_typst.source("chemistry", said))
+
+
+def test_what_the_families_examples_write_accepted():
+    """What the AI writes as the rules show it is never refused: every family's example (a
+    module of the preamble's imported from, `import cetz.draw: *`), a label's word that is a
+    name of Typst's (l'image A'B'), a module's own function called."""
+    for family in figures_typst.FAMILIES:
+        assert not figures_typst.forbidden(rule_example(family)), family
+    for body in (
+        "#cetz.canvas({ import cetz.draw: *\n content((0, 0), [l'image A'B'])\n })",
+        "#cetz.canvas({ import cetz.draw as d\n d.circle((0, 0)) })",
+        '#lq.diagram(lq.plot((0, 1), (0, 1), label: "zero"))',
+        "#let s = json.encode((a: 1))",  # a text written, no file read
+    ):
+        assert not figures_typst.forbidden(body), body
+
+
+def test_a_package_not_shipped_never_downloaded():
+    """Typst downloads a package it doesn't have (Typst Universe's @preview): its compiler
+    sent nowhere (a closed port of this computer), so that it finds the packages shipped
+    and nothing else; never the network (else "package not found", or a name not looked up)."""
+    with pytest.raises(figures_typst.Unusable, match="failed to download package") as refused:
+        figures_typst.compiled('#import "@preview/no-such-package-of-ours:9.9.9": *\n')
+    assert "refused" in str(refused.value)
 
 
 def test_the_figures_colours_kept():

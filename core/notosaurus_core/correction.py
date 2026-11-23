@@ -2,6 +2,7 @@
 ("the answer is 1789"). A card corrected stays the card it was (cards.matching): its id,
 so its note in Anki, its picture and its place on a diagram."""
 
+import asyncio
 from collections.abc import Sequence
 
 from . import ai, diagrams
@@ -83,13 +84,11 @@ async def fix_card(
     It stays the same card: its id (Anki updates its note) and its diagram label; its
     picture too, unless what to draw changed. `figure_svg`: its figure as drawn, shown after
     the photos: a request about the drawing ("E is on the wrong side") is seen, and said in
-    figure_problem for it to be drawn again (its picture kept until then). `quick`: as
-    revise_cards'."""
-    from . import figures
-
+    figure_problem for it to be drawn again (its picture kept until then); left out when it
+    can't be drawn (_drawn). `quick`: as revise_cards'."""
     images, _ = ai._prepare(images)
     photos = len(images)
-    drawn = figures.to_png(figures.clean(figure_svg)) if figure_svg.strip() and card.figure.strip() else None
+    drawn = await asyncio.to_thread(_drawn, figure_svg) if figure_svg.strip() and card.figure.strip() else None
     if drawn is not None:
         images.append(Image(drawn, "image/png"))
     text = instructions + _fix_text(prompt, deck, card, others, instruction, language, photos, drawn is not None)
@@ -114,6 +113,17 @@ async def fix_card(
         # Drawn again, told the problem: shown until then
         fixed.picture, fixed.picture_source = card.picture, card.picture_source
     return FixedCard(card=fixed, summary=plain_text(fix.summary), figure_problem=problem)
+
+
+def _drawn(figure_svg: str) -> bytes | None:
+    """The figure as drawn, as a picture for the AI to see; None when it can't be drawn (not an
+    SVG the cleaning keeps): the card corrected without it, as without resvg."""
+    from . import figures
+
+    try:
+        return figures.to_png(figures.clean(figure_svg))
+    except figures.FigureError:
+        return None
 
 
 def _keep_ids(revised: list[Card], before: list[Card]) -> None:
