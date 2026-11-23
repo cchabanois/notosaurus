@@ -74,6 +74,60 @@ def test_every_key_the_pages_name_is_translated():
         assert sorted(k for k in keys if not _translated(messages, k)) == [], lang
 
 
+PLURALS = {"zero", "one", "two", "few", "many", "other"}
+# Keys built from a value, never written whole: each with what builds it (a text that must
+# still be in the sources, or the entry is stale)
+BUILT_KEYS = {
+    r"app\.explain\.kinds\.\w+": "'app.explain.kinds.' + block.kind",
+    r"app\.explain\.ask\.\w+": "'app.explain.ask.' + k",
+    r"app\.pictures\.steps\.\w+": "app.pictures.steps.${",
+    r"app\.children\.examples\.\w+": "app.children.examples.${",
+    r"app\.report\.reasons\.\w+": "'app.report.reasons.' + r",
+    r"admin\.provider\.\w+\.(name|description)": "admin.provider.${p.id}.name",
+    r"admin\.costs\.kind\.\w+": "admin.costs.kind.${",
+    r"admin\.recommended\.notes\.\w+": "admin.recommended.notes.${",
+    r"setup\.steps\.\w+": "setup.steps.${",
+    r"android\.licence\.plans\.\w+": "android.licence.plans.${",
+    # The Android app's own texts, by their parts: server.text(lang, "android", "share", "computer")
+    r"android\.shortcuts\.\w+": '"android", "shortcuts", name',
+    r"android\.working\.\w+": '"android", "working", key',
+    r"android\.downloads\.\w+": '"android", "downloads", "saved"',
+    r"android\.share\.\w+": '"android", "share", "computer"',
+    r"demo\.\w+": 'i18n.get(lang, "demo")',
+    r"builtinPrompts\..+": '"builtinPrompts"',  # whole, by app/prompts.py and Prompts.kt
+}
+
+
+def test_every_key_is_used():
+    """Every key of a language file is named somewhere the user can meet it: in the pages,
+    the Android app, the server or the add-on; an error's by its code (errors.<code>); a key
+    built from a value, in BUILT_KEYS. A text left over once its feature is gone is removed."""
+    sources = [
+        *Path("static").glob("*.html"),
+        *Path("static").glob("*.js"),
+        *Path("android/app/src/main").rglob("*.kt"),
+        *Path("android/app/src/main/assets").rglob("*.[hj]*"),
+        *Path("app").rglob("*.py"),
+        *Path("core/notosaurus_core").rglob("*.py"),
+        *Path("anki_addon").glob("*.py"),
+        *Path("tools").glob("*.py"),
+    ]
+    text = "\n".join(path.read_text(encoding="utf-8") for path in sources)
+    stale = [evidence for evidence in BUILT_KEYS.values() if evidence not in text]
+    assert stale == []
+    built = re.compile("|".join(f"(?:{pattern})" for pattern in BUILT_KEYS))
+    messages = i18n.messages("fr")
+    keys = {k.rsplit(".", 1)[0] if k.rsplit(".", 1)[-1] in PLURALS else k for k in _keys(messages)}
+    unused = sorted(
+        key
+        for key in keys
+        if key not in text
+        and not built.fullmatch(key)
+        and not (key.startswith("errors.") and re.search(rf"""["'`]{re.escape(key[7:])}["'`]""", text))
+    )
+    assert unused == []
+
+
 def test_no_punctuation_glued_to_a_text_in_the_pages():
     """A text and what follows it are one key with a parameter ("Sub-deck: {name}"), each
     language with its own punctuation (French puts a space before ":"), never glued in code."""

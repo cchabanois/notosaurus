@@ -15,18 +15,6 @@ val json = Json {
 }
 
 @Serializable
-data class ExtractRequest(
-    val prompt: String,
-    val deck: String = "",
-    val decks: List<String> = emptyList(),
-    @SerialName("fun_facts") val funFacts: Boolean = false,
-    val helps: Boolean = false,
-    @SerialName("page_texts") val pageTexts: List<String> = emptyList(),
-    val instructions: String = "",
-    val quick: Boolean = false,
-)
-
-@Serializable
 data class Mask(val page: Int, val n: Int, val box: List<Double>)
 
 @Serializable
@@ -53,18 +41,6 @@ data class Card(
 
 @Serializable
 data class Deck(val deck: String, val cards: List<Card>)
-
-@Serializable
-data class Usage(val credits: Int, @SerialName("credits_left") val creditsLeft: Int)
-
-@Serializable
-data class ExtractResponse(
-    val deck: Deck,
-    val turns: List<Int> = emptyList(),
-    @SerialName("back_language") val backLanguage: String = "",
-    val choice: String = "",
-    val usage: Usage,
-)
 
 @Serializable
 data class Account(

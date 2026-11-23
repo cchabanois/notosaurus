@@ -73,7 +73,6 @@ STREAM_TYPE = "application/x-ndjson"
 MAX_IMAGE_BYTES = 4 * 1024 * 1024  # a prepared photo weighs a few hundred KB
 MAX_PROMPT = 8000  # Notosaurus's own prompts are under 1,000 characters
 MAX_INSTRUCTIONS = 10_000  # standing instructions, for everyone and for the pupil
-MAX_PAGE_TEXT = 20_000  # per photo; the AI gets the first llm.PAGE_TEXT_MAX
 MAX_NAME = 300  # a deck name
 MAX_EXISTING = 500  # a lesson's cards made already (the AI is sent the first 6,000 characters)
 MAX_DECKS = 1000
