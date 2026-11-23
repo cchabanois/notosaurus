@@ -287,7 +287,18 @@ const photosPart = {
     await this.addFiles([...event.dataTransfer.files]);
   },
 
+  // While they are read, the 📷 is off: the app's next capture would empty the folder they
+  // are read from (its pages "unreadable"), and tell its scanner places already taken
   async addFiles(files) {
+    this.filesReading++;
+    try {
+      await this.readFiles(files);
+    } finally {
+      this.filesReading--;
+    }
+  },
+
+  async readFiles(files) {
     this.error = "";
     let left = 0;  // photos past the lesson's pages: not added, said
     for (const file of files) {
@@ -355,7 +366,9 @@ const photosPart = {
     let unreadable = "";
     for (const file of files) {
       try {
-        read.push(new File([await (await api(`/api/shared/${file.n}`)).blob()], file.name, { type: file.type }));
+        // Of this share only: one coming meanwhile has its own files under the same numbers
+        const of = shared.id ? `?id=${encodeURIComponent(shared.id)}` : "";
+        read.push(new File([await (await api(`/api/shared/${file.n}${of}`)).blob()], file.name, { type: file.type }));
       } catch {
         unreadable = file.name;
       }

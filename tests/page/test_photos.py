@@ -321,6 +321,29 @@ def test_the_add_buttons_off_once_the_lesson_has_its_thirty_pages(page):
         sync_api.expect(chooser).to_be_enabled()
 
 
+def test_the_camera_off_while_the_pages_given_are_read(page):
+    """Pages given (the app's scanner, the gallery) are read one by one: meanwhile the camera's
+    input is off, its next capture would empty the app's folder they are read from (pages
+    "unreadable") and tell its scanner the places left before them."""
+    page.goto("/")
+    camera = page.locator("input[type=file][capture]")
+    sync_api.expect(camera).to_be_enabled()
+    page.evaluate(
+        """() => {
+          const held = new Promise((go) => { window.readOn = go; });
+          const real = window.resize;
+          window.resize = async (file) => { await held; return real(file); };
+        }"""
+    )
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
+        [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": png("white")} for n in (1, 2)]
+    )
+    sync_api.expect(camera).to_be_disabled()
+    page.evaluate("window.readOn()")
+    sync_api.expect(page.locator(".thumb img")).to_have_count(2)
+    sync_api.expect(camera).to_be_enabled()
+
+
 def test_a_name_hidden_before_the_photo_is_sent(page):
     """Blacked out with a finger, un-blacked the same way; only the blacked-out photo is sent."""
     page.goto("/")

@@ -1,6 +1,8 @@
 package app.notosaurus
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -60,5 +62,20 @@ class ApkgTest {
         assertEquals("H:y>fXo5(e", Apkg.guidFor(listOf("Histoire::Révolution", "c1")))
         assertEquals("y3%F&}7l[3", Apkg.guidFor(listOf("Histoire::Révolution", "c1", "1")))
         assertEquals(1266251675L, Apkg.stableId("deck", "Histoire::Révolution"))
+    }
+
+    @Test
+    fun aFailedPackageLeavesNoDatabaseBehind() {
+        // A media file gone by the time it is zipped: the write fails, its scratch database (the
+        // lesson's cards) deleted all the same
+        val gone = File(folder.root, "gone-1a2b3c4d.mp3")
+        val deck = Deck("Espagnol", listOf(Card(id = "c1", front = "la mère", back = "la madre")))
+        val files = mutableSetOf<File>()
+        fun shown(f: File, kind: String) = Apkg.shown(f.also { files += it }, kind)
+        val media = Media(audio = mapOf(Speech.spoken(deck.cards[0], false) to gone))
+        val notes = Anki.buildNotes(noteTypes, deck, media, Options(), ::shown, { f, k, _ -> shown(f, k) }) { _, f, _ -> f }
+        val work = folder.newFile("work.anki2")
+        assertThrows(java.io.IOException::class.java) { Apkg.write(notes, files, ByteArrayOutputStream(), work, ::JdbcApkgDb) }
+        assertFalse(work.exists())
     }
 }

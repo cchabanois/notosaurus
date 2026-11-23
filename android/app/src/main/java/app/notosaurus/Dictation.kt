@@ -60,9 +60,10 @@ class Dictation(
     /** What was heard so far, and the error that stopped it (null: none). */
     fun heard(): Pair<String, String?> = heard to failure
 
-    /** Stopped: everything heard ("" when nothing). */
-    suspend fun stopListening(): String {
-        val phone = listener ?: return ""
+    /** Stopped: everything heard ("" when nothing), and the error that stopped it (null: none):
+     * what was heard before it kept all the same. */
+    suspend fun stopListening(): Pair<String, String?> {
+        val phone = listener ?: return "" to null
         listeningLive = false
         if (listening) {
             listening = false
@@ -70,8 +71,7 @@ class Dictation(
             phone.stop { stopped.complete(Unit) }
             withTimeoutOrNull(STOP_MS) { stopped.await() }
         }
-        failure?.let { throw BadRequest(it) }
-        return heard.trim()
+        return heard.trim() to failure
     }
 
     // Asked from Ktor's threads (two taps at once): one at a time, the recording with them

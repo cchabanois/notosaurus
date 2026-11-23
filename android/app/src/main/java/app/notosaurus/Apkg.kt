@@ -28,9 +28,17 @@ interface ApkgDb : Closeable {
  */
 object Apkg {
     /** The notes (their files shown as `files` named them) written to `out`; `work`: a scratch
-     * file for the database. New cards: due as added, never reviewed. */
+     * file for the database, deleted after (a failure too). New cards: due as added, never reviewed. */
     internal fun write(notes: List<Built>, files: Collection<File>, out: OutputStream, work: File, db: (File) -> ApkgDb, now: Long = System.currentTimeMillis()) {
         work.delete()
+        try {
+            writeTo(notes, files, out, work, db, now)
+        } finally {
+            work.delete() // failed too: no lesson's cards left behind in the cache
+        }
+    }
+
+    private fun writeTo(notes: List<Built>, files: Collection<File>, out: OutputStream, work: File, db: (File) -> ApkgDb, now: Long) {
         val seconds = now / 1000
         var next = now // the notes' and cards' ids: as genanki's, from the time, one each
         val decks = notes.map { it.deck }.distinct().associateWith { stableId("deck", it) }
@@ -84,7 +92,6 @@ object Apkg {
                 zip.closeEntry()
             }
         }
-        work.delete()
     }
 
     /** How a note's field shows a file in the package: by its name, as the computer's. */

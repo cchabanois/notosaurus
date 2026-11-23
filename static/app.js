@@ -220,6 +220,7 @@ document.addEventListener("alpine:init", () => {
     pagesChosen: null,   // in it, the pages chosen to be removed together (their urls); null: a tap shows a page
     configured: true,    // an AI service with its key: until then, the setup assistant is offered
     pdfBusy: false,      // a PDF's pages being drawn
+    filesReading: 0,     // files being read into pages (addFiles, one call each): the 📷 off meanwhile
     dropTile: "",        // "gallery" or "pdf": a file dragged over it (the computer)
     pdf: { open: false, name: "", free: 0, pages: [] },  // its page picker
     lessonQuery: "",

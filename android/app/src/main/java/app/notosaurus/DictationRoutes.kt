@@ -31,7 +31,15 @@ internal fun Route.dictationRoutes(server: LocalServer) {
         }
         api("POST", "/api/dictation/stop") {
             val dictation = dictation ?: notFound()
-            if (dictation.live && dictation.listeningLive) return@api buildJsonObject { put("text", dictation.stopListening()) }
+            if (dictation.live && dictation.listeningLive) {
+                // The recognition failing partway (no network): what it heard before, with its error
+                // (a code, as /heard's): the page keeps the text in the field and says the error
+                val (text, failure) = dictation.stopListening()
+                return@api buildJsonObject {
+                    put("text", text)
+                    failure?.let { put("error", it) }
+                }
+            }
             val kind = body().string("kind").takeIf { it in Dictation.KINDS } ?: "prompt"
             buildJsonObject { put("text", dictation.stop(kind, languageName())) }
         }

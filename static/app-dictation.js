@@ -114,8 +114,11 @@ const dictationPart = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kind: kind.startsWith("card:") ? "correction" : kind }),
       });
-      text = keep ? ((await res.json()).text ?? "").trim() : "";
-      if (!text && keep) this.error = t("app.dictation.nothing");
+      // The phone's recognition failing partway: what it heard before kept, its error said
+      const said = keep ? await res.json() : {};
+      text = (said.text ?? "").trim();
+      if (said.error) this.error = errorMessage({ code: said.error });
+      else if (!text && keep) this.error = t("app.dictation.nothing");
     } catch (e) {
       if (keep) this.error = e.message;
     } finally {
