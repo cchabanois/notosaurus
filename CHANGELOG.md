@@ -121,6 +121,9 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- "📐 Dessiner la figure" on a figure a correction changed, while it hasn't been drawn again (its automatic drawing failed or is still to come), now starts from the old drawing and changes only what the correction asks (computer and Android).
+- A figure corrected while the lesson's other pictures are being drawn is now drawn again from its corrected description and keeps it, instead of going back to the old one.
+- Changes made to a lesson while its pictures are being drawn are now saved at once, instead of waiting for the drawing to end (they were lost if the app was closed meanwhile).
 - A lesson missing one of its pages (its photo deleted) no longer sends the AI the wrong page when correcting a card or the lesson, or when looking for the lesson's own drawings: each page is used by its own number, and a card from the missing page is handled as one whose page is unknown.
 - Adding pages to a lesson missing one of its photos no longer overwrites an existing page or reuses a number its cards still point to.
 - On Android, choosing your own photo for a card refuses a file that isn't a JPEG, PNG, WebP or GIF image, as on the computer.
