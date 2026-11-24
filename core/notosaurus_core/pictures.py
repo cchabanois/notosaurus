@@ -399,8 +399,15 @@ async def card_picture(
     except AppError as e:
         if e.code != "picture.needs_drawing":
             raise
-        # What was decided, for the client to look for free pictures itself or ask the user
-        raise AppError("picture.needs_drawing", 409, description=card.picture_prompt, search=card.picture_search) from e
+        # What was decided, for the client to look for free pictures itself or ask the user,
+        # and the side it shows on (decided's: the computer's "✨ Image" sets it too)
+        raise AppError(
+            "picture.needs_drawing",
+            409,
+            description=card.picture_prompt,
+            search=card.picture_search,
+            on_back=card.picture_on_back,
+        ) from e
     return CardPicture(card, jpeg, "jpg")
 
 
@@ -631,6 +638,14 @@ class Drawn(NamedTuple):
 READY = {"picture", *PICTURE_FIELDS}
 
 
+def needs_picture(card: Card) -> bool:
+    """A card whose picture is still to be made: it says what to show (a picture_prompt or a
+    figure) and has none. A sentence with gaps' too: its note type shows it (cloze v3), on its
+    question or its answer. The one rule of the computer, the phone (Pictures.needsPicture) and
+    the page (needsPicture): core/shared-cases.json's needs_picture."""
+    return bool((card.picture_prompt.strip() or card.figure.strip()) and not card.picture)
+
+
 async def draw_all(
     s: AIConfig,
     folder: Path,
@@ -655,8 +670,7 @@ async def draw_all(
     looked for as any other. `previous`: by card
     id, the figure a correction replaced, where it came from (its sources, kept_sources) and
     its family: drawn again from it, what is asked changed and the rest kept."""
-    # A sentence with gaps' too: its note type shows it (cloze v3), on its question or its answer
-    todo = [c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture]
+    todo = [c for c in cards if needs_picture(c)]
     if photos:
         by_page = photos if isinstance(photos, Mapping) else dict(enumerate(photos, 1))
         await _from_the_lesson(s, folder, [c for c in todo if c.id not in not_from_lesson], by_page, step)

@@ -143,7 +143,7 @@ const revisionPart = {
         const drawn = this.cards[i];
         drawn._check = { ok: false, problem: res.figure_problem };
         await this.redrawFigure(drawn);
-      } else if ((fixed.figure || fixed.picture_prompt) && !fixed.picture) this.drawPictures();
+      } else if (needsPicture(fixed)) this.drawPictures();
     } catch (e) {
       if (!fix.cancelling) this.error = e.message;  // cancelled: nothing to say
       fix.busy = false;

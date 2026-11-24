@@ -22,7 +22,7 @@ from ..anki import SharedLesson, build_apkg, build_shared_apkg
 from ..errors import AppError
 from ..lesson_notes import export_request
 from ..models import ExportRequest, Generated, Lesson, LessonIn, ShareRequest
-from .common import IMAGE_TYPES, MAX_PAGES, Step, jobs, pupil_lang, read_photo, streamed, wants_stream
+from .common import IMAGE_TYPES, MAX_PAGES, Step, finished, jobs, pupil_lang, read_photo, streamed, wants_stream
 
 log = logging.getLogger("notosaurus")
 
@@ -195,7 +195,10 @@ def _streamed(work, job: str = "") -> StreamingResponse:
     {"card": …} (or {"restart": true}: the ones sent so far are dropped; {"step": …}:
     what the AI is at, relay_api.AiStep), then {"lesson": …}, an error or
     {"cancelled": true}. The lesson is made and saved even if the page goes away
-    meanwhile: only "Cancel" (`job`, see cancel_generation) stops it, nothing saved."""
+    meanwhile: only "Cancel" (`job`, see cancel_generation) stops it, nothing saved, while the
+    AI writes; once its saving began, it is saved and answered all the same (common.finished:
+    the page told "cancelled" would keep the cards it had, its next save writing over the new
+    ones and their photos)."""
 
     async def told(step: Step):
         async def card(found: dict | None) -> None:
@@ -211,7 +214,8 @@ def _streamed(work, job: str = "") -> StreamingResponse:
 async def cancel_generation(job: str) -> dict:
     """Stop the AI's work ("Cancel" while waiting): a lesson being made, corrected, a card
     corrected (common.jobs). The AI stops writing, nothing is saved (generated again or
-    corrected: the lesson stays as it was). What the AI wrote already is paid for."""
+    corrected: the lesson stays as it was); a lesson whose saving began is saved, and given as
+    the answer (common.finished). What the AI wrote already is paid for."""
     task = jobs.get(job)
     if task:
         task.cancel()
@@ -232,7 +236,8 @@ async def extract(
         # Model, tokens and cost, kept with the lesson; answered but unusable: paid for, no lesson
         async with usage.metered("extract") as meter:
             g = await _generate(form, photos, lang, on_card=on_card)
-            created = await asyncio.to_thread(lessons.create, g, meter.calls)
+            # Saved once begun, whatever "Cancel" says meanwhile: the page given the lesson as saved
+            created = await finished(asyncio.to_thread(lessons.create, g, meter.calls))
             meter.kept_by(created)
         sounds.soon(created.id, created.voice)  # its backs' sounds made meanwhile
         return created
@@ -266,7 +271,7 @@ async def complete(
     async def work(on_card=None) -> Lesson:
         async with usage.metered("extract") as meter:  # as /api/extract's
             g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card, existing=existing)
-            lesson = await asyncio.to_thread(lessons.completed, id, g, meter.calls)
+            lesson = await finished(asyncio.to_thread(lessons.completed, id, g, meter.calls))  # as /api/extract's
             if lesson is None:  # deleted meanwhile
                 raise AppError("lesson.not_found", 404)
             meter.kept_by(lesson)
@@ -299,7 +304,9 @@ async def regenerate(
             g.content.dictation = g.content.dictation or old.dictation
             g.content.dictation_only = g.content.dictation_only or old.dictation_only
             g.content.child = g.content.child or old.child  # still for its child
-            lesson = await asyncio.to_thread(lessons.regenerated, id, g, meter.calls)
+            # Its old photos replaced: told "cancelled", the page's next save would put back the old
+            # cards over the new photos
+            lesson = await finished(asyncio.to_thread(lessons.regenerated, id, g, meter.calls))
             if lesson is None:  # deleted meanwhile
                 raise AppError("lesson.not_found", 404)
             meter.kept_by(lesson)

@@ -14,7 +14,7 @@ from notosaurus_core import correction
 from notosaurus_core.cards import kept_ids, same_text, text_key
 from notosaurus_core.correction import fix_photos, revise_photos
 from notosaurus_core.models import Card
-from notosaurus_core.pictures import drawing_calls
+from notosaurus_core.pictures import drawing_calls, needs_picture
 from notosaurus_core.tts import filename, speakable, spoken, spoken_sides
 
 CASES = json.loads((Path(__file__).parent.parent / "core" / "shared-cases.json").read_text(encoding="utf-8"))
@@ -70,6 +70,15 @@ def test_the_calls_looking_for_the_lessons_drawings(case):
     every page ten at a time: the phone's Pictures.drawingCalls the same."""
     calls = [{"pages": call.pages, "cards": call.cards} for call in drawing_calls(case["pages"], case["photos"])]
     assert calls == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["needs_picture"], ids=lambda c: c["name"])
+def test_a_card_whose_picture_is_to_be_made(case):
+    """A card saying what to show, without its picture, a sentence with gaps' too: the phone's
+    Pictures.needsPicture and the page's needsPicture the same (the phone left out those with
+    gaps, the page waiting for their picture)."""
+    fields = ("front", "back", "picture_prompt", "figure", "picture")
+    assert needs_picture(Card(**{field: case[field] for field in fields})) is case["out"]
 
 
 @pytest.mark.parametrize("case", CASES["revise_photos"], ids=lambda c: c["name"])

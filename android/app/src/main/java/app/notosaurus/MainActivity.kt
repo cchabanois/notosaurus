@@ -470,8 +470,9 @@ class MainActivity : ComponentActivity() {
 /**
  * cache/photos: the pages handed to the page's 📷 (the scanner's, the camera's), read by the page
  * one by one after. A new 📷 empties it but for the last pages handed over, which the page may
- * still be reading (the computer's page, an older one, keeps its 📷 on meanwhile); the new
- * pages handed over, those last ones go: never more than one 📷's pages kept.
+ * still be reading (the computer's page, an older one, keeps its 📷 on meanwhile; a picture's 📷
+ * taken while they are read); the new pages handed over, those last ones stay until the next
+ * 📷: never more than two 📷's pages kept.
  */
 internal class PhotoFolder(val dir: File) {
     private var last: Set<String> = emptySet()
@@ -482,10 +483,12 @@ internal class PhotoFolder(val dir: File) {
         dir.listFiles()?.filter { it.name !in last }?.forEach { it.delete() }
     }
 
-    /** `pages` handed to the page: every other file deleted. */
+    /** `pages` handed to the page: every other file deleted, but the pages handed over before
+     * them (the page may still be reading them: gone at the next 📷). */
     @Synchronized
     fun handed(pages: List<File>) {
+        val kept = last + pages.map { it.name }
         last = pages.map { it.name }.toSet()
-        clear()
+        dir.listFiles()?.filter { it.name !in kept }?.forEach { it.delete() }
     }
 }

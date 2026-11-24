@@ -20,7 +20,8 @@ class ScannerTest {
     @Test
     fun aNewCaptureKeepsThePagesThePageMayStillRead() {
         // cache/photos: a 📷's pages handed over, read by the page one by one; the next 📷 tapped
-        // meanwhile empties the folder but for them, its own pages handed over remove them
+        // meanwhile (a picture's) empties the folder but for them, its own pages handed over keep
+        // them too, until the 📷 after
         val photos = PhotoFolder(folder.newFolder("photos"))
         fun page(name: String) = java.io.File(photos.dir, name).apply { writeText(name) }
         val old = page("page-1-1.jpg") // an earlier 📷's, from before (another run of the app)
@@ -34,7 +35,12 @@ class ScannerTest {
         assertFalse(cancelled.exists())
         val next = listOf(page("photo-4.jpg"))
         photos.handed(next)
+        assertTrue(first.all { it.exists() }) // maybe still read
+        assertEquals(setOf("page-2-1.jpg", "page-2-2.jpg", "photo-4.jpg"), photos.dir.list()!!.toSet())
+        photos.clear() // the 📷 after
         assertEquals(listOf("photo-4.jpg"), photos.dir.list()!!.toList())
+        photos.handed(listOf(page("photo-5.jpg")))
+        assertEquals(setOf("photo-4.jpg", "photo-5.jpg"), photos.dir.list()!!.toSet())
     }
 
     @Test

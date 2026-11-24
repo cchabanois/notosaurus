@@ -69,6 +69,9 @@ class Generation(
             put("instructions", instructions(child))
             put("quick", form.on("quick"))
             if (existing.isNotEmpty()) put("existing", JsonArray(existing.map(::JsonPrimitive)))
+            // Each card's page among the call's photos: numbered as the lesson's here (pageWithin,
+            // Lessons.completed); the relay gives none to an app that doesn't say so
+            put("card_pages", true)
         }
         val found = cancellable(fields["job"]) { relay().extract(request, form.images, onCard) }
         // The options: Notosaurus's prompt's own, else what the AI read in the instructions (a

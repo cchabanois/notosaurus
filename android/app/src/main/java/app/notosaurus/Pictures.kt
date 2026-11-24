@@ -65,7 +65,7 @@ class Pictures(
         val few = Semaphore(AT_ONCE)
         coroutineScope {
             val figuresOff = off("figures.draw")
-            cards.indices.filter { i -> cards[i].missingPicture() && !(figuresOff && cards[i].string("figure").isNotBlank()) }.map { i ->
+            cards.indices.filter { i -> needsPicture(cards[i]) && !(figuresOff && cards[i].string("figure").isNotBlank()) }.map { i ->
                 async {
                     few.withPermit {
                         try {
@@ -108,7 +108,7 @@ class Pictures(
      * the relay refuses: its pages skipped, the others still looked at. */
     private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step, notFromLesson: Set<String>) {
         val wanted = cards.indices.filter { i ->
-            cards[i].missingPicture() && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank() &&
+            needsPicture(cards[i]) && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank() &&
                 cards[i].string("id") !in notFromLesson
         }
         val photos = lessons.photos(lessonId)
@@ -174,12 +174,15 @@ class Pictures(
             if (e.code != NEEDS_DRAWING) throw e
             val description = e.params.string("description")
             val search = e.params.string("search")
+            // The side the relay decided it shows on (as the computer's); an older relay's 409 says
+            // none: the card's
+            val onBack = (e.params["on_back"] as? JsonPrimitive)?.booleanOrNull ?: card.onBack()
             val found = "search" to JsonPrimitive(search.ifEmpty { description }) // what the page looks for
             if (card.string("figure").isNotBlank()) {
                 val decided = buildJsonObject {
                     put("picture_prompt", description)
                     put("picture_search", search)
-                    put("picture_on_back", card.onBack()) // the relay's 409 says no other: the card's
+                    put("picture_on_back", onBack)
                 }
                 return@drawing buildJsonObject {
                     put("card", card)
@@ -190,7 +193,7 @@ class Pictures(
             }
             cards[i] = cards[i].with(
                 "figure" to JsonPrimitive(""), "figure_kind" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(description),
-                "picture_search" to JsonPrimitive(search),
+                "picture_search" to JsonPrimitive(search), "picture_on_back" to JsonPrimitive(onBack),
             )
             JsonObject(answer(lesson, cards, i) + found)
         }
@@ -337,14 +340,19 @@ class Pictures(
      * written onto the lesson as saved now (mergedCards: the cards a /complete added while
      * they were drawn, a card the page changed, stay). The pictures no card uses any more stay
      * until prune(): a card's picture drawn again can still be undone on the page while the
-     * card is edited. */
+     * card is edited. Read and written under the lessons' lock (Lessons.locked): a save landing
+     * meanwhile (the page's correction) waits, never written over by cards read before it. */
     private fun saved(lesson: JsonObject, cards: List<JsonObject>): JsonObject {
         val id = lesson.string("id")
-        return synchronized(lessons) {
+        return lessons.locked {
             val now = lessons.get(id)?.cards() ?: notFound()
+            merging()
             lessons.update(id, buildJsonObject { put("cards", JsonArray(mergedCards(lesson.cards(), cards, now))) })
         } ?: notFound()
     }
+
+    /** Called between a merge's reading of the lesson and its writing (tests: a save landing there). */
+    internal var merging: () -> Unit = {}
 
     /** The lessons whose pictures are being written (id → how many at once): a picture is in
      * images/ before it is in the saved lesson. prune() waits for none (its check and their
@@ -390,12 +398,14 @@ class Pictures(
 
     private fun JsonObject.onBack() = (this["picture_on_back"] as? JsonPrimitive)?.booleanOrNull ?: false
 
-    // Not on a sentence with gaps: AnkiDroid shows no picture on it (not paid for, then)
-    private fun JsonObject.missingPicture() =
-        string("picture").isEmpty() && (string("picture_prompt").isNotBlank() || string("figure").isNotBlank()) &&
-            !CLOZE.containsMatchIn(string("front"))
-
     companion object {
+        /** A card whose picture is still to be made: it says what to show (a picture_prompt or a
+         * figure) and has none. A sentence with gaps' too: its note type shows it (Anki.kt sends its
+         * Picture and BackPicture fields), on its question or its answer. As the computer's and the
+         * page's (pictures.needs_picture, core/shared-cases.json). */
+        internal fun needsPicture(card: JsonObject) =
+            card.string("picture").isEmpty() && (card.string("picture_prompt").isNotBlank() || card.string("figure").isNotBlank())
+
         /** The calls looking for the lesson's own drawings of cards whose pages are `pages` (each
          * card's, from 1; 0 unknown) among the lesson's `photos` (the numbers of its pages there): each
          * call's pages sent and the cards it asks (their indexes; a later call asks only those still
@@ -431,8 +441,8 @@ class Pictures(
         /** The cards an edit made of `before` (`after`), merged into the lesson's as saved now
          * (`now`), card by card (by id): of each card the edit changed, only the fields it
          * changed; a card added since kept, one it removed gone, one it added at the end. A
-         * picture the edit drew for a card described anew meanwhile (stalePicture): none of its
-         * picture's fields, the card left to be drawn as it says now. As app/lessons.py's
+         * picture the edit drew for a card described anew meanwhile, or given another picture
+         * meanwhile (stalePicture): none of its picture's fields, the card left as it is now. As app/lessons.py's
          * merged_cards. Without ids to go by (or twice the same): `after`. */
         internal fun mergedCards(before: List<JsonObject>, after: List<JsonObject>, now: List<JsonObject>): List<JsonObject> {
             fun ids(cards: List<JsonObject>) = cards.map { it.string("id") }
@@ -447,8 +457,10 @@ class Pictures(
             } + after.filter { it.string("id") !in was }
         }
 
-        /** The picture an edit gave a card (`before` → `after`) drawn from what it no longer says:
-         * its description (DESCRIBED) changed meanwhile in the lesson as saved `now` (a correction
+        /** The picture an edit gave a card (`before` → `after`) no longer the card's to take: its
+         * picture changed meanwhile in the lesson as saved `now` (another edit gave it one: a photo
+         * the user chose while a batch drew it, written over then pruned), or it was drawn from
+         * what the card no longer says, its description (DESCRIBED) changed meanwhile (a correction
          * saved while it was drawn), not to what the edit set itself. The user's own photo is not
          * drawn from it (chosen as the card's, kept); nor is a picture removed. As app/lessons.py's
          * stale_picture. */
@@ -456,6 +468,7 @@ class Pictures(
             val picture = after.string("picture")
             if (picture.isEmpty() || picture == before.string("picture")) return false
             if ((after["picture_source"] as? JsonObject)?.string("source") == "photo") return false
+            if (now.string("picture") != before.string("picture") && now.string("picture") != picture) return true
             fun described(card: JsonObject) = DESCRIBED.map { card.string(it) }
             return described(now) != described(before) && described(now) != described(after)
         }
@@ -525,7 +538,6 @@ class Pictures(
         private val DRAWN = PICTURE_FIELDS + "picture"
         // A card's picture fields, told with "ready" (drawMissing) the moment it has them (core's pictures.READY)
         private val READY = PICTURE_FIELDS + "picture"
-        private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py
         private val NAME = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // the files we write
         // A figure's source files: named after its picture ("picture-c1-ab12cd34.typ", "-2.typ" for
         // a second), read back only by such a name; its group 1 the picture's stem (core's SOURCE_NAME)

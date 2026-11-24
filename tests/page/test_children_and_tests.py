@@ -47,7 +47,9 @@ def test_a_childs_class_typed_freely_the_countrys_suggested(page):
     grade.press("Tab")  # its change: the class set
     sync_api.expect(sheet.get_by_role("button", name="Léa::Maths Sup")).to_be_visible()  # its decks suggested
     sheet.get_by_role("button", name="Léa::Maths Sup").click()
-    sheet.get_by_role("button", name="Enregistrer").click()
+    # Saved in the background (saveChildren): read once its PUT has answered
+    with page.expect_response(lambda r: r.url.endswith("/api/children") and r.request.method == "PUT"):
+        sheet.get_by_role("button", name="Enregistrer").click()
     (child,) = page.request.get("/api/children").json()
     assert (child["grade"], child["decks"]) == ("Maths Sup", "Léa::Maths Sup")
 

@@ -2894,7 +2894,7 @@
           "draw": {
             "type": "boolean",
             "title": "Draw",
-            "description": "A picture no free one fits drawn by the image model (it costs: the user said yes). False: 409 picture.needs_drawing instead, its params what was decided (description, search).",
+            "description": "A picture no free one fits drawn by the image model (it costs: the user said yes). False: 409 picture.needs_drawing instead, its params what was decided (description, search, on_back: the side it shows on).",
             "default": true
           },
           "problem": {
@@ -3411,6 +3411,12 @@
             "maxItems": 500,
             "title": "Existing",
             "type": "array"
+          },
+          "card_pages": {
+            "default": false,
+            "description": "Each card's \"page\" as the AI gives it, numbered among this call's photos: asked by a client that numbers them among the lesson's when the photos are its next pages. Not asked (the apps 1.1.x, which store a card's fields unchanged): every card's \"page\" 0, in the answer and its lines.",
+            "title": "Card Pages",
+            "type": "boolean"
           }
         },
         "required": [

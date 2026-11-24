@@ -39,6 +39,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -349,6 +350,13 @@ class GenerationRoutesTest : LocalServerTestBase() {
             "turns": [], "usage": {"credits": 1, "credits_left": 97}}""")
         val again = client.submitFormWithBinaryData("/api/lessons/$id/regenerate", pageForm(1..2)) { page() }.json().jsonObject
         assertEquals(listOf(2), again.cards().map { it["page"]!!.jsonPrimitive.int })
+        // Each call asked for the cards' pages: the relay gives none to an app that would store
+        // them unnumbered (1.1.x, completing a lesson)
+        repeat(3) {
+            val asked = relay.takeRequest(5, TimeUnit.SECONDS)!!
+            assertEquals("/v1/extract", asked.url.encodedPath)
+            assertEquals(true, asked.multipartRequest()["card_pages"]?.jsonPrimitive?.booleanOrNull)
+        }
     }
 
     @Test

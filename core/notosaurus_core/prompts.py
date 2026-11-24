@@ -50,7 +50,9 @@ class ExtractOptions:
     a PDF page ("" for a photo); `instructions`: the user's standing instructions, put
     before the request (never replacing the rules); `quick`: made fast, the model thinking
     little; `existing`: the lesson's cards made from its earlier pages ("front [part]"),
-    when these photos are its next pages: not made again."""
+    when these photos are its next pages: not made again; `card_pages`: each card keeps
+    the page the AI gives it (Card.page), else 0, for a client that would store it
+    without numbering it among the lesson's (relay_api.ExtractRequest.card_pages)."""
 
     deck: str = ""
     decks: Sequence[str] = ()
@@ -61,6 +63,7 @@ class ExtractOptions:
     instructions: str = ""
     quick: bool = False
     existing: Sequence[str] = ()
+    card_pages: bool = True
 
 
 def _user_text(

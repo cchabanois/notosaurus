@@ -68,6 +68,12 @@ class SharedCasesTest {
     }
 
     @Test
+    fun aCardWhosePictureIsToBeMade() = cases("needs_picture").forEach { c ->
+        val card = buildJsonObject { listOf("front", "back", "picture_prompt", "figure", "picture").forEach { put(it, c.string(it)) } }
+        assertEquals(c.string("name"), c["out"]!!.jsonPrimitive.boolean, Pictures.needsPicture(card))
+    }
+
+    @Test
     fun thePhotosSentToCorrectALesson() = cases("revise_photos").forEach { c ->
         val out = c["out"]!!.jsonArray.map { it.jsonPrimitive.int } to c.string("sent")
         assertEquals(c.string("name"), out, Generation.revisePhotos(photos(c["photos"])))

@@ -26,6 +26,16 @@ import java.util.UUID
  */
 class Lessons(private val root: File) {
 
+    /** Every change to a lesson's file made under it, from its reading to its writing (update,
+     * completed, regenerated, copy, create, setAnkiNotes, delete; Pictures' merges, the photos
+     * turned): a save landing between another's reading and writing is never written over by it
+     * (the page's correction lost to a picture's merge read before it). Short work only: files,
+     * never a relay call. Reentrant (a block calling update). Reading alone needs none: a lesson's
+     * file is replaced whole (write). */
+    private val lock = Any()
+
+    fun <T> locked(block: () -> T): T = synchronized(lock) { block() }
+
     fun list(): List<JsonObject> = (root.listFiles() ?: emptyArray())
         .mapNotNull { get(it.name) }
         .sortedByDescending { it.string("updated_at") }
@@ -52,7 +62,7 @@ class Lessons(private val root: File) {
     fun photos(id: String): Map<Int, ByteArray> = pages(id).mapNotNull { n -> photo(id, n)?.let { n to it.readBytes() } }.toMap()
 
     /** A new lesson from what the AI made: its own folder, named after the date and deck. */
-    fun create(content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject {
+    fun create(content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject = locked {
         val id = newId(content["deck"]?.jsonPrimitive?.content ?: "")
         val dir = root.resolve(id).apply { mkdirs() }
         photos.forEachIndexed { i, data -> dir.resolve("page-${i + 1}.jpg").writeBytes(data) }
@@ -67,15 +77,15 @@ class Lessons(private val root: File) {
             ),
         )
         write(lesson)
-        return get(id) ?: lesson // its pages, as read back
+        get(id) ?: lesson // its pages, as read back
     }
 
     /** A copy for another child (its `deck`): photos, cards, pictures; new card ids (other
      * notes in AnkiDroid, with their own history); not sent yet, no AI calls (nothing asked
      * of the AI), as the computer's lessons.copy. Null: no such lesson. */
-    fun copy(id: String, deck: String, child: String): JsonObject? {
-        val source = folder(id) ?: return null
-        val lesson = get(id) ?: return null
+    fun copy(id: String, deck: String, child: String): JsonObject? = locked {
+        val source = folder(id) ?: return@locked null
+        val lesson = get(id) ?: return@locked null
         val copyId = newId(deck)
         val dir = root.resolve(copyId)
         source.copyRecursively(dir) // photos, pictures
@@ -104,7 +114,7 @@ class Lessons(private val root: File) {
             ),
         )
         write(copy)
-        return get(copyId) ?: copy
+        get(copyId) ?: copy
     }
 
     /** A new lesson's folder name: the date and its deck, another if taken. */
@@ -115,9 +125,9 @@ class Lessons(private val root: File) {
 
     /** Generated again in its place: new cards and photos; the options set in the review
      * stay, the prompt's (or the AI's) are added (reverse, typing, dictation), as the computer's. */
-    fun regenerated(id: String, content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject? {
-        val lesson = get(id) ?: return null
-        val dir = folder(id) ?: return null
+    fun regenerated(id: String, content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject? = locked {
+        val lesson = get(id) ?: return@locked null
+        val dir = folder(id) ?: return@locked null
         dir.listFiles { f -> f.name.matches(PHOTO) }?.forEach { it.delete() }
         photos.forEachIndexed { i, data -> dir.resolve("page-${i + 1}.jpg").writeBytes(data) }
         fun either(key: String) = JsonPrimitive(
@@ -136,16 +146,16 @@ class Lessons(private val root: File) {
             ),
         )
         write(updated)
-        return get(id) // its new pages, as read back
+        get(id) // its new pages, as read back
     }
 
     /** Its next pages added (/complete): their photos after its own, their cards after its
      * cards (untouched: their ids, so their notes in AnkiDroid, stay), as app/lessons.py's
      * completed. `content`'s masks and frames count pages from the first new photo; numbered here
      * from the lesson's next page (nextPage: a number never used in it, so no file written over). */
-    fun completed(id: String, content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject? {
-        val lesson = get(id) ?: return null
-        val dir = folder(id) ?: return null
+    fun completed(id: String, content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject? = locked {
+        val lesson = get(id) ?: return@locked null
+        val dir = folder(id) ?: return@locked null
         val before = nextPage(pageNumbers(dir), lesson) - 1
         photos.forEachIndexed { i, data -> dir.resolve("page-${before + i + 1}.jpg").writeBytes(data) }
         fun shifted(item: JsonObject, key: String): JsonObject {
@@ -177,18 +187,18 @@ class Lessons(private val root: File) {
             ),
         )
         write(updated)
-        return get(id) // its new pages, as read back
+        get(id) // its new pages, as read back
     }
 
     /** Its notes in AnkiDroid after a send, by card id (not a content change). */
-    fun setAnkiNotes(id: String, notes: Map<String, Long>) {
-        val lesson = get(id) ?: return
+    fun setAnkiNotes(id: String, notes: Map<String, Long>): Unit = locked {
+        val lesson = get(id) ?: return@locked
         write(JsonObject(lesson + ("anki_notes" to JsonObject(notes.mapValues { JsonPrimitive(it.value) }))))
     }
 
     /** The page's changes (LessonIn): null fields leave the lesson's as they are. */
-    fun update(id: String, changes: JsonObject, exported: Boolean = false): JsonObject? {
-        val lesson = get(id) ?: return null
+    fun update(id: String, changes: JsonObject, exported: Boolean = false): JsonObject? = locked {
+        val lesson = get(id) ?: return@locked null
         val kept = changes.filterKeys { it in EDITABLE }.filterValues { it !is JsonNull }
         val updated = JsonObject(
             lesson + kept + buildMap {
@@ -199,10 +209,10 @@ class Lessons(private val root: File) {
             },
         )
         write(updated)
-        return updated
+        updated
     }
 
-    fun delete(id: String): Boolean = folder(id)?.deleteRecursively() ?: false
+    fun delete(id: String): Boolean = locked { folder(id)?.deleteRecursively() ?: false }
 
     /** Every lesson deleted; returns how many there were. */
     fun deleteAll(): Int = list().count { delete(it.string("id")) }
