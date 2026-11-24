@@ -19,6 +19,13 @@ function describedAs(card) {
   return JSON.stringify(DESCRIBED.map((field) => card[field] ?? ""));
 }
 
+// A card whose picture is still to be made: it says what to show (a picture_prompt or a
+// figure) and has none; a sentence with gaps' too (the computer's pictures.needs_picture, the
+// phone's Pictures.needsPicture: core/shared-cases.json's needs_picture)
+function needsPicture(card) {
+  return Boolean((card.picture_prompt?.trim() || card.figure?.trim()) && !card.picture);
+}
+
 // A card's picture fields as they are, each as JSON (to tell those changed since: takeDrawn)
 function pictureFieldsOf(card) {
   return Object.fromEntries(PICTURE_FIELDS.map((field) => [field, JSON.stringify(card[field] ?? null)]));
@@ -332,7 +339,7 @@ const picturesPart = {
   // One drawing at a time for a lesson (two drew the same cards, each paid): asked while one
   // runs, done again once it ends (a card a correction added meanwhile)
   async drawPictures(draw = false) {
-    if (this.readOnly() || !this.cards.some((c) => (c.picture_prompt || c.figure) && !c.picture)) return;
+    if (this.readOnly() || !this.cards.some(needsPicture)) return;
     const lessonId = this.lessonId;
     if (this.drawingLessons.includes(lessonId)) {
       this.drawLater[lessonId] = Boolean(this.drawLater[lessonId] || draw);

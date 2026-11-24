@@ -36,6 +36,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -264,16 +265,20 @@ abstract class LocalServerTestBase {
     protected fun cardPicture(
         request: RecordedRequest,
         sources: List<String> = emptyList(),
-        decide: (JsonObject) -> Map<String, String> = { emptyMap() },
+        decide: (JsonObject) -> Map<String, Any> = { emptyMap() }, // a field's text, or a Boolean (picture_on_back)
     ): MockResponse {
         val asked = json.parseToJsonElement(request.body!!.utf8()).jsonObject
-        var card = JsonObject(asked["card"]!!.jsonObject + decide(asked).mapValues { JsonPrimitive(it.value) })
+        val decided = decide(asked).mapValues { (_, value) -> if (value is Boolean) JsonPrimitive(value) else JsonPrimitive(value.toString()) }
+        var card = JsonObject(asked["card"]!!.jsonObject + decided)
         if (sources.isNotEmpty()) {
             card = JsonObject(card + ("picture_source" to json.parseToJsonElement("""{"source": "drawn", "model": "m", "engine": "typst", "sources": []}""")))
         }
         val figure = card.string("figure").isNotBlank()
         if (!figure && asked["draw"]?.jsonPrimitive?.content == "false") { // as the core: no free one fits, not drawn
-            val params = buildJsonObject { put("description", card.string("picture_prompt")); put("search", card.string("picture_search")) }
+            val params = buildJsonObject {
+                put("description", card.string("picture_prompt")); put("search", card.string("picture_search"))
+                put("on_back", (card["picture_on_back"] as? JsonPrimitive)?.booleanOrNull ?: false)
+            }
             return MockResponse.Builder().code(409).body(buildJsonObject { put("code", "picture.needs_drawing"); put("params", params) }.toString()).build()
         }
         val data = if (figure) "<svg/>" else "jpeg $asked"

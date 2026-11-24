@@ -532,6 +532,58 @@ class PictureRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aPictureMadeShowsOnTheSideTheRelayDecided() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "Quel fruit ?", "back": "an apple"}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.url.encodedPath) {
+                // The relay's AI decides a picture, shown with the answer (it would give it away): no
+                // free one asked, its 409 says what was decided
+                "/v1/card-picture" -> cardPicture(request) {
+                    mapOf("picture_prompt" to "a red apple", "picture_search" to "apple", "picture_on_back" to true)
+                }
+                else -> MockResponse.Builder().code(404).build()
+            }
+        }
+        val id = lesson.string("id")
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject
+        assertEquals(false, card["picture_on_back"]?.jsonPrimitive?.boolean ?: false)
+        val made = client.post("/api/lessons/$id/cards/${card.string("id")}/picture/make") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"subject": ""}""")
+        }.json().jsonObject
+        assertEquals("apple", made.string("search"))
+        val saved = client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray[0].jsonObject
+        for (shown in listOf(made["card"]!!.jsonObject, saved)) {
+            assertEquals("a red apple" to "apple", shown.string("picture_prompt") to shown.string("picture_search"))
+            assertEquals(true, shown["picture_on_back"]!!.jsonPrimitive.boolean) // as the computer's: the side decided
+        }
+    }
+
+    @Test
+    fun aSentenceWithGapsGetsItsPicture() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Français", "cards": [{"front": "Le {{c1::chat}} dort.", "back": "",
+            "picture_prompt": "a sleeping cat"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val asked = java.util.Collections.synchronizedList(mutableListOf<String>())
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                asked += request.url.encodedPath
+                return cardPicture(request)
+            }
+        }
+        val id = lesson.string("id")
+        assertEquals("a sleeping cat", lesson["cards"]!!.jsonArray[0].jsonObject.string("picture_prompt"))
+        // Its note type shows a picture (Anki.kt sends it): drawn as any other card's, as the computer's
+        val cards = client.post("/api/lessons/$id/pictures") { page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""") }
+            .json().jsonObject["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+        assertEquals(listOf("/v1/card-picture"), asked.toList())
+        assertTrue(cards[0].string("picture").endsWith(".jpg"))
+    }
+
+    @Test
     fun aFigureTurnedIntoAPictureStaysTheFigureUntilAPictureIsChosen() = app { client ->
         val asked = mutableListOf<Pair<String, JsonObject>>()
         val lesson = client.figureLesson(mutableListOf(), emptyList())
@@ -546,7 +598,10 @@ class PictureRoutesTest : LocalServerTestBase() {
                     // The relay's AI decides a picture, nothing written: no free one asked, 409
                     "/v1/card-picture" -> cardPicture(request) { sent ->
                         if (sent.string("asked").isEmpty() && sent["card"]!!.jsonObject.string("figure").isNotEmpty()) {
-                            mapOf("figure" to "", "figure_kind" to "", "picture_prompt" to "a photo of a set square", "picture_search" to "set square")
+                            mapOf(
+                                "figure" to "", "figure_kind" to "", "picture_prompt" to "a photo of a set square",
+                                "picture_search" to "set square", "picture_on_back" to true,
+                            )
                         } else emptyMap()
                     }
                     else -> MockResponse.Builder().code(404).build()
@@ -560,6 +615,7 @@ class PictureRoutesTest : LocalServerTestBase() {
         assertEquals("set square", made.string("search"))
         val decided = made["decided"]!!.jsonObject
         assertEquals("a photo of a set square" to "set square", decided.string("picture_prompt") to decided.string("picture_search"))
+        assertEquals(true, decided["picture_on_back"]!!.jsonPrimitive.boolean) // the side the relay decided, not the card's
         // The search given up: still the figure, its drawing and its description (never one without the other)
         for (card in listOf(made["card"]!!.jsonObject, saved())) {
             assertEquals("a right triangle" to figure.string("picture"), card.string("figure") to card.string("picture"))
