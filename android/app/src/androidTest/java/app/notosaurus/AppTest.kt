@@ -7,7 +7,6 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.provider.MediaStore
-import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intending
@@ -457,17 +456,14 @@ class AppTest {
      * then a text shared with the app open, added to them as a page of its own (its words with it). */
     @Test
     fun whatIsSharedBecomesTheLessonsPages() {
-        val pdf = File(Device.context.cacheDir, "photos/shared-$run.pdf").apply {
-            parentFile!!.mkdirs()
-            writeText(
-                listOf(
-                    "%PDF-1.4", "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj", "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
-                    "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R/Resources<<>>>>endobj",
-                    "4 0 obj<</Length 21>>stream", "0 0 m 100 100 l S", "endstream endobj", "trailer<</Root 1 0 R>>", "%%EOF",
-                ).joinToString("\n"),
-            )
-        }
-        val pdfUri = FileProvider.getUriForFile(Device.context, "${Device.context.packageName}.photos", pdf)
+        val pdf = (
+            listOf(
+                "%PDF-1.4", "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj", "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
+                "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R/Resources<<>>>>endobj",
+                "4 0 obj<</Length 21>>stream", "0 0 m 100 100 l S", "endstream endobj", "trailer<</Root 1 0 R>>", "%%EOF",
+            ).joinToString("\n")
+        ).toByteArray()
+        val pdfUri = Device.shared("shared-$run.pdf", "application/pdf", pdf) // another app's (a file manager's)
         val share = Intent(Intent.ACTION_SEND_MULTIPLE).setClass(Device.context, MainActivity::class.java)
             .setType("image/*")
             .putParcelableArrayListExtra(Intent.EXTRA_STREAM, arrayListOf(galleryPhoto(), pdfUri))
@@ -560,10 +556,9 @@ class AppTest {
 
     /** A photo in the gallery's place: a small JPEG the app's own provider hands out. */
     private fun galleryPhoto(): android.net.Uri {
-        val file = File(Device.context.cacheDir, "photos/gallery-$run.jpg").apply { parentFile!!.mkdirs() }
         val picture = Bitmap.createBitmap(400, 300, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
-        file.outputStream().use { picture.compress(Bitmap.CompressFormat.JPEG, 90, it) }
-        return FileProvider.getUriForFile(Device.context, "${Device.context.packageName}.photos", file)
+        val jpeg = java.io.ByteArrayOutputStream().also { picture.compress(Bitmap.CompressFormat.JPEG, 90, it) }.toByteArray()
+        return Device.shared("gallery-$run.jpg", "image/jpeg", jpeg) // another app's, as a gallery shares it
     }
 
     /** A page as the scanner writes it: a JPEG in the app's cache (a file:// address). */
