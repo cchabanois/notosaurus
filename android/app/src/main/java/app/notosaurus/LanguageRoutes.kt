@@ -33,6 +33,11 @@ internal fun Route.languageRoutes(server: LocalServer) {
                 throw BadRequest("tts.voices_unavailable", buildJsonObject { put("detail", e.code) })
             }
         }
+        // The voice a lesson gets for a language ("es-ES"), chosen once it is made: as an "auto" lesson gets it
+        api("GET", "/api/voices/for") {
+            val language = call.request.queryParameters["language"].orEmpty()
+            buildJsonObject { put("voice", speech.voiceFor(language)) }
+        }
         // Listen to a text (🔊), read by the relay's voice
         get("/api/tts") {
             if (!allowed()) return@get

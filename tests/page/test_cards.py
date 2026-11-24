@@ -1345,3 +1345,44 @@ def test_a_correction_coming_back_after_another_lesson_opened_stays_its_own(page
     page.wait_for_function(f"!{data}.revision.busy")
     page.wait_for_load_state("networkidle")
     assert page.evaluate(f"[{data}.lessonId, {data}.cards.length]") == [None, 0]
+
+
+def test_a_lessons_voice_chosen_once_it_is_made(page):
+    """A lesson made without a voice (none for its language then), its cards asked to be read:
+    said, here and under a correction; its language picked in « Voix », the voice a lesson made
+    with the "auto" voice gets, saved with it; « Aucune voix », none again."""
+    voices = [
+        {"voice": "es-ES-ElviraNeural", "locale": "es-ES", "gender": "Female"},
+        {"voice": "zh-CN-XiaoxiaoNeural", "locale": "zh-CN", "gender": "Female"},
+    ]
+    page.route("**/api/voices", lambda route: route.fulfill(json=voices))
+    asked = []
+
+    def voice_for(route):
+        asked.append(route.request.url.split("language=")[1])
+        route.fulfill(json={"voice": "zh-CN-XiaoxiaoNeural"})
+
+    page.route("**/api/voices/for?*", voice_for)
+    generate_free(page, FRONT_PROMPT)
+    (summary,) = lessons(page)
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+    page.evaluate(f"{data}.voice = ''; {data}.cards.forEach((c) => {{ c.sound = 'back'; }})")
+    warning = page.locator(
+        "p.warn", has_text="Ces cartes doivent être lues à voix haute, mais la leçon n'a pas de voix"
+    )
+    sync_api.expect(warning).to_be_visible()
+    picker = page.get_by_role("combobox", name="Voix")
+    sync_api.expect(picker).to_have_value("")
+    # Each language named in the page's (the browser's words: « chinois (Chine) », « espagnol d'Espagne »)
+    names = ["Aucune voix", re.compile(r"^chinois"), re.compile(r"^espagnol")]
+    sync_api.expect(picker.locator("option")).to_have_text(names)
+
+    picker.select_option(value="zh-CN")
+    eventually(page, lambda: lesson(page, summary["id"])["voice"] == "zh-CN-XiaoxiaoNeural", "the voice saved")
+    assert asked == ["zh-CN"]
+    sync_api.expect(warning).to_be_hidden()
+    sync_api.expect(picker).to_have_value("zh-CN")
+
+    picker.select_option(value="")
+    eventually(page, lambda: lesson(page, summary["id"])["voice"] == "", "no voice saved")
+    sync_api.expect(warning).to_be_visible()

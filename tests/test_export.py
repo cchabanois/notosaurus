@@ -9,7 +9,7 @@ import apkg
 import pytest
 from conftest import CLOZE, extract_lesson, synthesized
 
-from app import anki
+from app import anki, settings
 from app.note_types.common import CONTEXT, PICTURE
 from notosaurus_core import tts
 from notosaurus_core.models import Card
@@ -167,6 +167,24 @@ def test_voices_listed(client, monkeypatch):
     res = client.get("/api/voices")
     assert res.status_code == 502
     assert res.json()["detail"] == {"code": "tts.voices_unavailable", "params": {"detail": "network down"}}
+
+
+def test_a_languages_voice_for_a_lesson(client, monkeypatch):
+    """A voice chosen for a lesson already made (its language picked on the page): the one
+    chosen in the settings for that language, else as "auto" picks it; none: ""."""
+    available = [
+        {"voice": "zh-CN-XiaoxiaoNeural", "locale": "zh-CN", "gender": "Female"},
+        {"voice": "zh-CN-YunxiNeural", "locale": "zh-CN", "gender": "Male"},
+    ]
+
+    async def voices():
+        return available
+
+    monkeypatch.setattr(tts, "voices", voices)
+    assert client.get("/api/voices/for", params={"language": "zh-CN"}).json() == {"voice": "zh-CN-XiaoxiaoNeural"}
+    assert client.get("/api/voices/for", params={"language": "ja-JP"}).json() == {"voice": ""}
+    settings.save({"voices": {"zh-CN": "zh-CN-YunxiNeural"}})  # chosen in the settings
+    assert client.get("/api/voices/for", params={"language": "zh-CN"}).json() == {"voice": "zh-CN-YunxiNeural"}
 
 
 def test_voice_preview_failed(client):

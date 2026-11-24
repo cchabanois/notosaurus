@@ -186,6 +186,10 @@
         "dictationOnly": "🎧 Só ditado"
       },
       "optionsChange": "Para mudar: diga isso na correção («num sentido só», «sem digitar a resposta»).",
+      "voice": "Voz",
+      "voiceNone": "Sem voz",
+      "voiceMissing": "Estes cartões devem ser lidos em voz alta, mas a lição não tem voz: escolha o idioma em “Voz”.",
+      "voiceUnavailable": "Nenhuma voz para este idioma.",
       "voiceIncluded": "🔊 Voz <code>{voice}</code>, incluída no baralho.",
       "voiceDevice": "🔊 Lido em voz alta pelo aparelho em <code>{voice}</code>.",
       "badgeNew": "novo",

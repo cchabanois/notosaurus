@@ -18,6 +18,10 @@ ihr. Jede Meldung wird gelesen, und so wird Notosaurus am besten verbessert. Sie
 ## Der Stapel und die Karten
 
 - **Stapel**: der Name des Anki-Stapels. `::` erzeugt Unterstapel: `Spanisch::Unidad 3 - En la escuela`.
+- **Stimme**: die Sprache, in der die Karten vorgelesen werden. Eine Lektion ohne Stimme (damals
+  keine für ihre Sprache gefunden, oder keine gewünscht) bekommt hier eine: Wähle ihre Sprache, sie
+  nimmt die in den Einstellungen für diese Sprache gewählte Stimme. **Keine Stimme**: Nichts wird
+  vorgelesen. Karten zum Vorlesen in einer Lektion ohne Stimme: rot angezeigt.
 - Jede Karte hat eine **Vorderseite** (die Frage) und eine **Rückseite** (die Antwort). Die Liste ist
   kompakt (Vorderseite, Rückseite, ein kleines Bild): Tippe auf eine Karte, um sie im Vollbild zu
   öffnen (am Computer als Fenster), wie in Anki, Formeln und Abbildungen gezeichnet, unten das Feld

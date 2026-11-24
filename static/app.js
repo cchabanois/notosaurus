@@ -185,6 +185,8 @@ document.addEventListener("alpine:init", () => {
     cards: [],
     reverse: false,
     voice: "",                   // the open lesson's voice (the prompt's may be "auto": form.voice)
+    voicesLoaded: 0,             // the voices' languages loaded (voiceLanguages redrawn)
+    choosingVoice: false,        // a language picked: its voice asked for
     rate: "",                    // its voice's speed ("-10%"; "": the settings')
     decks: [],                   // existing deck names, for the deck field
     lessonChoice: "",            // what the AI chose to make (prompt "Automatic")

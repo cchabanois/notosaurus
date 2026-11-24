@@ -186,6 +186,10 @@
         "dictationOnly": "🎧 Nur Diktat"
       },
       "optionsChange": "Zum Ändern: Sag es in der Korrektur („nur in eine Richtung“, „ohne Eintippen“).",
+      "voice": "Stimme",
+      "voiceNone": "Keine Stimme",
+      "voiceMissing": "Diese Karten sollen vorgelesen werden, aber die Lektion hat keine Stimme: Wähle ihre Sprache unter „Stimme“.",
+      "voiceUnavailable": "Keine Stimme für diese Sprache.",
       "voiceIncluded": "🔊 Stimme <code>{voice}</code>, im Stapel enthalten.",
       "voiceDevice": "🔊 Vom Gerät vorgelesen, auf <code>{voice}</code>.",
       "badgeNew": "neu",

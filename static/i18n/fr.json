@@ -186,6 +186,10 @@
         "dictationOnly": "🎧 Dictée seule"
       },
       "optionsChange": "Pour changer : dites-le dans la correction (« dans un seul sens », « sans la réponse tapée »).",
+      "voice": "Voix",
+      "voiceNone": "Aucune voix",
+      "voiceMissing": "Ces cartes doivent être lues à voix haute, mais la leçon n'a pas de voix : choisissez sa langue dans « Voix ».",
+      "voiceUnavailable": "Aucune voix pour cette langue.",
       "voiceIncluded": "🔊 Voix <code>{voice}</code>, incluse dans le paquet.",
       "voiceDevice": "🔊 Lu par l'appareil en <code>{voice}</code>.",
       "badgeNew": "nouvelle",

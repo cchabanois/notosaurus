@@ -18,6 +18,10 @@ segnalazione viene letta, ed è il modo migliore per far correggere Notosaurus. 
 ## Il mazzo e le carte
 
 - **Mazzo**: il nome del mazzo di Anki. `::` crea sotto-mazzi: `Inglese::Unit 3 - At school`.
+- **Voce**: la lingua in cui le carte vengono lette ad alta voce. Una lezione creata senza voce
+  (nessuna trovata allora per la sua lingua, o nessuna richiesta) ne riceve una qui: scegli la sua
+  lingua e prende la voce scelta per quella lingua nelle impostazioni. **Nessuna voce**: non viene
+  letto nulla. Carte da leggere in una lezione senza voce: indicato in rosso.
 - Ogni carta ha un **fronte** (la domanda) e un **retro** (la risposta). L'elenco è compatto (fronte,
   retro, una piccola immagine): tocca una carta per aprirla a schermo intero (una finestra sul
   computer), come in Anki, con formule e figure disegnate e il campo **✨ Correggi con l'IA** in

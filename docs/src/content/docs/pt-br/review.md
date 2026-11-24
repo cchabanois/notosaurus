@@ -18,6 +18,10 @@ relato é lido, e é o melhor jeito de fazer o Notosaurus ser corrigido. Veja
 ## O baralho e os cartões
 
 - **Baralho**: o nome do baralho do Anki. `::` cria subbaralhos: `Inglês::Unit 3 - At school`.
+- **Voz**: o idioma em que os cartões são lidos em voz alta. Uma lição feita sem voz (nenhuma
+  encontrada na época para seu idioma, ou nenhuma pedida) recebe uma aqui: escolha o idioma, e ela
+  usa a voz escolhida para esse idioma nas configurações. **Sem voz**: nada é lido. Cartões a ler em
+  uma lição sem voz: indicado em vermelho.
 - Cada cartão tem uma **frente** (a pergunta) e um **verso** (a resposta). A lista é compacta
   (frente, verso, uma imagem pequena): toque em um cartão para abri-lo em tela cheia (uma janela no
   computador), como no Anki, com fórmulas e figuras desenhadas e o campo **✨ Corrigir com a IA**

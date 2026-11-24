@@ -19,6 +19,10 @@ signalement est lu, et c'est le meilleur moyen de faire corriger Notosaurus. Voi
 
 - **Paquet** : le nom du paquet Anki. `::` crée des sous-paquets :
   `Espagnol::Unité 3 - À l'école`.
+- **Voix** : la langue dans laquelle les cartes sont lues à voix haute. Une leçon créée sans voix
+  (aucune trouvée alors pour sa langue, ou aucune demandée) en reçoit une ici : choisissez sa
+  langue, elle prend la voix choisie pour cette langue dans les réglages. **Aucune voix** : rien
+  n'est lu. Des cartes à lire dans une leçon sans voix : c'est dit en rouge.
 - Chaque carte a un **recto** (la question) et un **verso** (la réponse).
 
 ### La liste

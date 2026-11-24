@@ -1,6 +1,9 @@
 // A lesson made from the photos (extraction), and the saved lessons: opened, saved, deleted.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// The languages of the voices (/api/voices): loaded once for the page (loadVoiceLanguages)
+let voiceLocales = null;
+
 // The card a note's key names (the "✎ Notosaurus" link): its id, a diagram label's
 // "lesson:page:n", or its front text as Anki's {{text:}} gives it (tags gone, spaces loose)
 function findLinkedCard(cards, key) {
@@ -165,6 +168,70 @@ const lessonsPart = {
   },
 
   // Decks that already exist (Anki's, the lessons'), offered when the deck is edited
+  // --- The lesson's voice, chosen by its language -----------------------
+  // The languages of the voices (/api/voices), loaded once
+  async loadVoiceLanguages() {
+    if (voiceLocales) return;
+    voiceLocales = [];
+    try {
+      const voices = await (await api("/api/voices")).json();
+      voiceLocales = [...new Set(voices.map((v) => v.locale))];
+    } catch {
+      voiceLocales = null;  // asked again next time
+    }
+    this.voicesLoaded++;
+  },
+
+  // The voice's language: "cmn-CN" of "cmn-CN-Chirp3-HD-Aoede", "es-ES" of Anki's "es_ES"
+  voiceLocale() {
+    return (this.voice.match(/^([a-z]{2,3})[-_]([A-Z]{2})/) ?? []).slice(1, 3).join("-");
+  },
+
+  // The languages offered, named in the page's language, the lesson's own among them
+  voiceLanguages() {
+    this.voicesLoaded;  // (redrawn once loaded)
+    Alpine.store("i18n").version;
+    const locales = new Set(voiceLocales ?? []);
+    if (this.voiceLocale()) locales.add(this.voiceLocale());
+    let names = null;
+    try {
+      names = new Intl.DisplayNames([I18N.locale], { type: "language" });
+    } catch {}
+    const name = (locale) => {
+      try {
+        return names?.of(locale) || locale;
+      } catch {
+        return locale;
+      }
+    };
+    return [...locales].map((locale) => ({ locale, name: name(locale) })).sort((a, b) => a.name.localeCompare(b.name));
+  },
+
+  // A language picked: the voice a lesson made with the "auto" voice gets (the settings' first);
+  // none: the cards aren't read. Saved with the lesson, its sounds made as for any lesson.
+  async chooseVoiceLanguage(locale) {
+    if (!locale) {
+      this.voice = "";
+      return;
+    }
+    if (locale === this.voiceLocale()) return;
+    this.choosingVoice = true;
+    try {
+      const { voice } = await (await api(`/api/voices/for?language=${encodeURIComponent(locale)}`)).json();
+      if (voice) this.voice = voice;
+      else this.error = t("app.review.voiceUnavailable");
+    } catch (e) {
+      this.error = e.message;
+    } finally {
+      this.choosingVoice = false;
+    }
+  },
+
+  // Some card asks to be read aloud and the lesson has no voice: nothing will be heard
+  voiceMissing() {
+    return !this.voice && !this.off("speech.speak") && this.cards.some((c) => ["front", "back", "both"].includes(c.sound));
+  },
+
   async loadDecks() {
     try {
       this.decks = await (await api("/api/decks")).json();
