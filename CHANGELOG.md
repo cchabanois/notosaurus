@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🔊 A lesson's voice can be chosen once it is made (« Voix », under the deck): a lesson made without one gets it.
 - 📄 **The page a card comes from**: the open card shows "📄 p. 3"; a touch shows the lesson's page in full (‹ › to the others), in a lesson read only too.
 - 🗂 An open card shows its Anki deck at its top, small, as Anki does: « Jules › 5e › Anglais › … › Exercices ».
 - 🔊 Every card can be read aloud on its question, its answer, or both: a sentence with gaps with its blank, then whole; the card's ⋯ turns each side on or off.
@@ -121,6 +122,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🐛 Cards to be read aloud in a lesson without a voice: said, instead of a correction saying the audio is on.
 - 🐛 The app: a Chinese lesson gets a voice (Mandarin, or Cantonese for Hong Kong); it had none, nothing read aloud.
 - A card corrected while its picture was being drawn keeps its correction: the drawing of what it said before is set aside
 - Android: something shared to Notosaurus is no longer added a second time when the app is reopened from the recent apps, or after a change of theme, language or text size.
