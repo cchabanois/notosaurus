@@ -122,6 +122,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 📄 Swiping to the next card, its lesson page ("p. 2") shows with it, not a moment after.
+- 🔒 A figure's drawing can no longer read files or run code by writing a formula's quotes in a certain way.
+- 🔒 A card's formula can no longer add links, styles or a covering layer to Notosaurus's page, nor CSS of its own to the cards sent to Anki (`\bbox`, `\fcolorbox`, `\mmlToken`, `\unicode`, `\require`).
+- An imported lesson numbering its pages oddly (a huge number) still gets pages added, on the computer and the phone.
 - A picture a correction replaced, then removed by you: the next one can be the lesson's own drawing again (it used to be refused until the page was reloaded).
 - The app: a sentence with gaps gets its picture (the page waited for it, « drawing… », and nothing came).
 - The app: « ✨ Image » shows the picture on the side it was decided for (with the answer when it would give it away), as on the computer.

@@ -1411,6 +1411,24 @@ def test_a_card_shows_the_lesson_page_it_comes_from(page):
         sync_api.expect(card.locator(".card-page")).to_be_hidden()
 
 
+@pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
+def test_the_next_cards_page_shown_as_it_comes(page):
+    """The open card swiped: the next one beside it already shows its "📄 p. 2", as its deck,
+    not once arrived (seen on a phone, 2026-11-23: it came after, its deck's line shifting)."""
+    from page.test_cards import _let_go, _swipe
+
+    three_pages(page)
+    first, second = page.locator(".flash").nth(0), page.locator(".flash").nth(1)
+    open_card(first)
+    _swipe(first.locator(".front-row"), -40, let_go=False)
+    sync_api.expect(second).to_have_class(re.compile(r"\bpeek\b"))
+    sync_api.expect(second.locator(".card-deck")).to_be_visible()
+    chip = second.locator(".card-page")
+    sync_api.expect(chip).to_be_visible()  # (to_have_text alone takes a hidden one)
+    sync_api.expect(chip).to_have_text("📄 p. 2")
+    _let_go(page)
+
+
 def test_a_read_only_lessons_cards_show_their_page(page):
     """A lesson read only (another profile's), whose cards open none: each card's page there, seen
     in full all the same (nothing of the lesson changed)."""

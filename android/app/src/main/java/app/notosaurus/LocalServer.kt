@@ -2,15 +2,19 @@ package app.notosaurus
 
 import android.content.Context
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.http.defaultForFilePath
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.call
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondBytes
@@ -41,6 +45,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
+import java.net.URI
 import kotlin.concurrent.thread
 import java.util.UUID
 
@@ -185,7 +190,20 @@ class LocalServer(
     /** A text of the page's languages (the app's shortcuts), English when missing. */
     fun text(lang: String, vararg keys: String): String? = texts.get(lang, *keys) ?: texts.get("en", *keys)
 
-    fun Application.module() = routing {
+    fun Application.module() {
+        // A change another site asks (a page the WebView was sent to) refused, as the computer
+        // refuses it (app/origins.py): the page's own requests are same-origin
+        intercept(ApplicationCallPipeline.Plugins) {
+            val server = call.request.local
+            if (!sameSite(call.request.httpMethod.value, call.request.headers, "${server.serverHost}:${server.serverPort}")) {
+                call.respondText(error("origin.not_allowed", JsonObject(emptyMap())).toString(), ContentType.Application.Json, HttpStatusCode.Forbidden)
+                finish()
+            }
+        }
+        routes()
+    }
+
+    private fun Application.routes() = routing {
         settingsRoutes(this@LocalServer)
         languageRoutes(this@LocalServer)
         draftRoutes(this@LocalServer)
@@ -378,6 +396,22 @@ class LocalServer(
 
     companion object {
         const val COOKIE = "notosaurus_app"
+
+        private val READING = setOf("GET", "HEAD", "OPTIONS")
+
+        /** Whether a request may change something, as the computer's app/origins.py says: reading
+         * always; else not sent cross-site, its Origin (when a browser gives one) the server's own
+         * (`host`: its name and port, as the request reached it). */
+        internal fun sameSite(method: String, headers: Headers, host: String): Boolean {
+            if (method in READING) return true
+            if (headers["Sec-Fetch-Site"]?.lowercase() == "cross-site") return false
+            val origin = headers[HttpHeaders.Origin] ?: return true
+            val uri = runCatching { URI(origin) }.getOrNull() ?: return false
+            if (uri.scheme != "http" || uri.host == null || uri.rawPath.orEmpty() !in setOf("", "/") || uri.rawQuery != null) return false
+            val ours = runCatching { URI("http://$host") }.getOrNull() ?: return false
+            fun port(u: URI) = if (u.port == -1) 80 else u.port
+            return ours.host != null && uri.host.lowercase() == ours.host.lowercase() && port(uri) == port(ours)
+        }
 
         // The page's files: its own scripts only, as the computer serves them (app/origins.py, PAGE_POLICY)
         const val PAGE_POLICY = "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; " +

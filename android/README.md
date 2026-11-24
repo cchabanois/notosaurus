@@ -40,7 +40,7 @@ the `.apkg` download (the cards go to AnkiDroid) and Ko-fi (the subscription pay
 | `Working.kt` | the app kept running while the AI works (a short foreground service): left in the background, Android 15+ would cut its network, its call to the relay with it |
 | `PageDownloads.kt` | a file the page downloads (the computer's "⬇️ .apkg": a `blob:` link the WebView would drop), read by the page and saved in the phone's Downloads |
 | `Anki.kt` | AnkiDroid's API: note type, decks and sub-decks, notes, duplicates. Asked for at the first "Add to Anki": its Play Store page when it's missing, its permission dialog when it isn't allowed yet |
-| `Formulas.kt` | a card's formulas as they go to AnkiDroid: none of MathJax's `html` commands (`\href`, `\style`…), as the computer's (`app/note_types/formulas.py`) |
+| `Formulas.kt` | a card's formulas as they go to AnkiDroid: none of MathJax's `html` commands (`\href`, `\style`…), no CSS of their own (`\bbox`, `\mmlToken`…), as the computer's (`app/note_types/formulas.py`) |
 | `*Routes.kt` | the `/api` routes by subject (lessons, generation, pictures, AnkiDroid, tests, settings, subscription…) |
 | `Generation.kt`, `Pictures.kt`, `Speech.kt`, `Dictation.kt` | a lesson made by the relay; the cards' pictures; the backs read aloud (the relay's voices); 🎤 |
 | `Subscription.kt` | Google Play Billing: subscribing, restoring, the free trial (Play Integrity) |

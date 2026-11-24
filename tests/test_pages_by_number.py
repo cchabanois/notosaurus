@@ -211,3 +211,23 @@ def test_a_page_added_to_a_lesson_none_missing_comes_after_its_last(client, monk
     lesson = client.post("/api/extract", files=files, data={"prompt": "FR → ES"}).json()
     done = completing(client, monkeypatch, lesson, [1, 2, 3], texts=["t"])
     assert (done["cards"][-1]["page"], done["page_texts"]) == (3, ["", "", "t"])
+
+
+def test_a_lesson_numbering_its_pages_past_any_still_gets_a_page_added(client, monkeypatch):
+    """An imported lesson whose cards, labels, frames or files say a page past any (10**300,
+    2**31 - 1: no file could be written so named, the phone's number overflowing): those pages
+    unknown (0), the lesson read, a page added after its own."""
+    files = [("images", (f"p{n}.jpg", plain_image(100 + n, 50), "image/jpeg")) for n in range(1, 3)]
+    lesson = client.post("/api/extract", files=files, data={"prompt": "FR → ES"}).json()
+    path = lessons.folder(lesson["id"])
+    saved = json.loads((path / "lesson.json").read_text())
+    saved["cards"][0]["page"] = 10**300
+    saved["cards"][0]["mask"] = {"page": 2**31 - 1, "n": 1, "box": [0, 0, 0.1, 0.1]}
+    saved["frames"] = [{"page": 1e300, "box": [0, 0, 1, 1]}, {"page": -1, "box": [0, 0, 1, 1]}]
+    (path / "lesson.json").write_text(json.dumps(saved))
+    (path / f"page-{10**200}.jpg").write_bytes(plain_image(3, 50))
+    read = client.get(f"/api/lessons/{lesson['id']}").json()
+    assert (read["cards"][0]["page"], read["cards"][0]["mask"]["page"]) == (0, 0)
+    assert [f["page"] for f in read["frames"]] == [0, 0]
+    done = completing(client, monkeypatch, read, [1, 2, 3])
+    assert done["cards"][-1]["page"] == 3

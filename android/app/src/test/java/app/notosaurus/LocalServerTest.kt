@@ -114,6 +114,30 @@ class LocalServerTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aChangeAnotherSiteAsksRefused() = app { client ->
+        // As the computer (app/origins.py): another site's Origin, or a cross-site request, can't
+        // change anything; reading stays open, the page's own requests (its origin) pass
+        suspend fun deleted(vararg headers: Pair<String, String>) =
+            client.delete("/api/draft") { page(); headers.forEach { (name, value) -> header(name, value) } }
+        for (refused in listOf(
+            deleted(HttpHeaders.Origin to "https://example.com"),
+            deleted(HttpHeaders.Origin to "http://localhost:81"),
+            deleted(HttpHeaders.Origin to "null"),
+            deleted("Sec-Fetch-Site" to "cross-site"),
+        )) {
+            assertEquals(HttpStatusCode.Forbidden, refused.status)
+            assertEquals("origin.not_allowed", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        }
+        assertEquals(HttpStatusCode.OK, client.get("/api/draft") { page(); header("Sec-Fetch-Site", "cross-site") }.status)
+        assertEquals(HttpStatusCode.OK, deleted(HttpHeaders.Origin to "http://localhost", "Sec-Fetch-Site" to "same-origin").status)
+        assertEquals(HttpStatusCode.OK, deleted().status) // no browser's headers: the app's own calls
+        fun origin(origin: String) = Headers.build { append(HttpHeaders.Origin, origin) }
+        assertTrue(LocalServer.sameSite("POST", origin("http://127.0.0.1:41234"), "127.0.0.1:41234")) // the app's page
+        assertFalse(LocalServer.sameSite("POST", origin("http://127.0.0.1:41235"), "127.0.0.1:41234"))
+        assertFalse(LocalServer.sameSite("PUT", origin("http://192.168.1.20:8000"), "127.0.0.1:41234")) // the computer's page
+    }
+
+    @Test
     fun theDraftsPhotosRefusedBeforeTheyFillMemory() = runBlocking {
         // Too many: the one too many refused before a byte of it is read
         val more = ByteReadChannel("photo".toByteArray())
@@ -261,6 +285,17 @@ class LocalServerTest : LocalServerTestBase() {
         val next = client.get("/api/shared") { page() }.json().jsonObject.string("id")
         assertArrayEquals("%PDF".toByteArray(), client.get("/api/shared/1?id=$next") { page() }.bodyAsBytes())
         assertArrayEquals("%PDF".toByteArray(), client.get("/api/shared/1") { page() }.bodyAsBytes())
+    }
+
+    @Test
+    fun onlyOtherAppsFilesShared() {
+        // Another app's content:// files taken; never a file:// one, nor the app's own provider's
+        // (its camera's photos: a share naming them would hand the page the app's files)
+        assertTrue(Shared.accepted("content", "com.android.providers.media.documents", "app.notosaurus"))
+        assertFalse(Shared.accepted("file", null, "app.notosaurus"))
+        assertFalse(Shared.accepted("content", "app.notosaurus.photos", "app.notosaurus"))
+        assertFalse(Shared.accepted("content", "App.Notosaurus.Photos", "app.notosaurus"))
+        assertTrue(Shared.accepted("content", "app.notosaurus.photos", "app.notosaurus.debug")) // another build's: another app
     }
 
     @Test

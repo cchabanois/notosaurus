@@ -221,6 +221,34 @@ def test_a_formula_adds_no_link_nor_style_to_the_page(page):
     assert page.evaluate(fixed) is False
 
 
+def test_a_formula_loads_no_link_nor_writes_css_of_its_own(page):
+    """A formula can't load the html extension back (\\require{html}: a link then, for the
+    whole page), nor write CSS of its own through the commands that copy it into the page
+    (\\bbox, \\fcolorbox, \\mmlToken, \\unicode): nothing drawn outside its preview, a box's
+    border still drawn."""
+    generate_free(page, FRONT_PROMPT)
+    card = page.locator(".flash").first
+    preview = card.locator(".math-preview.back:not(.shown)")
+    field(card, "back").fill(
+        r"\(\require{html}\href{https://example.com}{x}\) \(\bbox[border:2px solid blue;position:fixed;inset:0]{a}"
+        r" + \fcolorbox{red;position:fixed;inset:0}{blue}{b} + \unicode[x;position:fixed;inset:0]{66}"
+        r" + \mmlToken{mi}[style='position:fixed;inset:0' href='https://example.com' class='flash' id='taken']{c}\)"
+    )
+    sync_api.expect(preview.locator("mjx-container").nth(1)).to_be_visible()
+    assert page.locator("mjx-container [href], mjx-container .flash, #taken").count() == 0
+    # every element a formula drew within its preview, none placed against the page
+    outside = """(p) => {
+      const box = p.getBoundingClientRect();
+      return [...p.querySelectorAll('mjx-container *')].filter((n) => {
+        const r = n.getBoundingClientRect();
+        return getComputedStyle(n).position === 'fixed' || r.width > box.width + 1 || r.height > box.height + 1;
+      }).length;
+    }"""
+    assert preview.evaluate(outside) == 0
+    bordered = "(p) => [...p.querySelectorAll('mjx-container *')].some((n) => n.style.borderStyle === 'solid')"
+    assert preview.evaluate(bordered)  # the box's border kept
+
+
 def test_formulas_drawn_in_the_helps_and_the_doubt(page):
     """A help's formulas drawn as the back's (its text a click away), the doubt's too."""
     generate_free(page, FRONT_PROMPT)

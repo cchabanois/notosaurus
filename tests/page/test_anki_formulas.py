@@ -65,3 +65,26 @@ def test_a_fields_formulas_drawn_by_anki_run_nothing(browser, server):
 
     drawn = _drawn(browser, server, field_html(TEXT))
     assert drawn == {"formulas": 3, "links": 0, "fixed": False, "own": 0, "red": True}
+
+
+# Commands writing CSS of their own in Anki's MathJax (its html extension aside): a box's CSS,
+# a token's attributes, a character's font, a frame's colour (given, or defined), an alias
+CSS_TEXT = (
+    "\\(\\bbox[yellow,5px,border:2px solid red;position:fixed;inset:0]{a}"
+    " + \\mmlToken{mi}[style='position:fixed' href='https://example.com' class='flash' id='taken']{b}"
+    " + \\unicode[x;position:fixed]{66} + \\unicode{66}"
+    " + \\fcolorbox{red;position:fixed}{blue}{c}\\)"
+    " \\(\\definecolor{q}{named}{red;position:fixed}\\fcolorbox{q}{blue}{d}\\)"
+    " \\(\\let\\b\\bbox{} \\b[position:fixed]{e}\\)"
+)
+
+
+def test_a_fields_formulas_write_no_css_of_their_own_in_anki(browser, server):
+    """\\bbox, \\mmlToken, \\unicode, \\fcolorbox: MathJax copies their CSS into the card as
+    written (a page covered, a picture fetched at each review); as Notosaurus writes them,
+    only a box's colour, padding and border are drawn."""
+    unsafe = _drawn(browser, server, html.escape(CSS_TEXT))
+    assert unsafe["formulas"] == 3 and unsafe["links"] and unsafe["fixed"] and unsafe["own"] == 2, unsafe
+
+    drawn = _drawn(browser, server, field_html(CSS_TEXT))
+    assert drawn["formulas"] == 3 and drawn["links"] == 0 and not drawn["fixed"] and drawn["own"] == 0, drawn
