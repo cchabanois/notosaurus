@@ -121,6 +121,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Android: something shared to Notosaurus is no longer added a second time when the app is reopened from the recent apps, or after a change of theme, language or text size.
+- Android: sharing more files than a lesson's pages now says how many were not added, and a file too large or damaged is said as such, not as a type Notosaurus doesn't take.
 - "📐 Dessiner la figure" on a figure a correction changed, while it hasn't been drawn again (its automatic drawing failed or is still to come), now starts from the old drawing and changes only what the correction asks (computer and Android).
 - A figure corrected while the lesson's other pictures are being drawn is now drawn again from its corrected description and keeps it, instead of going back to the old one.
 - Changes made to a lesson while its pictures are being drawn are now saved at once, instead of waiting for the drawing to end (they were lost if the app was closed meanwhile).
