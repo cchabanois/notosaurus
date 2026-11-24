@@ -160,22 +160,9 @@ class Speech(
     /** The voice for the backs' language ("es-ES", "en"…): DEFAULT_VOICE in that variety,
      * else in the language's usual one (VARIETY), else in another; "" when none (or no relay). */
     suspend fun voiceFor(language: String): String {
-        val tag = language.trim().replace('_', '-').lowercase()
-        if (tag.isEmpty()) return ""
+        if (language.isBlank()) return ""
         val all = runCatching { voices() }.getOrNull()?.map { it.jsonObject } ?: return ""
-        val base = tag.substringBefore('-')
-        // The one the user chose for that variety (for a language alone: for one of its varieties)
-        val mine = chosen().mapKeys { it.key.lowercase() }.filterValues { it.isNotBlank() }
-        mine[tag]?.let { return it }
-        if (tag == base) mine.toSortedMap().entries.firstOrNull { it.key.substringBefore('-') == base }?.let { return it.value }
-        val ranked = all.filter { it.string("locale").lowercase().substringBefore('-') == base }.sortedWith(
-            compareBy(
-                { it.string("locale").lowercase() != tag }, // the variety asked for
-                { it.string("locale").lowercase() != (VARIETY[base] ?: "$base-$base") }, // else its usual one (en-GB, es-ES)
-                { !it.string("voice").endsWith("-$DEFAULT_VOICE") },
-            ),
-        )
-        return ranked.firstOrNull()?.string("voice") ?: ""
+        return pick(language, all, chosen())
     }
 
     /** The voice chosen per language variety ("es-ES" → "es-ES-Chirp3-HD-Puck"), in the settings. */
@@ -194,7 +181,43 @@ class Speech(
     companion object {
         // A language's usual variety, as the computer's (tts.PREFERRED): "en" alone isn't
         // en-AU, the first English voice by name ("en-en" isn't one)
-        private val VARIETY = mapOf("en" to "en-gb", "pt" to "pt-pt")
+        private val VARIETY = mapOf("en" to "en-gb", "pt" to "pt-pt", "cmn" to "cmn-cn")
+
+        /** The voice for a language among `all` (the relay's voices) and those `mine` (chosen per
+         * variety): voiceFor without the relay. */
+        internal fun pick(language: String, all: List<JsonObject>, mine: Map<String, String>): String {
+            val tag = voiceTag(language)
+            if (tag.isEmpty()) return ""
+            val base = tag.substringBefore('-')
+            // The one the user chose for that variety (for a language alone: for one of its varieties)
+            val chosen = mine.mapKeys { it.key.lowercase() }.filterValues { it.isNotBlank() }
+            chosen[tag]?.let { return it }
+            if (tag == base) chosen.toSortedMap().entries.firstOrNull { it.key.substringBefore('-') == base }?.let { return it.value }
+            val ranked = all.filter { it.string("locale").lowercase().substringBefore('-') == base }.sortedWith(
+                compareBy(
+                    { it.string("locale").lowercase() != tag }, // the variety asked for
+                    { it.string("locale").lowercase() != (VARIETY[base] ?: "$base-$base") }, // else its usual one (en-GB, es-ES)
+                    { !it.string("voice").endsWith("-$DEFAULT_VOICE") },
+                ),
+            )
+            return ranked.firstOrNull()?.string("voice") ?: ""
+        }
+
+        /** A language as the voices name it ("es-ES", "en"…, lowercase). Chinese: the AI says "zh"
+         * (zh-CN, zh-Hant, zh-HK…), the voices name the spoken language: Mandarin "cmn-CN" or
+         * "cmn-TW", Cantonese "yue-HK" (Hong Kong's, Macao's). */
+        internal fun voiceTag(language: String): String {
+            val tag = language.trim().replace('_', '-').lowercase()
+            val parts = tag.split('-')
+            if (parts.first() != "zh") return tag
+            val region = parts.drop(1).firstOrNull { it.length == 2 }
+            return when {
+                "yue" in parts || region == "hk" || region == "mo" -> "yue-hk"
+                region == "tw" || "hant" in parts -> "cmn-tw"
+                region != null -> "cmn-$region"
+                else -> "cmn"
+            }
+        }
 
         private val BLANK = Regex("""…|\.{3}|_{3,}""") // a sentence's blank for the word to write
         private val BRACKETS = Regex("""\s*\([^)]*\)""")
