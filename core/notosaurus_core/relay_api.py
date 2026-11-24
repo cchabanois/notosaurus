@@ -186,6 +186,13 @@ class ReviseRequest(BaseModel):
         "lesson that has photos, none sent (more than a call takes): corrected from its cards, the AI "
         "saying in its summary what it could not do without the pages.",
     )
+    pages: list[int] = Field(
+        default_factory=list,
+        max_length=MAX_IMAGES,
+        description="The lesson's page numbers of the \"images\", in their order (llm.revise_cards' pages): "
+        "the cards' pages and masks are the lesson's, a page missing from it leaving a gap. Empty, or "
+        "not one per image: pages 1 to n.",
+    )
 
 
 class FixCardRequest(BaseModel):

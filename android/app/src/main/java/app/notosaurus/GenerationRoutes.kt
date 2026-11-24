@@ -54,8 +54,9 @@ internal fun Route.generationRoutes(server: LocalServer) {
             val every = children.list()
             // The deck without the children's levels: no child's name to the AI (put back after)
             val (private, deck) = Children.splitDeck(req.string("deck"), every)
-            // Every page when one call takes them all; else none, corrected from its cards (Generation.revisePhotos)
-            val (pages, sent) = Generation.revisePhotos(lesson["photo_count"]?.jsonPrimitive?.intOrNull ?: 0)
+            // Every page when one call takes them all; else none, corrected from its cards (Generation.revisePhotos):
+            // by their numbers, a page missing never replaced by another
+            val (pages, sent) = Generation.revisePhotos(lessons.pages(lesson.string("id")))
             val request = buildJsonObject {
                 put("prompt", lesson.string("prompt"))
                 put("deck", buildJsonObject { put("deck", deck); put("cards", req["cards"]!!) })
@@ -64,6 +65,8 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
                 if (req["quick"]?.jsonPrimitive?.booleanOrNull == true) put("quick", true) // the page's "Quick": the AI thinking little
                 put("photos_sent", sent)
+                // The photos' page numbers: the AI's pages (counted among the photos) turned back into them
+                put("pages", JsonArray(pages.map(::JsonPrimitive)))
             }
             val photos = pages.mapNotNull { lessons.photo(lesson.string("id"), it)?.readBytes() }
             val revised = withContext(Telling { said -> step(buildJsonObject { put("step", said) }) }) {
@@ -99,7 +102,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
             val card = req["card"] as? JsonObject
             // The page the card comes from alone, when known (Generation.fixPhotos): not the whole lesson
             val page = (card?.get("page") as? JsonPrimitive)?.intOrNull ?: 0
-            val (pages, sent) = Generation.fixPhotos(page, lesson["photo_count"]?.jsonPrimitive?.intOrNull ?: 0)
+            val (pages, sent) = Generation.fixPhotos(page, lessons.pages(lesson.string("id"))) // its page missing: as unknown
             val figure = card?.takeIf { it.string("figure").isNotBlank() }
                 ?.let { pictures.file(lesson.string("id"), it.string("picture")) }?.takeIf { it.extension == "svg" }
             val request = buildJsonObject {

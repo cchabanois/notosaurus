@@ -160,11 +160,14 @@ def _revision_text(
     fmt: str = "",
     labels: dict[int, list[int]] | None = None,
     sent: PhotosSent = "all",
+    pages: Sequence[int] = (),
 ) -> str:
     """`labels`: numbers of the diagram labels already hidden, per photo. `sent`: what the
     photos are of the lesson's (correction.revise_photos): all of them, or "none" of a lesson
     that has some (its pages not shown: corrected from its cards). Without a photo the cards'
-    pages aren't shown (numbered among photos the AI doesn't see)."""
+    pages aren't shown (numbered among photos the AI doesn't see). `pages`: the lesson's page
+    numbers of the photos, in their order: said when they aren't 1 to n (a page missing), the
+    request naming a page by the lesson's number."""
     hidden = SET_BY_NOTOSAURUS if photos else SET_BY_NOTOSAURUS | {"page"}
     shown = deck.model_dump(exclude={"cards": {"__all__": hidden}})
     current = json.dumps(shown, ensure_ascii=False, indent=1)
@@ -195,6 +198,12 @@ def _revision_text(
         if fmt == "pixels":
             known = [f"photo {i}: {size[0]}x{size[1]}" for i, size in enumerate(sizes, 1) if size]
             add += " Photo sizes: " + ", ".join(known) + "."
+    if photos and list(pages) not in ([], list(range(1, photos + 1))):
+        seen += (
+            "\nThe photos are not all of the lesson's pages, nor numbered as they are: "
+            + ", ".join(f"photo {i} is page {page}" for i, page in enumerate(pages, 1))
+            + ". A card's \"page\" and a label's page are photo numbers."
+        )
     return f"""\
 The cards below were made from {source}:
 {prompt.strip()}{seen}

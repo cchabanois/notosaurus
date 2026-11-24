@@ -126,20 +126,33 @@ class Generation(
 
         /** The lesson's photos sent to correct one card (their numbers, from 1), and what they are,
          * as the computer (correction.fix_photos, core/shared-cases.json): the card's own page when
-         * known ("card"); else all, when one call takes them ("all"); else none ("none": an older
-         * card, a lesson longer than the relay takes at once, relay.too_large otherwise). */
-        fun fixPhotos(page: Int, photos: Int): Pair<List<Int>, String> = when {
-            page in 1..photos -> listOf(page) to "card"
-            photos <= LocalServer.MAX_PER_CALL -> (1..photos).toList() to "all"
-            else -> emptyList<Int>() to "none"
+         * it is one of the lesson's `photos` ("card"); else all, when one call takes them ("all");
+         * else none ("none": an older card, a lesson longer than the relay takes at once,
+         * relay.too_large otherwise). `photos`: the numbers of the lesson's pages there (a page
+         * missing is never replaced by another: its card's page then unknown). */
+        fun fixPhotos(page: Int, photos: List<Int>): Pair<List<Int>, String> {
+            val present = photos.toSortedSet().toList()
+            return when {
+                page in present -> listOf(page) to "card"
+                present.size <= LocalServer.MAX_PER_CALL -> present to "all"
+                else -> emptyList<Int>() to "none"
+            }
         }
+
+        /** fixPhotos of a lesson whose pages are 1 to `photos` (none missing). */
+        fun fixPhotos(page: Int, photos: Int): Pair<List<Int>, String> = fixPhotos(page, (1..photos).toList())
 
         /** The lesson's photos sent to correct the whole lesson (their numbers, from 1), and what
          * they are, as the computer (correction.revise_photos, core/shared-cases.json): all, when one
          * call takes them ("all"); else none ("none": corrected from its cards, the AI told its pages
-         * aren't shown; relay.too_large otherwise). */
-        fun revisePhotos(photos: Int): Pair<List<Int>, String> =
-            if (photos <= LocalServer.MAX_PER_CALL) (1..photos).toList() to "all" else emptyList<Int>() to "none"
+         * aren't shown; relay.too_large otherwise). `photos`: as fixPhotos'. */
+        fun revisePhotos(photos: List<Int>): Pair<List<Int>, String> {
+            val present = photos.toSortedSet().toList()
+            return if (present.size <= LocalServer.MAX_PER_CALL) present to "all" else emptyList<Int>() to "none"
+        }
+
+        /** revisePhotos of a lesson whose pages are 1 to `photos` (none missing). */
+        fun revisePhotos(photos: Int): Pair<List<Int>, String> = revisePhotos((1..photos).toList())
 
         /** The decks that exist: AnkiDroid's (but its own, `own`: the deck of the lesson made
          * again, and its subdecks: they are its own, not another's), the lessons' with their

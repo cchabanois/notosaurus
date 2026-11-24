@@ -116,11 +116,11 @@ class Pictures(
         wanted.forEach { i -> step(buildJsonObject { put("card", cards[i].string("id")); put("step", "lesson") }) }
         val left = wanted.toMutableList()
         val pages = wanted.map { (cards[it]["page"] as? JsonPrimitive)?.intOrNull ?: 0 }
-        for ((numbers, among) in drawingCalls(pages, photos.size)) {
+        for ((numbers, among) in drawingCalls(pages, photos.keys.toList())) { // by their page number: a page missing, none
             val asked = among.map { wanted[it] }.filter { it in left } // the drawings' "card": an index into these
             if (asked.isEmpty()) continue
             val found = try {
-                val sent = numbers.map { photos[it - 1] } // the relay cuts each drawing out of its own
+                val sent = numbers.map { photos.getValue(it) } // the relay cuts each drawing out of its own
                 relay().withPhotos("lesson-drawings", buildJsonObject { put("cards", JsonArray(asked.map { cards[it] })) }, sent)
             } catch (e: RelayException) {
                 continue // these pages' cards looked for one by one, as without
@@ -386,19 +386,20 @@ class Pictures(
 
     companion object {
         /** The calls looking for the lesson's own drawings of cards whose pages are `pages` (each
-         * card's, from 1; 0 unknown) among the lesson's `photos`: each call's pages sent (from 1)
-         * and the cards it asks (their indexes; a later call asks only those still without a
-         * drawing). A card's drawing looked for on its own page and its neighbours (the page
-         * before, the page after, within the lesson): the cards taken by their page, each call
-         * sends the pages around as many as fit in `perCall` photos. The cards whose page is
-         * unknown (0, or not one of the lesson's): every page, `perCall` at a time. As the
-         * computer (pictures.drawing_calls, core/shared-cases.json). */
-        internal fun drawingCalls(pages: List<Int>, photos: Int, perCall: Int = LocalServer.MAX_PER_CALL): List<Pair<List<Int>, List<Int>>> {
+         * card's, from 1; 0 unknown) among the lesson's `photos` (the numbers of its pages there): each
+         * call's pages sent and the cards it asks (their indexes; a later call asks only those still
+         * without a drawing). A card's drawing looked for on its own page and its neighbours (the page
+         * before, the page after, those the lesson has): the cards taken by their page, each call
+         * sends the pages around as many as fit in `perCall` photos. The cards whose page is unknown
+         * (0, or not one of the lesson's: a page missing is never replaced by another): every page,
+         * `perCall` at a time. As the computer (pictures.drawing_calls, core/shared-cases.json). */
+        internal fun drawingCalls(pages: List<Int>, photos: List<Int>, perCall: Int = LocalServer.MAX_PER_CALL): List<Pair<List<Int>, List<Int>>> {
+            val present = photos.toSortedSet()
             val calls = mutableListOf<Pair<List<Int>, List<Int>>>()
             val sent = sortedSetOf<Int>()
             val asked = mutableListOf<Int>()
-            for (i in pages.indices.filter { pages[it] in 1..photos }.sortedWith(compareBy({ pages[it] }, { it }))) {
-                val near = (maxOf(1, pages[i] - 1)..minOf(photos, pages[i] + 1)).toSet()
+            for (i in pages.indices.filter { pages[it] in present }.sortedWith(compareBy({ pages[it] }, { it }))) {
+                val near = (pages[i] - 1..pages[i] + 1).filter { it in present }.toSet()
                 if (asked.isNotEmpty() && (sent + near).size > perCall) {
                     calls += sent.toList() to asked.sorted()
                     sent.clear(); asked.clear()
@@ -407,10 +408,14 @@ class Pictures(
                 asked += i
             }
             if (asked.isNotEmpty()) calls += sent.toList() to asked.sorted()
-            val unknown = pages.indices.filter { pages[it] !in 1..photos }
-            if (unknown.isNotEmpty()) (1..photos).chunked(perCall).forEach { calls += it to unknown }
+            val unknown = pages.indices.filter { pages[it] !in present }
+            if (unknown.isNotEmpty()) present.toList().chunked(perCall).forEach { calls += it to unknown }
             return calls
         }
+
+        /** drawingCalls of a lesson whose pages are 1 to `photos` (none missing). */
+        internal fun drawingCalls(pages: List<Int>, photos: Int, perCall: Int = LocalServer.MAX_PER_CALL): List<Pair<List<Int>, List<Int>>> =
+            drawingCalls(pages, (1..photos).toList(), perCall)
 
         /** The cards an edit made of `before` (`after`), merged into the lesson's as saved now
          * (`now`), card by card (by id): of each card the edit changed, only the fields it

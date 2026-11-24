@@ -497,7 +497,8 @@ const photosPart = {
         return;
       }
       if (this.saveTimer) await this.saveNow();
-      const lesson = await (await api(`/api/lessons/${this.lessonId}/photos/${i + 1}/rotate`, { method: "POST" })).json();
+      const page = this.photos[i].n ?? i + 1;  // its page's number: one missing leaves a gap
+      const lesson = await (await api(`/api/lessons/${this.lessonId}/photos/${page}/rotate`, { method: "POST" })).json();
       await this.loadPhotos(lesson);
       lesson.cards.forEach((card, n) => { if (this.cards[n]) this.cards[n].mask = card.mask; });
       this.frames = lesson.frames ?? [];

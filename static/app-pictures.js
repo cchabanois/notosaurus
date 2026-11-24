@@ -7,6 +7,18 @@
 const PICTURE_FIELDS = ["picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"];
 // The free pictures' sources, as their credit line says them
 const SOURCE_NAMES = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
+// A whole card's text the server takes as a search's context (relay_api.MAX_CARD): a card has
+// no length limit of its own, so a longer one is cut to it, "…" last, never refused
+const MAX_CARD = 4000;
+
+// `text` cut to `max` characters, "…" last when it was longer, never half a character (as the
+// phone's Pictures.cut and the computer's PictureSearch)
+function cutText(text, max = MAX_CARD) {
+  if (text.length <= max) return text;
+  const kept = text.slice(0, max - 1);
+  const last = kept.charCodeAt(kept.length - 1);
+  return (last >= 0xd800 && last <= 0xdbff ? kept.slice(0, -1) : kept) + "…";
+}
 
 const picturesPart = {
   pictureUrl(card) {
@@ -166,8 +178,9 @@ const picturesPart = {
   // sorted by the AI, each source's as it answers (previews come as data)
   async searchPictures(card, words = "") {
     if (card._searching) return;
-    const context = `${(card.front ?? "").trim()} → ${(card.back ?? "").trim()}`;
-    const subject = (card.picture_prompt?.trim() || card._subject?.trim() || context).slice(0, 200);
+    const whole = `${(card.front ?? "").trim()} → ${(card.back ?? "").trim()}`;
+    const context = cutText(whole);  // a long card's still searched
+    const subject = (card.picture_prompt?.trim() || card._subject?.trim() || whole).slice(0, 200);
     card._searching = true;
     card._found = [];  // each source's, as it answers
     this.error = "";

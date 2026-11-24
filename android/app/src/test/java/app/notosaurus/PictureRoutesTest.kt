@@ -81,7 +81,51 @@ class PictureRoutesTest : LocalServerTestBase() {
         assertEquals("extract.too_large" to 4, error.string("code") to error["params"]!!.jsonObject["max"]!!.jsonPrimitive.int)
         assertEquals("", client.get("/api/lessons/$id") { page() }.json().jsonObject.cards().single().string("picture"))
         // At the cap: taken
-        assertEquals(HttpStatusCode.Created, own(ByteArray(LocalServer.MAX_IMAGE_BYTES)).status)
+        assertEquals(HttpStatusCode.Created, own(jpeg("").copyOf(LocalServer.MAX_IMAGE_BYTES)).status)
+    }
+
+    @Test
+    fun aCardsOwnPhotoOfAnotherKindRefused() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "the cat", "back": "le chat"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        val (id, card) = lesson.string("id") to lesson["cards"]!!.jsonArray.single().jsonObject.string("id")
+        suspend fun own(photo: ByteArray, type: String) = client.submitFormWithBinaryData("/api/lessons/$id/cards/$card/picture", formData {
+            append("photo", photo, Headers.build {
+                append(HttpHeaders.ContentType, type)
+                append(HttpHeaders.ContentDisposition, "filename=\"photo\"")
+            })
+        }) { page() }
+        // Not a kind a card shows, or not an image of its kind: refused as the computer's
+        // (extract.bad_format, its format), the card as it was
+        for ((photo, type) in listOf(jpeg("") to "application/pdf", "not an image".toByteArray() to "image/jpeg", jpeg("") to "image/svg+xml")) {
+            val refused = own(photo, type)
+            assertEquals(type, HttpStatusCode.BadRequest, refused.status)
+            val error = refused.json().jsonObject["detail"]!!.jsonObject
+            assertEquals("extract.bad_format" to type, error.string("code") to error["params"]!!.jsonObject.string("format"))
+        }
+        assertEquals("", client.get("/api/lessons/$id") { page() }.json().jsonObject.cards().single().string("picture"))
+        // Each kind the computer takes, by its first bytes
+        val png = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+        val webp = "RIFF".toByteArray() + ByteArray(4) + "WEBPVP8 ".toByteArray()
+        for ((photo, type) in listOf(jpeg("") to "image/jpeg", png to "image/png", webp to "image/webp", "GIF89a".toByteArray() to "image/gif")) {
+            assertEquals(type, HttpStatusCode.Created, own(photo, type).status)
+        }
+    }
+
+    @Test
+    fun picturesOfALongCardLookedForItCut() = app { client ->
+        // A card has no length limit: its context cut to MAX_CARD ("…" last), the search never refused
+        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "application/json")
+            .body("""{"results": [], "words": "castle", "usage": {"credits": 1, "credits_left": 99}}""").build())
+        val context = "q → " + "b".repeat(6000)
+        val res = client.post("/api/pictures/search") {
+            page(); contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("subject", "un château"); put("context", context) }.toString())
+        }
+        assertEquals(HttpStatusCode.OK, res.status)
+        val sent = json.parseToJsonElement(relay.takeRequest(5, TimeUnit.SECONDS)!!.body!!.utf8()).jsonObject.string("context")
+        assertEquals(Pictures.MAX_CARD, sent.length)
+        assertEquals(context.take(Pictures.MAX_CARD - 1) + "…", sent)
     }
 
     @Test
@@ -436,7 +480,7 @@ class PictureRoutesTest : LocalServerTestBase() {
         val decided = """{"picture_prompt": "a photo of a set square", "picture_search": "set square", "picture_on_back": false}"""
         val photo = client.submitFormWithBinaryData("/api/lessons/$id/cards/$cardId/picture", formData {
             append("decided", decided)
-            append("photo", "a set square".toByteArray(), Headers.build {
+            append("photo", jpeg("a set square"), Headers.build {
                 append(HttpHeaders.ContentType, "image/jpeg")
                 append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
             })
@@ -447,7 +491,7 @@ class PictureRoutesTest : LocalServerTestBase() {
         // Not a decision: refused, the card as it was
         val refused = client.submitFormWithBinaryData("/api/lessons/$id/cards/$cardId/picture", formData {
             append("decided", "nope")
-            append("photo", "x".toByteArray(), Headers.build {
+            append("photo", jpeg("x"), Headers.build {
                 append(HttpHeaders.ContentType, "image/jpeg")
                 append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
             })
@@ -500,7 +544,7 @@ class PictureRoutesTest : LocalServerTestBase() {
         }
         for (card in lesson["cards"]!!.jsonArray.map { it.jsonObject }) {
             client.submitFormWithBinaryData("/api/lessons/$id/cards/${card.string("id")}/picture", formData {
-                append("photo", "a photo".toByteArray(), Headers.build {
+                append("photo", jpeg("a photo"), Headers.build {
                     append(HttpHeaders.ContentType, "image/jpeg")
                     append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
                 })

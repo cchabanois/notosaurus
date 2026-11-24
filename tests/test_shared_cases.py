@@ -79,6 +79,19 @@ def test_the_photos_sent_to_correct_a_lesson(case):
     assert revise_photos(case["photos"]) == (case["out"], case["sent"])
 
 
+@pytest.mark.parametrize("case", CASES["next_page"], ids=lambda c: c["name"])
+def test_the_number_of_a_page_added_to_a_lesson(case):
+    """After the highest page number used anywhere in the lesson: the phone's Lessons.nextPage
+    the same."""
+    from app.lessons import next_page
+    from notosaurus_core.models import Frame
+
+    lesson = case["lesson"]
+    cards = [Card(front="f", back="b", **c) for c in lesson.get("cards", [])]
+    frames = [Frame(**f) for f in lesson.get("frames", [])]
+    assert next_page(case["files"], cards, frames, lesson.get("page_texts", [])) == case["out"]
+
+
 @pytest.mark.parametrize("case", CASES["kept_ids"], ids=lambda c: c["name"])
 def test_a_card_made_again_keeps_its_id(case):
     """A lesson made again in its place (Lessons.regenerated on the phone): the same cards keep

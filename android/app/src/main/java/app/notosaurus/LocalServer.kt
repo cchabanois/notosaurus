@@ -402,6 +402,18 @@ class LocalServer(
         internal suspend fun readPhoto(channel: ByteReadChannel): ByteArray =
             channel.readCapped(MAX_IMAGE_BYTES, "extract.too_large", buildJsonObject { put("max", MAX_IMAGE_BYTES / (1024 * 1024)) })
 
+        /** The kinds of photo taken as a card's own picture, as the computer's (app/routes/common.py). */
+        val IMAGE_TYPES = listOf("image/jpeg", "image/png", "image/webp", "image/gif")
+
+        /** Whether `data` is an image of one of IMAGE_TYPES, by its first bytes (JPEG, PNG, WebP,
+         * GIF): what isn't one is refused, as the computer's (its picture not read). */
+        internal fun isImage(data: ByteArray): Boolean {
+            fun starts(vararg bytes: Int, at: Int = 0) = data.size >= at + bytes.size && bytes.indices.all { data[at + it] == bytes[it].toByte() }
+            fun text(value: String, at: Int = 0) = starts(*value.map { it.code }.toIntArray(), at = at)
+            return starts(0xFF, 0xD8, 0xFF) || starts(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A) ||
+                text("GIF87a") || text("GIF89a") || (text("RIFF") && text("WEBP", at = 8))
+        }
+
         // The welcome accepted (its version): raised when what it says changes a lot, so it shows again
         const val WELCOME = "welcome"
         const val WELCOME_VERSION = 1

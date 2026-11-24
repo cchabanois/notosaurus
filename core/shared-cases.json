@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by its number of photos: their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's number of photos: each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level: Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's photos (a number n: its pages 1 to n; a list: the numbers of its pages there, one missing leaving a gap): their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by the lesson's photos (as fix_photos'): their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's photos (as fix_photos'): each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level: Python and Kotlin only. next_page: the number of a page added to a lesson (lessons.next_page, Lessons.nextPage), by its pages' files (their numbers) and the lesson (its cards' pages and masks, its frames, its pages' texts): after the highest used anywhere; Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -900,7 +900,11 @@
   {"name": "past the lesson's photos, a long lesson", "page": 15, "photos": 11, "out": [], "sent": "none"},
   {"name": "negative: as unknown", "page": -1, "photos": 2, "out": [1, 2], "sent": "all"},
   {"name": "no photo", "page": 0, "photos": 0, "out": [], "sent": "all"},
-  {"name": "a page, no photo", "page": 1, "photos": 0, "out": [], "sent": "all"}
+  {"name": "a page, no photo", "page": 1, "photos": 0, "out": [], "sent": "all"},
+  {"name": "page 3 missing, the card from page 4: page 4, not the 4th photo", "page": 4, "photos": [1, 2, 4, 5], "out": [4], "sent": "card"},
+  {"name": "its page missing: as unknown, never another page", "page": 3, "photos": [1, 2, 4, 5], "out": [1, 2, 4, 5], "sent": "all"},
+  {"name": "its page missing, a long lesson", "page": 3, "photos": [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12], "out": [], "sent": "none"},
+  {"name": "the last page missing", "page": 5, "photos": [1, 2, 3, 4], "out": [1, 2, 3, 4], "sent": "all"}
   ],
  "drawing_calls": [
   {"name": "its page and its neighbours", "pages": [4], "photos": 25, "out": [{"pages": [3, 4, 5], "cards": [0]}]},
@@ -916,14 +920,29 @@
   {"name": "past the lesson's photos: as unknown", "pages": [7], "photos": 4, "out": [{"pages": [1, 2, 3, 4], "cards": [0]}]},
   {"name": "mixed: the known first, then the unknown", "pages": [0, 12, -1], "photos": 12, "out": [{"pages": [11, 12], "cards": [1]}, {"pages": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "cards": [0, 2]}, {"pages": [11, 12], "cards": [0, 2]}]},
   {"name": "no photo", "pages": [3, 0], "photos": 0, "out": []},
-  {"name": "no card", "pages": [], "photos": 5, "out": []}
+  {"name": "no card", "pages": [], "photos": 5, "out": []},
+  {"name": "a page missing: no neighbour there", "pages": [4], "photos": [1, 2, 4, 5], "out": [{"pages": [4, 5], "cards": [0]}]},
+  {"name": "its page missing: as unknown", "pages": [3], "photos": [1, 2, 4, 5], "out": [{"pages": [1, 2, 4, 5], "cards": [0]}]},
+  {"name": "unknown, a page missing: the pages there, ten at a time", "pages": [0], "photos": [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12], "out": [{"pages": [1, 2, 4, 5, 6, 7, 8, 9, 10, 11], "cards": [0]}, {"pages": [12], "cards": [0]}]}
  ],
  "revise_photos": [
   {"name": "a lesson of 3 pages: all", "photos": 3, "out": [1, 2, 3], "sent": "all"},
   {"name": "as many as a call takes: all", "photos": 10, "out": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "sent": "all"},
   {"name": "one more than a call takes: none", "photos": 11, "out": [], "sent": "none"},
   {"name": "a lesson of 30 pages: none", "photos": 30, "out": [], "sent": "none"},
-  {"name": "made without photos: none to send, nor any not shown", "photos": 0, "out": [], "sent": "all"}
+  {"name": "made without photos: none to send, nor any not shown", "photos": 0, "out": [], "sent": "all"},
+  {"name": "page 3 missing: the others, by their numbers", "photos": [1, 2, 4, 5], "out": [1, 2, 4, 5], "sent": "all"},
+  {"name": "a page missing, still more than a call takes: none", "photos": [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12], "out": [], "sent": "none"}
+  ],
+ "next_page": [
+  {"name": "none missing: after the last page", "files": [1, 2, 3], "lesson": {"cards": [{"page": 1}, {"page": 3}], "page_texts": ["a", "b", "c"]}, "out": 4},
+  {"name": "the last page missing, cards still from it: after them, never its number again", "files": [1, 2, 3, 4], "lesson": {"cards": [{"page": 5}, {"page": 2}]}, "out": 6},
+  {"name": "a page missing in the middle: after the last, none written over", "files": [1, 2, 4, 5], "lesson": {"cards": [{"page": 3}, {"page": 5}]}, "out": 6},
+  {"name": "a label on a page whose file is gone", "files": [1], "lesson": {"cards": [{"page": 0, "mask": {"page": 2, "n": 1, "box": [0, 0, 0.1, 0.1]}}]}, "out": 3},
+  {"name": "a diagram frame on a page whose file is gone", "files": [1], "lesson": {"frames": [{"page": 3, "box": [0, 0, 1, 1]}]}, "out": 4},
+  {"name": "the pages' texts, one per page", "files": [1], "lesson": {"page_texts": ["a", "", ""]}, "out": 4},
+  {"name": "a card's page unknown (0)", "files": [1, 2], "lesson": {"cards": [{"page": 0}]}, "out": 3},
+  {"name": "a lesson made without photos", "files": [], "lesson": {}, "out": 1}
   ],
  "figure_source_files": [
   {

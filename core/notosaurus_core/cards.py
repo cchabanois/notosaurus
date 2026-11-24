@@ -4,6 +4,7 @@ import html
 import re
 import unicodedata
 from collections import Counter
+from collections.abc import Iterable, Sequence
 
 from .models import Card
 
@@ -124,6 +125,22 @@ def plain_cards(cards: list[Card]) -> None:
         if card.doubt:
             for name in ("reason", "front", "back"):
                 setattr(card.doubt, name, plain(getattr(card.doubt, name)))
+
+
+def page_numbers(photos: int | Iterable[int]) -> list[int]:
+    """A lesson's pages present, by their numbers (from 1), in order: `photos` as they are, or
+    a count of them, its pages 1 to n (none missing). A page is a file of its own (page-N.jpg),
+    its number the card's `page`: one missing leaves a gap, never renumbers the others."""
+    return list(range(1, photos + 1)) if isinstance(photos, int) else sorted(set(photos))
+
+
+def as_pages(cards: list[Card], pages: Sequence[int]) -> None:
+    """The cards' pages as the AI gave them, numbered among the photos it was given (from 1),
+    turned into the lesson's page numbers: `pages`, those photos' (in their order), in place.
+    Unknown (0) stays so."""
+    for card in cards:
+        if 1 <= card.page <= len(pages):
+            card.page = pages[card.page - 1]
 
 
 def pages_within(cards: list[Card], photos: int) -> None:

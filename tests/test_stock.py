@@ -316,6 +316,24 @@ def test_found_for_a_long_card(client, monkeypatch):
     assert res.status_code == 200 and seen == [context]
 
 
+def test_found_for_a_card_longer_than_a_card_is_sent(client, monkeypatch):
+    """Longer than relay_api.MAX_CARD: its context cut to it, "…" last, never the search refused
+    (422) for a card's length."""
+    from notosaurus_core.relay_api import MAX_CARD
+
+    seen = []
+
+    async def as_found(s, subject, context="", pixabay_key=""):
+        seen.append(context)
+        yield []
+
+    monkeypatch.setattr(stock, "sorted_as_found", as_found)
+    context = "q → " + "b" * 6000
+    res = client.post("/api/pictures/search", json={"subject": "a castle", "words": "castle", "context": context})
+    assert res.status_code == 200, res.text
+    assert seen == [context[: MAX_CARD - 1] + "…"] and len(seen[0]) == MAX_CARD
+
+
 # --- Searched for by the user, sorted by the AI (stock.sorted_search) ---------------
 
 
