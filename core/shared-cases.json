@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's photos (a number n: its pages 1 to n; a list: the numbers of its pages there, one missing leaving a gap): their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by the lesson's photos (as fix_photos'): their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's photos (as fix_photos'): each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level: Python and Kotlin only. next_page: the number of a page added to a lesson (lessons.next_page, Lessons.nextPage), by its pages' files (their numbers) and the lesson (its cards' pages and masks, its frames, its pages' texts): after the highest used anywhere; Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's photos (a number n: its pages 1 to n; a list: the numbers of its pages there, one missing leaving a gap): their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by the lesson's photos (as fix_photos'): their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's photos (as fix_photos'): each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level: Python and Kotlin only. next_page: the number of a page added to a lesson (lessons.next_page, Lessons.nextPage), by its pages' files (their numbers) and the lesson (its cards' pages and masks, its frames, its pages' texts): after the highest used anywhere; Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only. merged_card: a card an edit changed (before → after: a picture drawn, found, the user's, removed) merged into the card as saved now (app/lessons.py's merged_cards, Pictures.mergedCards): the fields the edit changed, but none of a picture's it drew from a description changed meanwhile (stale_picture); Python and Kotlin only.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -2502,6 +2502,389 @@
    "name": "a command in a gap text outside formulas",
    "in": "{{c1::a}} \\href{b}{c}",
    "out": "{{c1::a}} ＼href{b}{c}"
+  }
+ ],
+ "merged_card": [
+  {
+   "name": "drawn from its description as saved: taken",
+   "before": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "after": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   },
+   "now": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle en C",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "out": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle en C",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   }
+  },
+  {
+   "name": "described anew meanwhile: the drawing set aside, the edit's other changes taken",
+   "before": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "after": {
+    "id": "c1",
+    "front": "Ce triangle est-il rectangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   },
+   "now": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle en C",
+    "figure": "Un triangle rectangle ABC, l'angle droit en rouge.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "out": {
+    "id": "c1",
+    "front": "Ce triangle est-il rectangle ?",
+    "back": "rectangle en C",
+    "figure": "Un triangle rectangle ABC, l'angle droit en rouge.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   }
+  },
+  {
+   "name": "its family changed meanwhile: set aside",
+   "before": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "after": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   },
+   "now": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "diagram",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "out": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "diagram",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   }
+  },
+  {
+   "name": "a picture's description changed meanwhile: the free one found set aside",
+   "before": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "a cat",
+    "picture": "",
+    "picture_source": null
+   },
+   "after": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "a cat",
+    "picture": "picture-c1-0badf00d.jpg",
+    "picture_source": {
+     "source": "commons",
+     "licence": "CC0"
+    }
+   },
+   "now": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "a black cat sleeping",
+    "picture": "",
+    "picture_source": null
+   },
+   "out": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "a black cat sleeping",
+    "picture": "",
+    "picture_source": null
+   }
+  },
+  {
+   "name": "described by the edit itself, unchanged meanwhile: taken",
+   "before": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "after": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC, l'angle droit en rouge.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   },
+   "now": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "out": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC, l'angle droit en rouge.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   }
+  },
+  {
+   "name": "described meanwhile as the edit described it: taken",
+   "before": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "after": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC, l'angle droit en rouge.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   },
+   "now": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC, l'angle droit en rouge.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "out": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC, l'angle droit en rouge.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   }
+  },
+  {
+   "name": "the user's own photo: kept, whatever its description became",
+   "before": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "a cat",
+    "picture": "",
+    "picture_source": null
+   },
+   "after": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "a cat",
+    "picture": "picture-c1-12345678.jpg",
+    "picture_source": {
+     "source": "photo"
+    }
+   },
+   "now": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "a black cat",
+    "picture": "",
+    "picture_source": null
+   },
+   "out": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "a black cat",
+    "picture": "picture-c1-12345678.jpg",
+    "picture_source": {
+     "source": "photo"
+    }
+   }
+  },
+  {
+   "name": "a picture removed: removed, whatever its description became",
+   "before": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   },
+   "after": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   },
+   "now": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "Un triangle rectangle ABC, l'angle droit en rouge.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture": "picture-c1-ab12cd34.svg",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   },
+   "out": {
+    "id": "c1",
+    "front": "Ce triangle ?",
+    "back": "rectangle",
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "",
+    "picture": "",
+    "picture_source": null
+   }
   }
  ]
 }

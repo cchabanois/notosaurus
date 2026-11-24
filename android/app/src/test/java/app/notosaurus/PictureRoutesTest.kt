@@ -276,6 +276,44 @@ class PictureRoutesTest : LocalServerTestBase() {
         assertTrue(images.resolve(client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray[0].jsonObject.string("picture")).isFile)
     }
 
+    @Test
+    fun aPictureDrawnFromWhatItsCardNoLongerSaysSetAside() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Maths", "cards": [{"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"},
+            {"front": "Ce carré ?", "back": "un carré", "figure": "a square"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val id = lesson.string("id")
+        val held = java.util.concurrent.CountDownLatch(1)
+        val asked = java.util.Collections.synchronizedList(mutableListOf<String>())
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val figure = json.parseToJsonElement(request.body!!.utf8()).jsonObject["card"]!!.jsonObject.string("figure")
+                asked += figure
+                if (figure == "a square") held.await(10, TimeUnit.SECONDS) // drawn slowly
+                return cardPicture(request)
+            }
+        }
+        suspend fun drawn() = client.post("/api/lessons/$id/pictures") { page(); contentType(ContentType.Application.Json); setBody("{}") }
+            .json().jsonObject["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+        coroutineScope {
+            val drawing = async(Dispatchers.IO) { drawn() }
+            assertTrue(waitFor { "a square" in asked })
+            // The page saves the square's correction meanwhile: what its figure shows changed
+            val saved = client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+            val corrected = JsonArray(listOf(saved[0], saved[1].with("figure" to JsonPrimitive("a red square"))))
+            client.put("/api/lessons/$id") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Maths", "cards": $corrected}""") }
+            held.countDown()
+            val cards = drawing.await()
+            assertTrue(cards[0].string("picture").endsWith(".svg")) // the triangle's: as it says
+            assertEquals("a red square", cards[1].string("figure"))
+            assertEquals("", cards[1].string("picture")) // not the square drawn before
+            assertEquals(cards, client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray.map { it.jsonObject })
+        }
+        val cards = drawn() // drawn as it says now
+        assertEquals("a red square", asked.last())
+        assertTrue(cards[1].string("picture").endsWith(".svg"))
+    }
+
     /** A lesson whose one card is a figure, its sources answered by the relay (`sources`); the
      * requests to card-picture kept in `asked`. */
     private suspend fun io.ktor.client.HttpClient.figureLesson(asked: MutableList<JsonObject>, sources: List<String>): JsonObject {

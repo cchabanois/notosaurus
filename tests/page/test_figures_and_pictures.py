@@ -339,6 +339,108 @@ def test_a_figure_corrected_while_others_are_drawn_redrawn_as_corrected(page, mo
     assert lesson(page, summary["id"])["cards"][0]["figure"] == corrected
 
 
+def test_a_figure_corrected_while_drawn_not_given_the_drawing_of_what_it_said(page, monkeypatch):
+    """A card corrected again while the figure its first correction asked for is being drawn:
+    that drawing (of what it said before) is set aside, by the page and by the saved lesson, and
+    the card drawn again as it says now, still from the figure it had."""
+    import asyncio
+
+    from app.routes import pictures as routes
+
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    page.wait_for_function(f"() => !{APP}.drawingLessons.length && {APP}.cards.every((c) => !c.figure || c.picture)")
+    from app import lessons as saved_lessons
+
+    was = page.evaluate(DRAWN_IN_TYPST)
+    (summary,) = lessons(page)
+    typst = saved_lessons.existing_folder(summary["id"]) / "images" / was["source"]["sources"][0]["file"]
+    typst.write_text("#circle()", encoding="utf-8")
+    page.wait_for_function(f"() => {APP}.saveState === 'saved' && !{APP}.saveTimer")
+    real, go_on, started = routes.pictures.draw_all, threading.Event(), []
+
+    async def held(*args, **kwargs):  # the first drawing held until the card is corrected again
+        started.append(True)
+        if len(started) == 1:
+            await asyncio.to_thread(go_on.wait, 30)
+        return await real(*args, **kwargs)
+
+    monkeypatch.setattr(routes.pictures, "draw_all", held)
+    told = _drawn_with(monkeypatch)
+
+    def fix(route):  # what the figure shows changed: its picture and where it came from cleared
+        asked = route.request.post_data_json
+        changed = {**asked["card"], "picture": "", "picture_source": None}
+        changed["figure"] += f" {asked['instruction']}."
+        route.fulfill(json={"card": changed, "summary": "Figure changée."})
+
+    page.route("**/fix-card*", fix)
+    asked = []
+    page.on("request", lambda r: asked.append(r.post_data_json) if r.url.endswith("/pictures") else None)
+    card = open_card(page.locator(".flash").first)
+    field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("Le carré en rouge")
+    field.press("Enter")
+    eventually(page, lambda: started, "its figure being drawn")
+    first = page.evaluate(f"() => {APP}.cards[0].figure")
+    field.fill("Le carré en bleu")
+    field.press("Enter")
+    page.wait_for_function(f"() => {APP}.cards[0].figure.endsWith('Le carré en bleu.')")
+    corrected = page.evaluate(f"() => {APP}.cards[0].figure")
+    eventually(page, lambda: lesson(page, summary["id"])["cards"][0]["figure"] == corrected, "the correction saved")
+    go_on.set()
+    eventually(page, lambda: len(asked) == 2, "drawn again as it says now")
+    previous = {was["id"]: {"source": was["source"], "kind": "geometry"}}
+    assert asked[0]["previous"] == asked[1]["previous"] == previous  # from the figure it had, both times
+    page.wait_for_function(f"() => !{APP}.drawingLessons.length && {APP}.cards[0].picture")
+    assert [figure for figure, _ in told] == [first, corrected]
+    assert [sources for _, sources in told] == [["#circle()"], ["#circle()"]]
+    page.wait_for_function(f"() => {APP}.saveState === 'saved' && !{APP}.saveTimer")
+    saved = lesson(page, summary["id"])["cards"][0]
+    assert (saved["figure"], saved["picture"]) == (corrected, page.evaluate(f"() => {APP}.cards[0].picture"))
+
+
+def test_a_figure_corrected_again_by_the_lesson_still_drawn_from_the_one_it_had(page):
+    """A card's correction changing its figure, its drawing not done (failed), then the lesson's
+    correction changing it again: still drawn again from the figure it had."""
+    import json
+
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    sync_api.expect(page.locator(".card-picture.figure img").first).to_be_visible()
+    was = page.evaluate(DRAWN_IN_TYPST)
+
+    def fix(route):  # what the figure shows changed: its picture and where it came from cleared
+        changed = {**route.request.post_data_json["card"], "picture": "", "picture_source": None}
+        changed["figure"] += " Le carré en rouge."
+        route.fulfill(json={"card": changed, "summary": "Figure changée."})
+
+    page.route("**/fix-card*", fix)
+    asked = _asked_to_draw(page)  # its drawing fails
+    card = open_card(page.locator(".flash").first)
+    field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("Le carré en rouge")
+    field.press("Enter")
+    eventually(page, lambda: asked, "drawn again")
+    page.wait_for_function(f"() => !{APP}.drawingLessons.length")
+    page.get_by_role("alert").get_by_role("button", name="Fermer").click()  # its drawing's failure, said
+    page.evaluate(f"() => {APP}.doneEditing()")
+
+    def revise(route):  # its first card's figure changed again
+        response = route.fetch()
+        items = [json.loads(line) for line in response.text().splitlines() if line.strip()]
+        for item in items:
+            if "result" in item:
+                first = item["result"]["lesson"]["cards"][0]
+                first.update(picture="", picture_source=None, figure=first["figure"] + " Le carré en bleu.")
+        body = "".join(json.dumps(item) + "\n" for item in items)
+        route.fulfill(body=body, content_type=response.headers.get("content-type", ""))
+
+    page.route("**/api/lessons/*/revise*", revise)
+    page.locator(".revise textarea").fill("Le carré en bleu")
+    page.locator(".revise .btn.primary").click()
+    eventually(page, lambda: len(asked) == 2, "drawn again as corrected")
+    assert asked[-1]["previous"] == {was["id"]: {"source": was["source"], "kind": "geometry"}}
+
+
 def test_a_picture_a_correction_replaced_not_taken_from_the_lesson_again(page):
     """A correction that replaces a card's picture ("another photo"): its next one is not cut
     out of the lesson's photos again (the same drawing would come back), the page says so to

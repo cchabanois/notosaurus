@@ -69,7 +69,7 @@ const revisionPart = {
         // drawn again from the one it had
         if (old?.picture && !c.picture && (c.figure || c.picture_prompt)) {
           Object.assign(c, { _replacing: this.pictureUrl(old), _notFromLesson: true, _previous: this.previousFigure(old, c) });
-        }
+        } else if (old && !old.picture && !c.picture) Object.assign(c, this.stillReplacing(old, c));
       });
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
@@ -134,7 +134,7 @@ const revisionPart = {
       // figure drawn again from the one it had
       if (card.picture && !fixed.picture) {
         Object.assign(fixed, { _replacing: this.pictureUrl(card), _notFromLesson: true, _previous: this.previousFigure(card, fixed) });
-      }
+      } else if (!card.picture && !fixed.picture) Object.assign(fixed, this.stillReplacing(card, fixed));
       this.cards.splice(i, 1, fixed);
       await this.saveNow();  // its picture is drawn from the saved lesson
       if (res.figure_problem) {
