@@ -19,6 +19,13 @@ function describedAs(card) {
   return JSON.stringify(DESCRIBED.map((field) => card[field] ?? ""));
 }
 
+// A card whose picture is still to be made: it says what to show (a picture_prompt or a
+// figure) and has none; a sentence with gaps' too (the computer's pictures.needs_picture, the
+// phone's Pictures.needsPicture: core/shared-cases.json's needs_picture)
+function needsPicture(card) {
+  return Boolean((card.picture_prompt?.trim() || card.figure?.trim()) && !card.picture);
+}
+
 // `text` cut to `max` characters, "…" last when it was longer, never half a character (as the
 // phone's Pictures.cut and the computer's PictureSearch)
 function cutText(text, max = MAX_CARD) {
@@ -298,7 +305,7 @@ const picturesPart = {
   // One drawing at a time for a lesson (two drew the same cards, each paid): asked while one
   // runs, done again once it ends (a card a correction added meanwhile)
   async drawPictures(draw = false) {
-    if (this.readOnly() || !this.cards.some((c) => (c.picture_prompt || c.figure) && !c.picture)) return;
+    if (this.readOnly() || !this.cards.some(needsPicture)) return;
     if (this.saveTimer) await this.saveNow();
     const lessonId = this.lessonId;
     if (this.drawingLessons.includes(lessonId)) {

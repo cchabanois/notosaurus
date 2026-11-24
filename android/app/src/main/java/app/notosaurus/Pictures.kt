@@ -65,7 +65,7 @@ class Pictures(
         val few = Semaphore(AT_ONCE)
         coroutineScope {
             val figuresOff = off("figures.draw")
-            cards.indices.filter { i -> cards[i].missingPicture() && !(figuresOff && cards[i].string("figure").isNotBlank()) }.map { i ->
+            cards.indices.filter { i -> needsPicture(cards[i]) && !(figuresOff && cards[i].string("figure").isNotBlank()) }.map { i ->
                 async {
                     few.withPermit {
                         try {
@@ -108,7 +108,7 @@ class Pictures(
      * the relay refuses: its pages skipped, the others still looked at. */
     private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step, notFromLesson: Set<String>) {
         val wanted = cards.indices.filter { i ->
-            cards[i].missingPicture() && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank() &&
+            needsPicture(cards[i]) && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank() &&
                 cards[i].string("id") !in notFromLesson
         }
         val photos = lessons.photos(lessonId)
@@ -174,12 +174,15 @@ class Pictures(
             if (e.code != NEEDS_DRAWING) throw e
             val description = e.params.string("description")
             val search = e.params.string("search")
+            // The side the relay decided it shows on (as the computer's); an older relay's 409 says
+            // none: the card's
+            val onBack = (e.params["on_back"] as? JsonPrimitive)?.booleanOrNull ?: card.onBack()
             val found = "search" to JsonPrimitive(search.ifEmpty { description }) // what the page looks for
             if (card.string("figure").isNotBlank()) {
                 val decided = buildJsonObject {
                     put("picture_prompt", description)
                     put("picture_search", search)
-                    put("picture_on_back", card.onBack()) // the relay's 409 says no other: the card's
+                    put("picture_on_back", onBack)
                 }
                 return@drawing buildJsonObject {
                     put("card", card)
@@ -190,7 +193,7 @@ class Pictures(
             }
             cards[i] = cards[i].with(
                 "figure" to JsonPrimitive(""), "figure_kind" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(description),
-                "picture_search" to JsonPrimitive(search),
+                "picture_search" to JsonPrimitive(search), "picture_on_back" to JsonPrimitive(onBack),
             )
             JsonObject(answer(lesson, cards, i) + found)
         }
@@ -390,12 +393,14 @@ class Pictures(
 
     private fun JsonObject.onBack() = (this["picture_on_back"] as? JsonPrimitive)?.booleanOrNull ?: false
 
-    // Not on a sentence with gaps: AnkiDroid shows no picture on it (not paid for, then)
-    private fun JsonObject.missingPicture() =
-        string("picture").isEmpty() && (string("picture_prompt").isNotBlank() || string("figure").isNotBlank()) &&
-            !CLOZE.containsMatchIn(string("front"))
-
     companion object {
+        /** A card whose picture is still to be made: it says what to show (a picture_prompt or a
+         * figure) and has none. A sentence with gaps' too: its note type shows it (Anki.kt sends its
+         * Picture and BackPicture fields), on its question or its answer. As the computer's and the
+         * page's (pictures.needs_picture, core/shared-cases.json). */
+        internal fun needsPicture(card: JsonObject) =
+            card.string("picture").isEmpty() && (card.string("picture_prompt").isNotBlank() || card.string("figure").isNotBlank())
+
         /** The calls looking for the lesson's own drawings of cards whose pages are `pages` (each
          * card's, from 1; 0 unknown) among the lesson's `photos` (the numbers of its pages there): each
          * call's pages sent and the cards it asks (their indexes; a later call asks only those still
@@ -525,7 +530,6 @@ class Pictures(
         private val DRAWN = PICTURE_FIELDS + "picture"
         // A card's picture fields, told with "ready" (drawMissing) the moment it has them (core's pictures.READY)
         private val READY = PICTURE_FIELDS + "picture"
-        private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py
         private val NAME = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // the files we write
         // A figure's source files: named after its picture ("picture-c1-ab12cd34.typ", "-2.typ" for
         // a second), read back only by such a name; its group 1 the picture's stem (core's SOURCE_NAME)
