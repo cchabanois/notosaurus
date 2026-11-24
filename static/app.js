@@ -282,6 +282,7 @@ document.addEventListener("alpine:init", () => {
     lessonPrompt: "",            // prompt text the open lesson was generated with
     promptOpen: false,           // step 2 unfolded ("✏️ Change") though the lesson has cards
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo
+    photoRatios: {},             // a diagram photo's width / height, by its address, once loaded
     sending: false,
     sendStep: "",                // what the send is doing (its sounds, its cards), on its button
     soundLoading: "",            // the text whose sound is on its way (made by the voice), its 🔊 pulsing

@@ -445,8 +445,7 @@
                 <p class="hint" x-show="diagramOpen === card.key" x-text="$t('app.review.diagramHint')"></p>
               <div class="diagram">
                 <img :src="photoFor(card)" alt="" draggable="false"
-                     x-init="$el.complete && (card._ratio = $el.naturalWidth / $el.naturalHeight)"
-                     @load="card._ratio = $el.naturalWidth / $el.naturalHeight">
+                     x-init="photoLoaded(card, $el)" @load="photoLoaded(card, $el)">
                 <div class="crop-frame" :style="maskStyle(cropFor(card))" :title="$t('app.review.cropFrame')">
                   <template x-for="corner in ['nw', 'ne', 'sw', 'se']" :key="corner">
                     <i class="crop-handle" :class="corner" x-show="!readOnly()"

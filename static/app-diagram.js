@@ -39,11 +39,17 @@ const diagramPart = {
   },
 
   // What the compact list shows of the card's photo (its frame, as Anki): CSS variables placing
-  // the whole diagram behind a window of that part's size (`_ratio`: the photo's, once loaded)
+  // the whole diagram behind a window of that part's size (the photo's proportions, once loaded)
   diagramClip(card) {
     const [x0, y0, x1, y1] = this.cropFor(card).box;
     const w = x1 - x0 || 1, h = y1 - y0 || 1;
-    return `--cx: ${x0}; --cy: ${y0}; --cw: ${w}; --ch: ${h}; --crop-ratio: ${(w * (card._ratio || 1)) / h}`;
+    return `--cx: ${x0}; --cy: ${y0}; --cw: ${w}; --ch: ${h}; --crop-ratio: ${(w * (this.photoRatios[this.photoFor(card)] || 1)) / h}`;
+  },
+
+  // A diagram's photo loaded: its proportions kept by the photo, not the card: a card given anew
+  // (corrected, undone) shows the same photo, already loaded, which tells them no more
+  photoLoaded(card, img) {
+    if (img.complete && img.naturalHeight) this.photoRatios[this.photoFor(card)] = img.naturalWidth / img.naturalHeight;
   },
 
   // Drag a corner of the frame ("nw", "ne", "sw", "se"). It starts from what is shown,
