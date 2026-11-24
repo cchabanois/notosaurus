@@ -243,9 +243,12 @@ class RedrawRequest(BaseModel):
 
 class PictureRequest(BaseModel):
     """Draw a card's picture again, with what to draw (None: the card's own): its subject,
-    or a figure's description."""
+    or a figure's description. `previous`: the figure a correction replaced on the card, not
+    drawn again since (the page's previousFigure, as DrawPictures'): its figure drawn again
+    from it, what is asked changed and the rest kept."""
 
     subject: str | None = Field(default=None, max_length=1000)
+    previous: PreviousFigure | None = None
 
 
 class LessonAccess(BaseModel):

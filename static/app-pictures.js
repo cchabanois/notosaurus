@@ -41,6 +41,7 @@ const picturesPart = {
       );
       if (!res) return null;  // cancelled: the card as it was
       this.takePicture(card, res.card);
+      if (card.picture) card._previous = null;  // the figure a correction replaced: no longer drawn from
       return res;
     } catch (e) {
       this.error = e.message;
@@ -64,17 +65,20 @@ const picturesPart = {
   // one fits, it is the card's; several, the user picks (the AI's choice first); none, the
   // user is asked before the image model draws one (it costs). A figure the AI turns into a
   // picture: the card keeps its figure until a picture replaces it (the search given up, it
-  // is still the figure), the picture's fields kept in `_decided`, sent with the one chosen
+  // is still the figure), the picture's fields kept in `_decided`, sent with the one chosen.
+  // A figure a correction replaced, not drawn again since (its automatic drawing failed, or
+  // not done yet): drawn again from it (`previous`, as drawPictures'), until one is drawn
   async makePicture(card) {
     card._found = null;
     card._ask = false;
     card._decided = null;
     const had = card.picture_source?.page ?? "";  // "Change": not the one it has
+    const previous = card._previous && !card.picture ? { previous: card._previous } : {};
     const res = await this.pictureAction(card, {
       path: "/make",
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject: card._subject ?? null }),
+      body: JSON.stringify({ subject: card._subject ?? null, ...previous }),
     });
     if (!res) return;
     card._decided = res.decided ?? null;

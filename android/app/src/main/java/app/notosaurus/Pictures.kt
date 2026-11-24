@@ -146,17 +146,28 @@ class Pictures(
      * "search" (a picture's)}. A card with a figure the AI turns into a picture keeps its figure until
      * a picture replaces it (the user may give up the search: never a figure's drawing left without
      * its description): the picture's fields then come as "decided" ({"picture_prompt",
-     * "picture_search", "picture_on_back"}), sent back with the picture chosen (draw, own). */
-    suspend fun make(lesson: JsonObject, i: Int, subject: String?, language: String = "English", step: Step = {}): JsonObject = drawing(lesson.string("id")) {
+     * "picture_search", "picture_on_back"}), sent back with the picture chosen (draw, own).
+     * `replaced`: the figure a correction replaced, not drawn again since ({"source", "kind"}, as
+     * drawMissing's `previous`): drawn again from it, whatever the description asked (it always
+     * differs from what that figure was drawn from). */
+    suspend fun make(
+        lesson: JsonObject,
+        i: Int,
+        subject: String?,
+        language: String = "English",
+        replaced: JsonObject? = null,
+        step: Step = {},
+    ): JsonObject = drawing(lesson.string("id")) {
         val id = lesson.string("id")
         val cards = lesson.cards()
         val card = cards[i]
-        val origin = card["picture_source"] as? JsonObject
-        val previous = if (changedFigure(card, subject)) keptSources(lessons.images(id), origin) else emptyList()
+        val origin = (replaced?.get("source") ?: card["picture_source"]) as? JsonObject
+        val previous = if (replaced != null || changedFigure(card, subject)) keptSources(lessons.images(id), origin) else emptyList()
+        val kind = if (replaced != null) replaced.string("kind") else card.string("figure_kind")
         try {
             cards[i] = drawn(
                 id, card, fresh = true, asked = subject, language = language, draw = false, find = false, previous = previous,
-                previousKind = card.string("figure_kind"), previousEngine = origin?.string("engine").orEmpty(), onStep = step,
+                previousKind = kind, previousEngine = origin?.string("engine").orEmpty(), onStep = step,
             )
             answer(lesson, cards, i)
         } catch (e: RelayException) {

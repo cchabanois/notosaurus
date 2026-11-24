@@ -42,12 +42,14 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             pictures.drawMissing(lesson(), draw, step, notFromLesson, previous)
         }
         // "✨ Image", its first step: a figure drawn, or a picture decided (the page then looks
-        // for free ones, and asks before one is drawn)
+        // for free ones, and asks before one is drawn); "previous": the figure a correction replaced
+        // ({"source", "kind"}), drawn again from it
         // Asked as Relay.STREAM_TYPE (both): its steps ({"step": {…}}) as they begin, then the answer
         stepping("/api/lessons/{id}/cards/{card}/picture/make") { req, step ->
             val lesson = lesson()
             val subject = req["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
-            pictures.make(lesson, cardIndex(lesson), subject, languageName()) { step(buildJsonObject { put("step", it) }) }
+            val replaced = req["previous"] as? JsonObject
+            pictures.make(lesson, cardIndex(lesson), subject, languageName(), replaced) { step(buildJsonObject { put("step", it) }) }
         }
         // The user said yes: drawn by the image model (it costs); a figure drawn again, told what
         // its check found ("problem"), with the model's thinking when "careful", from what it was
