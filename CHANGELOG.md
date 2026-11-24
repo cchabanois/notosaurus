@@ -122,6 +122,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- The app: a sentence with gaps gets its picture (the page waited for it, « drawing… », and nothing came).
+- The app: « ✨ Image » shows the picture on the side it was decided for (with the answer when it would give it away), as on the computer.
 - The picture's page no longer reuses an earlier visit's choice: a picture found or a photo of one's own no longer replaces a figure edited since with what was decided for the figure it had.
 - "Draw it?" now names the picture decided for a figure, no longer an empty subject.
 - A picture drawn with the lesson's keeps where it shows when this was changed while it was drawn.
