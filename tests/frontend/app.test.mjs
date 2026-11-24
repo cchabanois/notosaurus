@@ -829,6 +829,154 @@ test("✨ Image: several fit, the user picks (the AI's first); none, asked befor
   assert.equal(other._ask, false);
 });
 
+// A figure the AI turns into a picture (the card still the figure until one is chosen), none
+// found or several: what that visit left is for the card as it said then
+async function figureToPicture(found) {
+  const sent = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      sent.push([url, options?.body ?? null]);
+      const figure = { picture: "picture-c1.svg", figure: "un triangle", picture_prompt: "" };
+      if (url.endsWith("/picture/make")) {
+        return new Response({ card: figure, search: "set square",
+          decided: { picture_prompt: "a set square", picture_search: "set square", picture_on_back: false } });
+      }
+      if (url === "/api/pictures/search") return Response.ndjson([{ found }, { done: {} }]);
+      return new Response({ card: { ...figure, picture: "picture-c1.jpg", figure: "", picture_prompt: "a set square" } });
+    },
+  });
+  const c = page.component();
+  c.lessonId = "L1";
+  const card = { id: "c1", key: 1, front: "Un triangle ?", back: "rectangle", picture: "picture-c1.svg", figure: "un triangle", picture_prompt: "" };
+  c.cards = [card];
+  return { c, card, sent };
+}
+
+test("a picture decided for a figure: never sent once the card says something else, nor left for the next visit", async () => {
+  // Several found, then the figure's description changed by hand: the one picked isn't taken
+  // with the decision made for what the card said before (it would clear the new figure)
+  const edited = await figureToPicture([castle("a"), castle("b")]);
+  await edited.c.makePicture(edited.card);
+  assert.equal(edited.card._decided.picture_prompt, "a set square");
+  assert.deepEqual(plain(edited.c.pendingPicture(edited.card)), { decided: plain(edited.card._decided) });
+  edited.card.figure = "un triangle isocèle";
+  await edited.c.chooseFound(edited.card, castle("a"));
+  assert.ok(!edited.sent.some(([url]) => url.endsWith("/found")));
+  assert.equal(edited.card.figure, "un triangle isocèle");
+  assert.equal(edited.card._found, null);  // the pictures found for what it said before gone
+  assert.deepEqual(plain(edited.c.pendingPicture(edited.card)), {});
+
+  // None found, asked whether to draw it: the question gone with the description changed
+  const asked = await figureToPicture([]);
+  await asked.c.makePicture(asked.card);
+  assert.equal(asked.card._ask, true);
+  asked.card.figure = "un carré";
+  await asked.c.drawPicture(asked.card);
+  assert.ok(!asked.sent.some(([url]) => url.endsWith("/draw")));
+
+  // The picture's page opened again: afresh
+  const again = await figureToPicture([castle("a"), castle("b")]);
+  await again.c.makePicture(again.card);
+  again.c.editing = again.card.key;
+  again.c.pictureOpen = "";
+  again.c.openPicture(again.card);
+  assert.deepEqual([again.card._decided, again.card._found, again.card._ask], [null, null, false]);
+  assert.deepEqual(plain(again.c.pendingPicture(again.card)), {});
+
+  // The figure drawn again (its check): it stays a figure, no decision sent later
+  const redrawn = await figureToPicture([castle("a"), castle("b")]);
+  await redrawn.c.makePicture(redrawn.card);
+  await redrawn.c.redrawFigure(redrawn.card);
+  assert.equal(redrawn.card._decided, null);
+  assert.ok(!JSON.parse(redrawn.sent.at(-1)[1]).decided);
+
+  // Chosen while still the same: sent with it
+  const chosen = await figureToPicture([castle("a"), castle("b")]);
+  await chosen.c.makePicture(chosen.card);
+  await chosen.c.chooseFound(chosen.card, castle("b"));
+  const [url, body] = chosen.sent.at(-1);
+  assert.ok(url.endsWith("/picture/found"));
+  assert.equal(JSON.parse(body).decided.picture_prompt, "a set square");
+});
+
+test("a picture drawn with the lesson's: where it shows, switched by the user meanwhile, kept", async () => {
+  let c;
+  const ready = { card: "c1", step: "ready", picture: "picture-c1.svg", picture_source: { source: "drawn" },
+    figure: "un triangle", figure_kind: "geometry", picture_prompt: "", picture_search: "", picture_on_back: false };
+  const page = await loadScripts("app.js", {
+    routes: () => {
+      c.cards[0].picture_on_back = true;  // switched on the picture's page while it is drawn
+      return Response.ndjson([ready, { result: { lesson: { cards: [{ id: "c1", ...ready }] }, failures: 0 } }]);
+    },
+  });
+  c = page.component();
+  c.lessonId = "L1";
+  c.cards = [{ id: "c1", front: "f", back: "b", figure: "un triangle", picture: "", picture_on_back: false }];
+  await c.drawPictures();
+  assert.equal(c.cards[0].picture, "picture-c1.svg");  // the drawing's own fields taken
+  assert.equal(c.cards[0].figure_kind, "geometry");
+  assert.equal(c.cards[0].picture_on_back, true);  // the user's choice kept
+});
+
+test("a drawing asked again while one runs: the lesson drawing from the start, its save included", async () => {
+  // picturesDone (a send waiting for the pictures) must never see none being drawn
+  const page = await loadScripts("app.js", { routes: () => new Response({ lesson: { cards: [] } }) });
+  const c = page.component();
+  c.lessonId = "L1";
+  c.cards = [{ id: "c1", front: "f", back: "b", figure: "un triangle", picture: "" }];
+  let saved;
+  c.saveTimer = 1;
+  c.saveNow = () => new Promise((resolve) => { saved = resolve; });
+  const drawing = c.drawPictures();
+  assert.equal(c.drawingHere(), true);  // while its save is awaited too
+  saved();
+  await drawing;
+  assert.equal(c.drawingHere(), false);
+});
+
+test("a share waits for the sheet of all pages and the copy for another child", async () => {
+  const c = (await loadScripts("app.js")).component();
+  assert.equal(c.shareWaits(), false);
+  c.allPages = true;
+  assert.equal(c.shareWaits(), true);
+  c.allPages = false;
+  c.copySheet = { open: true, busy: false, error: "" };
+  assert.equal(c.shareWaits(), true);
+  c.copySheet = { open: false, busy: true, error: "" };
+  assert.equal(c.shareWaits(), true);
+});
+
+test("a voice's language picked: the list shows the lesson's voice as answered; an answer for another lesson dropped", async () => {
+  let answer = { voice: "" };
+  let answered;
+  const page = await loadScripts("app.js", {
+    routes: (url) => (url.startsWith("/api/voices/for") ? new Promise((resolve) => { answered = () => resolve(new Response(answer)); }) : null),
+  });
+  const c = page.component();
+  c.lessonId = "L1";
+  c.voice = "fr-FR-DeniseNeural";
+  const select = { value: "de-DE" };  // as the user left it
+  const choosing = c.chooseVoiceLanguage("de-DE", select);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  answered();
+  await choosing;
+  assert.equal(c.voice, "fr-FR-DeniseNeural");  // none for German: the lesson's own
+  assert.equal(select.value, "fr-FR");
+  assert.ok(c.error);
+
+  answer = { voice: "de-DE-KatjaNeural" };
+  c.error = "";
+  const switched = c.chooseVoiceLanguage("de-DE", select);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  c.lessonId = "L2";
+  c.voice = "es-ES-ElviraNeural";  // another lesson opened meanwhile
+  answered();
+  await switched;
+  assert.equal(c.voice, "es-ES-ElviraNeural");
+  assert.equal(select.value, "es-ES");
+  assert.equal(c.error, "");
+});
+
 test("pictures cancelled as they are drawn: no error, the cards as they were, their steps cleared", async () => {
   const page = await loadScripts("app.js", {
     routes: () => Response.ndjson([{ card: "c1", step: "drawing" }, { cancelled: true }]),

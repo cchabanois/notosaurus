@@ -392,7 +392,8 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
     and holding storage.lock that long would stall every other write. Not a race but a
     choice: `_save` merges field by field, writing only the fields `change` modified over
     the lesson as it is then, so a concurrent change to other fields is kept. The save
-    runs in a worker thread, off the event loop (storage.lock serializes the threads)."""
+    runs in a worker thread, off the event loop (storage.lock serializes the threads).
+    `change` changing nothing: nothing saved, the lesson as it is then (its date kept)."""
     before = get(id)
     if before is None:
         raise AppError("lesson.not_found", 404)
@@ -405,7 +406,9 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
         changed = {f for f in CONTENT if getattr(draft, f) != getattr(before, f)}
         content = draft.model_dump(include=changed - {"cards"})
         cards = (before.cards, draft.cards) if "cards" in changed else None
-        saved = await asyncio.to_thread(_save, id, content, cards=cards)
+        # Nothing changed (a picture decided, not yet chosen): not saved, its date kept (a
+        # lesson saved anew reads as changed since its send)
+        saved = await asyncio.to_thread(_save, id, content, cards=cards) if changed else get(id)
     finally:
         if _editing[id] > 1:
             _editing[id] -= 1
