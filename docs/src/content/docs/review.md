@@ -17,6 +17,10 @@ and it's the best way to get Notosaurus fixed. See [Reporting a problem](#report
 ## The deck and the cards
 
 - **Deck**: the name of the Anki deck. `::` makes sub-decks: `Spanish::Unit 3 - At school`.
+- **Voice**: the language the cards are read aloud in. A lesson made without one (none found for its
+  language then, or none asked for) gets one here: pick its language, and it takes the voice chosen
+  for that language in the settings. **No voice**: nothing is read. Cards asked to be read in a
+  lesson without a voice: said in red.
 - Each card has a **front** (the question) and a **back** (the answer).
 
 ### The list

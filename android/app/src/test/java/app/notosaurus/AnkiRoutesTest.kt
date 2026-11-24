@@ -110,6 +110,9 @@ class AnkiRoutesTest : LocalServerTestBase() {
         val listed = client.get("/api/voices") { page() }.json().jsonArray
         assertEquals("es-US-Chirp3-HD-Aoede", listed[0].jsonObject.string("voice"))
         assertEquals("/v1/voices", relay.takeRequest().url.encodedPath)
+        // A lesson's voice chosen once it is made, by its language: as an "auto" lesson gets it
+        assertEquals("es-ES-Chirp3-HD-Aoede", client.get("/api/voices/for?language=es-ES") { page() }.json().jsonObject.string("voice"))
+        assertEquals("", client.get("/api/voices/for?language=ja-JP") { page() }.json().jsonObject.string("voice"))
 
         // 🔊: read by the relay, then kept on the phone (not paid for twice)
         relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3 la madre").build())

@@ -18,6 +18,10 @@ Consulta [Señalar un problema](#señalar-un-problema).
 ## El mazo y las tarjetas
 
 - **Mazo**: el nombre del mazo de Anki. `::` crea submazos: `Inglés::Unit 3 - At school`.
+- **Voz**: el idioma en que se leen las tarjetas en voz alta. Una lección hecha sin voz (ninguna
+  encontrada entonces para su idioma, o ninguna pedida) recibe una aquí: elige su idioma y toma la
+  voz elegida para ese idioma en los ajustes. **Sin voz**: no se lee nada. Tarjetas que leer en una
+  lección sin voz: se indica en rojo.
 - Cada tarjeta tiene un **anverso** (la pregunta) y un **reverso** (la respuesta). La lista es
   compacta (anverso, reverso, una imagen pequeña): toca una tarjeta para abrirla a pantalla completa
   (una ventana en el ordenador), como en Anki, con las fórmulas y las figuras dibujadas y el campo

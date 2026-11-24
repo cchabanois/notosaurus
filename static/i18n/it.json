@@ -186,6 +186,10 @@
         "dictationOnly": "🎧 Solo dettato"
       },
       "optionsChange": "Per cambiarlo: dillo nella correzione («in un solo senso», «senza scrivere la risposta»).",
+      "voice": "Voce",
+      "voiceNone": "Nessuna voce",
+      "voiceMissing": "Queste carte vanno lette ad alta voce, ma la lezione non ha una voce: scegli la sua lingua in «Voce».",
+      "voiceUnavailable": "Nessuna voce per questa lingua.",
       "voiceIncluded": "🔊 Voce <code>{voice}</code>, inclusa nel mazzo.",
       "voiceDevice": "🔊 Letto ad alta voce dal dispositivo in <code>{voice}</code>.",
       "badgeNew": "nuova",

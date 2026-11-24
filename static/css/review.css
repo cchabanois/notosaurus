@@ -85,6 +85,10 @@
 .revision-result > div { flex: 1 1 14rem; min-width: 0; display: flex; flex-direction: column; }
 .revision-result strong { font-size: .9rem; }
 .revision-result small { color: var(--muted); font-weight: 700; }
+/* Nothing will be heard (no voice): said as a warning, apart from what the AI says */
+.revision-result small.warn, .review > p.voice-missing { color: var(--danger); font-weight: 700; }
+.revision-result small.warn { margin-top: .3rem; }
+.review > p.voice-missing { margin: -.4rem 0 .8rem; font-size: .85rem; }
 .revision-result .btn { min-height: 2.3rem; padding: .3rem .8rem; font-size: .85rem; }
 .revision-result .btn:not(.primary) { background: var(--surface); }  /* on the tinted line; ✓ Garder its own colour */
 

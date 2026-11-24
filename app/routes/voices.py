@@ -23,6 +23,13 @@ async def list_voices() -> list[dict]:
         raise AppError("tts.voices_unavailable", 502, detail=str(e)) from e
 
 
+@router.get("/api/voices/for")
+async def voice_for(language: str) -> dict:
+    """The voice a lesson gets for a language ("es-ES", "cmn-CN"): as a lesson made with the
+    "auto" voice gets it (tts.voice_for: the one chosen in the settings first); "" none."""
+    return {"voice": await tts.voice_for(language, settings.current().voices)}
+
+
 @router.get("/api/tts")
 async def preview(
     text: str, voice: str, lesson: str | None = None, rate: Annotated[str, Query(pattern=r"^([+-]\d{1,2}%)?$")] = ""

@@ -289,6 +289,17 @@
         <input x-model="deck" :readonly="readOnly()" list="decks" @focus="loadDecks()">
       </label>
       <p class="hint ai-choice" x-show="lessonChoice" x-text="$t('app.review.choice', { choice: lessonChoice })"></p>
+      <!-- The lesson's voice, by its language: chosen once it is made too (one made without any) -->
+      <label class="field lesson-voice" x-show="!off('speech.speak')" x-effect="cards.length && loadVoiceLanguages()">
+        <span x-text="$t('app.review.voice')"></span>
+        <select :disabled="readOnly() || choosingVoice" @change="chooseVoiceLanguage($event.target.value)">
+          <option value="" :selected="!voiceLocale()" x-text="$t('app.review.voiceNone')"></option>
+          <template x-for="l in voiceLanguages()" :key="l.locale">
+            <option :value="l.locale" :selected="l.locale === voiceLocale()" x-text="l.name"></option>
+          </template>
+        </select>
+      </label>
+      <p class="warn voice-missing" x-show="voiceMissing()" x-text="$t('app.review.voiceMissing')"></p>
       <datalist id="decks">
         <template x-for="d in decksForChild(decks)" :key="d"><option :value="d"></option></template>
       </datalist>
@@ -328,6 +339,8 @@
         <div>
           <strong x-html="previewHtml(revision.summary)"></strong>
           <small x-text="revision.stats"></small>
+          <!-- Read aloud asked, the lesson without a voice: nothing heard, whatever the AI says -->
+          <small class="warn" x-show="voiceMissing()" x-text="$t('app.review.voiceMissing')"></small>
         </div>
         <button class="btn soft" x-show="revision.undo" @click="undoRevision()" x-text="$t('app.revise.undo')"></button>
         <!-- Made quick: once more with the model's thinking, when it isn't right -->
