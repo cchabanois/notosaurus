@@ -75,6 +75,11 @@ class SharedCasesTest {
     }
 
     @Test
+    fun aCardsFormulasAsTheyGoToAnkiDroid() = cases("anki_formula").forEach { c ->
+        assertEquals(c.string("name"), c.string("out"), Formulas.ankiText(c.string("in")))
+    }
+
+    @Test
     fun twoTextsTheSame() = cases("same_text").forEach { c ->
         val (a, b) = c.string("a") to c.string("b")
         assertEquals("$a | $b", c.string("key") to c["out"]!!.jsonPrimitive.boolean, Lessons.textKey(a) to Lessons.sameText(a, b))

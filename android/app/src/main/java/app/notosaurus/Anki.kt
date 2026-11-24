@@ -580,7 +580,7 @@ class Anki(private val context: Context) : AnkiTarget {
             return "anki://x-callback-url/browser?search=$encoded&at=$at"
         }
 
-        /** A card's text as an AnkiDroid field: escaped, its line breaks kept. */
+        /** A card's text as an AnkiDroid field: its formulas without MathJax's html commands, escaped, its line breaks kept. */
         fun html(text: String) = escape(text.trim())
 
         /** The Info field: the card's info, then its "did you know" (💡, in italics). */
@@ -639,8 +639,9 @@ class Anki(private val context: Context) : AnkiTarget {
         private val ENTITY = Regex("&(?:#[xX]([0-9a-fA-F]+)|#([0-9]+)|([a-zA-Z]+));")
         private val NAMED = mapOf("amp" to "&", "lt" to "<", "gt" to ">", "quot" to "\"", "apos" to "'", "nbsp" to "\u00A0")
 
+        /** A card's text as a field: its formulas without MathJax's html commands (Formulas), escaped. */
         private fun escape(text: String) =
-            text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("\n", "<br>")
+            Formulas.ankiText(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("\n", "<br>")
 
         // The diagram in AnkiDroid: enough to read it, light to sync (the computer's)
         private const val CARD_SIDE = 1000

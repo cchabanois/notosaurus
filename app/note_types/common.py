@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from .formulas import anki_text
+
 CSS = (Path(__file__).parent / "css" / "common.css").read_text(encoding="utf-8")
 
 # On the back, under the info: the helps asked for at generation (why the answer is the
@@ -237,8 +239,9 @@ def variant(name: str, typing: bool, dictation: bool) -> tuple[str, str]:
 
 
 def field_html(text: str) -> str:
-    """A card's text as an Anki field: escaped, its line breaks kept."""
-    return html.escape(text).replace("\n", "<br>")
+    """A card's text as an Anki field: its formulas without MathJax's html commands
+    (formulas.anki_text), escaped, its line breaks kept."""
+    return html.escape(anki_text(text)).replace("\n", "<br>")
 
 
 def info(card) -> str:

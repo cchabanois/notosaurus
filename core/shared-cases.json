@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by its number of photos: their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's number of photos: each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level: Python and Kotlin only.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by its number of photos: their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's number of photos: each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level: Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -2391,6 +2391,98 @@
     "instructions": "  "
    },
    "out": "Standing instructions, for every lesson:\nPas de dates.\n(The request below wins if it says otherwise.)\n\n"
+  }
+ ],
+ "anki_formula": [
+  {
+   "name": "a plain formula",
+   "in": "Aire : \\(\\pi r^2\\) et \\[\\frac{a}{b}\\]",
+   "out": "Aire : \\(\\pi r^2\\) et \\[\\frac{a}{b}\\]"
+  },
+  {
+   "name": "a colour kept",
+   "in": "\\(\\color{red}{x} + \\textcolor{blue}{y}\\)",
+   "out": "\\(\\color{red}{x} + \\textcolor{blue}{y}\\)"
+  },
+  {
+   "name": "a style of one colour: \\color",
+   "in": "\\(\\style{color: Red}{x} = \\style{ COLOR:#1A2B3C; }{y^{2}}\\)",
+   "out": "\\({\\color{red}{x}} = {\\color{#1a2b3c}{y^{2}}}\\)"
+  },
+  {
+   "name": "a style of rgb(): \\color",
+   "in": "\\(\\style{color:rgb(10%, 20%, 30%)}{z}\\)",
+   "out": "\\({\\color{rgb(10%, 20%, 30%)}{z}}\\)"
+  },
+  {
+   "name": "a style of other CSS: text",
+   "in": "\\(\\style{position:fixed;inset:0}{x}\\)",
+   "out": "\\(\\backslash\\text{style}{position:fixed;inset:0}{x}\\)"
+  },
+  {
+   "name": "a colour and more CSS: text",
+   "in": "\\(\\style{color:red;background:url(x)}{x}\\)",
+   "out": "\\(\\backslash\\text{style}{color:red;background:url(x)}{x}\\)"
+  },
+  {
+   "name": "a link: text",
+   "in": "\\(\\href{javascript:alert(1)}{x}\\)",
+   "out": "\\(\\backslash\\text{href}{javascript:alert(1)}{x}\\)"
+  },
+  {
+   "name": "class, cssId, data: text",
+   "in": "\\[\\class{flash}{a} \\cssId{taken}{b} \\data{x=1}{c}\\]",
+   "out": "\\[\\backslash\\text{class}{flash}{a} \\backslash\\text{cssId}{taken}{b} \\backslash\\text{data}{x=1}{c}\\]"
+  },
+  {
+   "name": "nested braces",
+   "in": "\\(\\style{color:green}{\\frac{1}{\\href{https://x}{2}}}\\)",
+   "out": "\\({\\color{green}{\\frac{1}{\\backslash\\text{href}{https://x}{2}}}}\\)"
+  },
+  {
+   "name": "a closing delimiter in braces stays in the formula",
+   "in": "\\(\\href{\\)}{x}\\)",
+   "out": "\\(\\backslash\\text{href}{\\)}{x}\\)"
+  },
+  {
+   "name": "several formulas in one field",
+   "in": "\\(\\href{a}{b}\\) puis \\(x\\)\net \\[\\style{color:red}{y}\\]",
+   "out": "\\(\\backslash\\text{href}{a}{b}\\) puis \\(x\\)\net \\[{\\color{red}{y}}\\]"
+  },
+  {
+   "name": "an escaped backslash: no command",
+   "in": "\\(a \\\\href b\\)",
+   "out": "\\(a \\\\href b\\)"
+  },
+  {
+   "name": "a longer name: another command",
+   "in": "\\(\\hrefs{a} \\datax\\)",
+   "out": "\\(\\hrefs{a} \\datax\\)"
+  },
+  {
+   "name": "outside a formula: left as written",
+   "in": "\\href{a}{b} \\( x \\href",
+   "out": "\\href{a}{b} \\( x \\href"
+  },
+  {
+   "name": "a gap's question and answer",
+   "in": "{{c1::\\(x^2\\)}} vaut {{c2::4::un nombre}} \\(\\style{color:red}{x}\\)",
+   "out": "{{c1::\\(x^2\\)}} vaut {{c2::4::un nombre}} \\({\\color{red}{x}}\\)"
+  },
+  {
+   "name": "a command joined by a gap's markup",
+   "in": "\\(\\h{{c1::ref}}{javascript:alert(1)}{x}\\)",
+   "out": "＼(＼h{{c1::ref}}{javascript:alert(1)}{x}＼)"
+  },
+  {
+   "name": "a command joined by a line break in a gap text",
+   "in": "{{c1::a}} \\(\\hr\nef{javascript:alert(1)}{x}\\)",
+   "out": "{{c1::a}} ＼(＼hr\nef{javascript:alert(1)}{x}＼)"
+  },
+  {
+   "name": "a command in a gap text outside formulas",
+   "in": "{{c1::a}} \\href{b}{c}",
+   "out": "{{c1::a}} ＼href{b}{c}"
   }
  ]
 }
