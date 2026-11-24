@@ -1276,6 +1276,30 @@ def test_a_diagram_in_the_list_leaves_its_texts_the_cards_width(page):
     assert clip["y"] + clip["height"] <= body["y"] + 1, (clip, body)  # the photo above its texts
 
 
+def test_a_diagrams_frame_kept_when_its_cards_come_back_new(page):
+    """A diagram's cards replaced by new ones, as a correction or its undo gives them (the same
+    keys, none of the page's own fields): its frame still the photo's part it was, its photo
+    already loaded (seen 2026-11-24: after « Corriger », the lesson's title shown instead of the
+    labels, the photo's proportions lost with the cards)."""
+    page.goto("/")
+    add_photo(page, halves())
+    generate_from_photos(page, "Une carte par mot")
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+    page.evaluate(f"""() => {{ const app = {data};
+        app.frames = [{{ page: 1, box: [0.1, 0.2, 0.5, 0.4] }}];
+        app.cards[0].mask = {{ page: 1, box: [0.2, 0.25, 0.3, 0.3], n: 1 }}; }}""")
+    card = page.locator(".flash").first
+    page.wait_for_function("document.querySelector('.diagram img').complete")
+    ratio = "(c => { const r = c.querySelector('.diagram-clip').getBoundingClientRect(); return r.width / r.height; })"
+    before = card.evaluate(ratio)
+    assert before == pytest.approx((0.4 * 600) / (0.2 * 800), rel=0.03)
+    page.evaluate(f"""() => {{ const app = {data};
+        const fresh = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith('_')));
+        app.cards = app.cards.map(fresh); }}""")
+    page.wait_for_timeout(300)
+    assert card.evaluate(ratio) == pytest.approx(before, rel=0.03)
+
+
 def test_a_diagram_in_the_list_shows_only_its_frame(page):
     """A diagram's card: only what Anki shows of the photo (its frame), its mask on it, nothing to
     drag, in the list and in the card open; touched there, the whole photo full screen, its
