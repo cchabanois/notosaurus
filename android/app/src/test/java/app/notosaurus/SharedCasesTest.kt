@@ -3,8 +3,10 @@ package app.notosaurus
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -218,5 +220,24 @@ class SharedCasesTest {
     fun theStandingInstructionsToldTheAi() = cases("standing_instructions").forEach { c ->
         val child = (c["child"] as? JsonObject)?.let { Child("c", "Jules", grade = it.string("grade"), instructions = it.string("instructions")) }
         assertEquals(c.toString(), c.string("out"), Generation.standingInstructions(c.string("instructions"), Children.forAi(child)))
+    }
+
+    @Test
+    fun whichEarlierFigureAFigureIsDrawnAgainFrom() = cases("redraw_from").forEach { c ->
+        // Each file in the lesson holds its own name
+        val folder = Files.createTempDirectory("redraw").toFile()
+        strings(c["files"]).forEach { folder.resolve(it).writeText(it) }
+        val asked = (c["asked"] as? JsonPrimitive)?.contentOrNull
+        val redraw = Pictures.redrawFrom(folder, c["card"]!!.jsonObject, c["replaced"] as? JsonObject, asked, c["again"]!!.jsonPrimitive.boolean)
+        val out = (c["out"] as? JsonObject)?.let { Pictures.Redraw(strings(it["sources"]), it.string("kind"), it.string("engine")) }
+        assertEquals(c.string("name"), out, redraw)
+        folder.deleteRecursively()
+    }
+
+    @Test
+    fun theVoiceForALanguage() = cases("voice_for").forEach { c ->
+        val voices = cases["voice_lists"]!!.jsonObject[c.string("voices")]!!.jsonArray.map { it.jsonObject }
+        val chosen = c["chosen"]!!.jsonObject.mapValues { it.value.jsonPrimitive.content }
+        assertEquals(c.string("name"), c.string("out"), Speech.pick(c.string("language"), voices, chosen))
     }
 }

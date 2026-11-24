@@ -291,3 +291,29 @@ def test_an_edits_card_merged_into_the_saved_one(case):
 
     before, after, now = (Card(**case[k]) for k in ("before", "after", "now"))
     assert merged_cards([before], [after], [now]) == [Card(**case["out"])]
+
+
+@pytest.mark.parametrize("case", CASES["redraw_from"], ids=lambda c: c["name"])
+def test_which_earlier_figure_a_figure_is_drawn_again_from(case, tmp_path):
+    """The one rule of the missing pictures, "✨ Image" and its drawing (pictures.redraw_from):
+    Pictures.redrawFrom the same. Each file in the lesson holds its own name."""
+    from notosaurus_core.models import PictureSource
+    from notosaurus_core.pictures import redraw_from
+
+    for name in case["files"]:
+        (tmp_path / name).write_text(name, encoding="utf-8")
+    card = Card(front="f", back="b", **case["card"])
+    replaced = case["replaced"]
+    if replaced is not None:
+        source = replaced["source"]
+        replaced = (PictureSource(**source) if source else None, replaced["kind"])
+    redraw = redraw_from(tmp_path, card, replaced, case["asked"], case["again"])
+    assert (redraw._asdict() if redraw else None) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["voice_for"], ids=lambda c: c["name"])
+def test_the_voice_for_a_language(case):
+    """Among edge-tts's voices or the relay's (tts.pick_voice): Speech.pick the same."""
+    from notosaurus_core.tts import pick_voice
+
+    assert pick_voice(case["language"], CASES["voice_lists"][case["voices"]], case["chosen"]) == case["out"]

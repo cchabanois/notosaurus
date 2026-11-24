@@ -157,11 +157,11 @@ class Speech(
         return made.mapNotNull { (back, mp3) -> mp3?.let { back to it } }.toMap() to made.count { it.second == null }
     }
 
-    /** The voice for the backs' language ("es-ES", "en"…): DEFAULT_VOICE in that variety,
-     * else in the language's usual one (VARIETY), else in another; "" when none (or no relay). */
+    /** The voice for the backs' language ("es-ES", "en"…), among the relay's (pick): the one
+     * chosen in the settings even when the relay can't list them, as the computer's. */
     suspend fun voiceFor(language: String): String {
         if (language.isBlank()) return ""
-        val all = runCatching { voices() }.getOrNull()?.map { it.jsonObject } ?: return ""
+        val all = runCatching { voices() }.getOrNull()?.map { it.jsonObject }.orEmpty()
         return pick(language, all, chosen())
     }
 
@@ -179,28 +179,44 @@ class Speech(
     fun deleteAll() = folder.listFiles()?.forEach { it.delete() }
 
     companion object {
-        // A language's usual variety, as the computer's (tts.PREFERRED): "en" alone isn't
-        // en-AU, the first English voice by name ("en-en" isn't one)
+        // A language's usual variety, as the computer's (tts.USUAL): "en" alone isn't en-AU, the
+        // first English voice by name; else "es-es", "de-de"…
         private val VARIETY = mapOf("en" to "en-gb", "pt" to "pt-pt", "cmn" to "cmn-cn")
+        // edge-tts's preferred voices (the computer's tts.PREFERRED): the same rule as the computer's
+        private val PREFERRED = setOf(
+            "es-ES-ElviraNeural", "es-MX-DaliaNeural", "en-GB-SoniaNeural", "en-US-JennyNeural", "de-DE-KatjaNeural",
+            "it-IT-ElsaNeural", "fr-FR-DeniseNeural", "pt-PT-RaquelNeural", "pt-BR-FranciscaNeural", "nl-NL-ColetteNeural",
+        )
 
-        /** The voice for a language among `all` (the relay's voices) and those `mine` (chosen per
-         * variety): voiceFor without the relay. */
+        /** The voice for a language among `all` (the relay's voices: {"voice", "locale", "gender"})
+         * and those `mine` (chosen per variety): voiceFor without the relay, as the computer's
+         * tts.pick_voice (core/shared-cases.json voice_for). The one chosen for that variety (for a
+         * language alone: for one of its varieties, the first by locale), else one of that
+         * language's voices: of that variety first, else of its usual one (VARIETY), its preferred
+         * voice first (DEFAULT_VOICE), else a female one, else the first by name; "" when none.
+         * Chinese found under the relay's names (voiceTag) when the voices don't say "zh". */
         internal fun pick(language: String, all: List<JsonObject>, mine: Map<String, String>): String {
-            val tag = voiceTag(language)
-            if (tag.isEmpty()) return ""
-            val base = tag.substringBefore('-')
-            // The one the user chose for that variety (for a language alone: for one of its varieties)
+            val asked = language.trim().replace('_', '-').lowercase()
+            if (asked.isEmpty()) return ""
             val chosen = mine.mapKeys { it.key.lowercase() }.filterValues { it.isNotBlank() }
-            chosen[tag]?.let { return it }
-            if (tag == base) chosen.toSortedMap().entries.firstOrNull { it.key.substringBefore('-') == base }?.let { return it.value }
-            val ranked = all.filter { it.string("locale").lowercase().substringBefore('-') == base }.sortedWith(
-                compareBy(
+            for (each in listOf(asked, voiceTag(asked)).distinct()) {
+                chosen[each]?.let { return it }
+                val base = each.substringBefore('-')
+                if (each == base) chosen.toSortedMap().entries.firstOrNull { it.key.substringBefore('-') == base }?.let { return it.value }
+            }
+            fun languageOf(voice: JsonObject) = voice.string("locale").lowercase().substringBefore('-')
+            val tag = if (all.any { languageOf(it) == asked.substringBefore('-') }) asked else voiceTag(asked)
+            val base = tag.substringBefore('-')
+            val usual = VARIETY[base] ?: "$base-$base"
+            val best = all.filter { languageOf(it) == base }.minWithOrNull(
+                compareBy<JsonObject>(
                     { it.string("locale").lowercase() != tag }, // the variety asked for
-                    { it.string("locale").lowercase() != (VARIETY[base] ?: "$base-$base") }, // else its usual one (en-GB, es-ES)
-                    { !it.string("voice").endsWith("-$DEFAULT_VOICE") },
-                ),
+                    { it.string("locale").lowercase() != usual }, // else its usual one (en-GB, es-ES)
+                    { it.string("voice").let { name -> name !in PREFERRED && !name.endsWith("-$DEFAULT_VOICE") } },
+                    { it.string("gender") != "Female" },
+                ).thenBy(naturalOrder()) { it.string("voice") },
             )
-            return ranked.firstOrNull()?.string("voice") ?: ""
+            return best?.string("voice") ?: ""
         }
 
         /** A language as the voices name it ("es-ES", "en"…, lowercase). Chinese: the AI says "zh"

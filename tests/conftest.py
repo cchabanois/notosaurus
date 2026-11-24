@@ -5,12 +5,14 @@ AnkiConnect (FakeAnki)."""
 import base64
 import json
 import re
+import time
 
+import edge_tts
 import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from app import ankiconnect, settings, sounds
+from app import ankiconnect, lessons, settings, sounds
 from app.attempts import Attempts
 from app.main import app
 from app.routes import admin as admin_routes
@@ -66,15 +68,37 @@ class Unreachable:
 def offline(monkeypatch):
     """No outside service reached by any test, the page tests' server included (it runs
     in this process): the free pictures' sources refuse (and fail the test), AnkiConnect
-    is closed, OpenRouter's prices are a fixed list. A test fakes any of them over this;
-    the pictures' answers kept by another test are never seen."""
+    is closed, OpenRouter's prices are a fixed list, edge-tts's voices can't be listed (as
+    without network: tts.voices fails, tts.voice_for falls back on its preferred voices). A
+    test fakes any of them over this; the pictures' answers and the voices kept by another
+    test are never seen."""
     pictures = Unreachable("the free pictures' sources (stock)")
     monkeypatch.setattr(stock, "_transport", httpx.MockTransport(pictures))
     monkeypatch.setattr(stock, "_cache", {})
     monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
     monkeypatch.setattr(prices, "_transport", httpx.MockTransport(model_list))
+    monkeypatch.setattr(edge_tts, "list_voices", no_voices)
+    monkeypatch.setattr(tts, "_voices", None)
     yield pictures
     assert not pictures.asked, f"a test reached {pictures.name}: {[str(r.url) for r in pictures.asked]}"
+
+
+async def no_voices(*args, **kwargs):
+    raise httpx.ConnectError("edge-tts unreachable in the tests: fake tts.voices")
+
+
+@pytest.fixture(autouse=True)
+def no_state_left():
+    """Nothing a test leaves in the server's memory seen by the next: the lessons being
+    edited (lessons.edit's count) start empty, and no sound made ahead is still waiting
+    or running once a test is done (each stopped with its server: sounds.stop)."""
+    lessons._editing.clear()
+    yield
+    # A page test's are cancelled from its thread (stop_sounds_ahead): gone a moment later
+    deadline = time.monotonic() + 5
+    while sounds._jobs and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert not sounds._jobs, f"sounds made ahead still waiting: {list(sounds._jobs)}"
 
 
 @pytest.fixture(autouse=True)

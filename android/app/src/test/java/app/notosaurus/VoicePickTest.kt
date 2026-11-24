@@ -2,8 +2,10 @@ package app.notosaurus
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.nio.file.Files
 
 /** The voice an "auto" lesson gets (Speech.voiceFor), among the relay's voices (Chirp 3 HD). */
 class VoicePickTest {
@@ -33,5 +35,14 @@ class VoicePickTest {
         assertEquals("es-US-Chirp3-HD-Aoede", Speech.pick("es-US", all, emptyMap()))
         assertEquals("", Speech.pick("ja-JP", all, emptyMap()))
         assertEquals("", Speech.pick("", all, emptyMap()))
+    }
+
+    @Test
+    fun theOneChosenEvenWhenTheRelayCantListThem() = runBlocking {
+        // As the computer's (tts.voice_for, edge-tts unreachable): never "" for a voice chosen
+        val speech = Speech(Files.createTempDirectory("speech").toFile(), MemoryPreferences(), { error("no relay") })
+        speech.choose(mapOf("es-ES" to "es-ES-Chirp3-HD-Puck"))
+        assertEquals("es-ES-Chirp3-HD-Puck", speech.voiceFor("es"))
+        assertEquals("", speech.voiceFor("de-DE"))
     }
 }

@@ -101,12 +101,12 @@ const childrenPart = {
     return parts.slice(n);
   },
 
-  // The decks offered for the deck name: the chosen child's and those of no child, never
-  // another child's (as children.decks_for_ai); no child chosen: all
+  // The decks offered for the deck name: the chosen child's (its levels alone too: "Jules")
+  // and those of no child, never another child's (as children.decks_for_ai, whole); no
+  // child chosen: those of no child (no children: all)
   decksForChild(decks) {
     const child = this.currentChild();
-    if (!child) return decks;
-    const mine = childLevels(child);
+    const mine = child ? childLevels(child) : new Set();
     const every = new Set(this.children.flatMap((c) => [...childLevels(c)]));
     return decks.filter((deck) => {
       const parts = deck.split("::").map((p) => p.trim()).filter(Boolean);

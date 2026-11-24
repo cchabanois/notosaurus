@@ -50,3 +50,23 @@ test("two deck levels the same, as children.same_level", async () => {
     assert.equal(same, c.out, `${c.a} | ${c.b}`);
   }
 });
+
+test("the decks offered for a lesson's deck, as children.decks_for_ai", async () => {
+  const page = await loadScripts("app.js");
+  const component = page.component();
+  for (const c of cases.decks_for_ai) {
+    component.children = c.children;
+    component.childId = c.child;
+    // The page offers the decks whole: what the AI sees of each (its children's levels left
+    // out); a child's levels alone (nothing for the AI) are offered too, for its child
+    const every = new Set(c.children.flatMap((child) => [...page.run(`childLevels(${JSON.stringify(child)})`)]));
+    const rest = (deck) => {
+      const parts = deck.split("::").map((p) => p.trim()).filter(Boolean);
+      let n = 0;
+      while (n < parts.length && every.has(page.run(`sameLevel(${JSON.stringify(parts[n])})`))) n++;
+      return parts.slice(n).join("::");
+    };
+    const offered = [...new Set(component.decksForChild(c.decks).map(rest).filter(Boolean))].sort();
+    assert.deepEqual(offered, c.out, c.child || "none");
+  }
+});
