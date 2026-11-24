@@ -332,8 +332,8 @@ def merged_cards(before: list[Card], after: list[Card], now: list[Card]) -> list
     (a picture drawn: its picture's; the card's text the page saved meanwhile stays); a card
     added since kept (the next pages' cards, a /complete ending while pictures were drawn),
     one the edit removed gone, one it added at the end. A picture the edit drew for a card
-    described anew meanwhile (stale_picture): none of its picture's fields, the card left to
-    be drawn as it says now. Without ids to go by (or twice the same): `after`, as it is."""
+    described anew meanwhile, or given another picture meanwhile (stale_picture): none of its
+    picture's fields, the card left as it is now. Without ids to go by (or twice the same): `after`, as it is."""
     lists = (before, after, now)
     if any(not all(c.id for c in cards) or len({c.id for c in cards}) != len(cards) for cards in lists):
         return after
@@ -353,14 +353,18 @@ def merged_cards(before: list[Card], after: list[Card], now: list[Card]) -> list
 
 
 def stale_picture(before: Card, after: Card, now: Card) -> bool:
-    """The picture an edit gave a card (`before` → `after`) drawn from what it no longer says:
-    its description (DESCRIBED) changed meanwhile in the lesson as saved `now` (a correction
-    saved while it was drawn), not to what the edit set itself. The user's own photo is not
-    drawn from it (chosen as the card's, kept); nor is a picture removed."""
+    """The picture an edit gave a card (`before` → `after`) no longer the card's to take: its
+    picture changed meanwhile in the lesson as saved `now` (another edit gave it one: a photo
+    the user chose while a batch drew it, written over then pruned), or it was drawn from what
+    the card no longer says, its description (DESCRIBED) changed meanwhile (a correction saved
+    while it was drawn), not to what the edit set itself. The user's own photo is not drawn
+    from it (chosen as the card's, kept); nor is a picture removed."""
     if not after.picture or after.picture == before.picture:
         return False
     if after.picture_source is not None and after.picture_source.source == "photo":
         return False
+    if now.picture not in (before.picture, after.picture):
+        return True
     described = [tuple(getattr(c, f) for f in DESCRIBED) for c in (before, after, now)]
     return described[2] not in (described[0], described[1])
 

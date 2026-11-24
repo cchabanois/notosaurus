@@ -3,9 +3,11 @@ JSON per line, then the lesson (or the error)."""
 
 import asyncio
 import json
+import threading
 import types as py_types
 
 import pytest
+from conftest import extract_lesson
 from google.genai import errors, types
 from helpers import run
 
@@ -188,6 +190,45 @@ def test_cancelled_while_the_ai_writes(client):
     assert stopped == [True] and saved == []
     # Gone (or never there): nothing to cancel
     assert client.post("/api/generations/j1/cancel").json() == {"cancelled": False}
+
+
+@pytest.mark.parametrize("save", ["create", "completed", "regenerated"])
+def test_cancelled_while_the_lesson_is_saved_answers_what_is_saved(client, monkeypatch, save):
+    """ "Cancel" landing while the lesson made (again, or its next pages) is being saved: the
+    save goes on (a thread), so the page is given the lesson as saved, not "cancelled" over
+    the cards it had (made again: its next save would write the old cards back over the new
+    photos)."""
+    from app import lessons
+
+    lesson = extract_lesson(client)  # 2 photos
+    id = lesson["id"]
+    path = {
+        "create": "/api/extract",
+        "completed": f"/api/lessons/{id}/complete",
+        "regenerated": f"/api/lessons/{id}/regenerate",
+    }
+    saving, go = threading.Event(), threading.Event()
+    real = getattr(lessons, save)
+
+    def slow(*args, **kwargs):
+        saving.set()
+        assert go.wait(5)
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(lessons, save, slow)
+    files = [("images", ("p3.jpg", b"page 3", "image/jpeg"))]
+    answer = {}
+    asked = {"files": files, "data": {"prompt": "FR → ES", "job": "s1"}, "headers": NDJSON}
+    thread = threading.Thread(target=lambda: answer.update(res=client.post(path[save], **asked)))
+    thread.start()
+    assert saving.wait(5)
+    assert client.post("/api/generations/s1/cancel").json() == {"cancelled": True}
+    go.set()
+    thread.join(5)
+    saved = lines(answer["res"])[-1]["lesson"]
+    shown = client.get(f"/api/lessons/{saved['id']}").json()
+    assert (saved["cards"], saved["photo_count"]) == (shown["cards"], shown["photo_count"])
+    assert shown["photo_count"] == {"create": 1, "completed": 3, "regenerated": 1}[save]
 
 
 def test_an_unexpected_error_mid_stream(client, monkeypatch, caplog):
