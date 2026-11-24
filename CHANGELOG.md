@@ -121,6 +121,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🐛 The app: a Chinese lesson gets a voice (Mandarin, or Cantonese for Hong Kong); it had none, nothing read aloud.
 - A card corrected while its picture was being drawn keeps its correction: the drawing of what it said before is set aside
 - Android: something shared to Notosaurus is no longer added a second time when the app is reopened from the recent apps, or after a change of theme, language or text size.
 - Android: sharing more files than a lesson's pages now says how many were not added, and a file too large or damaged is said as such, not as a type Notosaurus doesn't take.
