@@ -122,6 +122,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A picture a correction replaced, then removed by you: the next one can be the lesson's own drawing again (it used to be refused until the page was reloaded).
 - The app: a sentence with gaps gets its picture (the page waited for it, « drawing… », and nothing came).
 - The app: « ✨ Image » shows the picture on the side it was decided for (with the answer when it would give it away), as on the computer.
 - The picture's page no longer reuses an earlier visit's choice: a picture found or a photo of one's own no longer replaces a figure edited since with what was decided for the figure it had.
