@@ -1574,13 +1574,49 @@ test("pictures not pruned while a figure a correction replaced is still to be dr
     picture_source: { source: "drawn", engine: "typst", sources: [{ file: "picture-c1-0123abcd.typ" }] },
   };
   c.show({ id: "L1", deck: "D", cards: [{ ...old, figure: "Un carré ABCD en rouge", picture: "", picture_source: null }] });
-  c.cards[0]._previous = c.previousFigure(old, c.cards[0]);
-  assert.equal(JSON.stringify(c.cards[0]._previous), JSON.stringify({ source: old.picture_source, kind: "geometry" }));
+  c.cards[0]._replaced = c.replacedPicture(old, c.cards[0]);
+  assert.equal(JSON.stringify(c.cards[0]._replaced.previous), JSON.stringify({ source: old.picture_source, kind: "geometry" }));
   await c.prunePictures();
   assert.deepEqual(sent, []);  // its sources: what it is drawn again from
   c.cards[0].picture = "picture-c1-4567cdef.svg";  // drawn
   await c.prunePictures();
   assert.deepEqual(sent.filter(([url]) => url.endsWith("/prune")), [["/api/lessons/L1/pictures/prune", "POST"]]);
+});
+
+test("a picture a correction replaced, drawn again, then removed by the user: the next one may be the lesson's", async () => {
+  // The correction's "not the lesson's drawing again" outlived the picture drawn in its place:
+  // removed, the card refused the lesson's own drawing for as long as the page was open
+  const card = { id: "c1", front: "la mère", back: "mother", picture_prompt: "a mother", figure: "", picture: "picture-x.jpg",
+    picture_source: { source: "lesson" } };
+  const asked = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      if (url.startsWith("/api/lessons/L1/revise")) {
+        const changed = { ...card, picture_prompt: "a smiling mother", picture: "", picture_source: null };
+        return new Response({ lesson: { deck: "D", cards: [changed], reverse: false }, summary: "ok" });
+      }
+      if (url === "/api/lessons/L1/pictures") {
+        asked.push(JSON.parse(options.body));
+        return new Response({ lesson: { cards: [{ ...card, picture: "picture-c1-new.jpg", picture_source: { source: "commons" } }] }, failures: 0 });
+      }
+      if (url === "/api/lessons/L1/cards/c1/picture") return new Response({ card: { ...card, picture: "", picture_source: null } });
+      return new Response({});
+    },
+  });
+  const c = page.component();
+  Object.assign(c, { lessonId: "L1", loadLessons: () => {} });
+  c.cards = [{ ...card, key: 1 }];
+  c.revision.text = "une autre photo";
+  await c.revise();
+  while (c.drawingLessons.length) await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepEqual(plain(asked[0].not_from_lesson), ["c1"]);
+  assert.equal(c.cards[0].picture, "picture-c1-new.jpg");
+  await c.removePicture(c.cards[0]);
+  assert.equal(c.cards[0].picture, "");
+  await c.drawPictures();
+  assert.equal(asked.length, 2);
+  assert.deepEqual(plain(asked[1].not_from_lesson), []);
+  assert.deepEqual(plain(asked[1].previous), {});
 });
 
 test("a figure a correction replaced is drawn again from it only when it was a figure with sources", async () => {

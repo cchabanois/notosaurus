@@ -57,7 +57,7 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         stepping("/api/lessons/{id}/cards/{card}/picture/draw") { req, step ->
             val lesson = lesson()
             val i = cardIndex(lesson)
-            val decided = req["decided"] as? JsonObject
+            val decided = decidedPicture(req["decided"])
             if (decided != null || lesson.cards()[i].string("figure").isBlank()) switches.check("pictures.draw")
             val problem = req["problem"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content.orEmpty()
             val careful = req["careful"]?.jsonPrimitive?.booleanOrNull == true && !switches.off("ai.careful")
@@ -142,8 +142,9 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             val lesson = lesson()
             val i = cardIndex(lesson)
             val req = body()
+            val decided = decidedPicture(req["decided"]) // before the relay is asked for it
             val found = relay().foundPicture(req.string("source"), req.string("id"))
-            pictures.own(lesson, i, found.jpeg, found.source, req["decided"] as? JsonObject)
+            pictures.own(lesson, i, found.jpeg, found.source, decided)
         }
         // The pictures no card uses any more removed (drawn again, replaced, removed: kept until
         // then, so that the page can undo a card's correction while it is edited): asked by the
@@ -164,7 +165,7 @@ internal fun Route.pictureRoutes(server: LocalServer) {
                 file == null -> call.respondText("", status = HttpStatusCode.NotFound)
                 name.endsWith(".svg") -> {
                     // Cleaned by the relay; and even opened on its own, nothing in it may run or load
-                    call.response.headers.append("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
+                    call.response.headers.append("Content-Security-Policy", PICTURE_POLICY)
                     call.response.headers.append("X-Content-Type-Options", "nosniff")
                     call.respondBytes(file.readBytes(), ContentType.Image.SVG)
                 }
@@ -174,11 +175,41 @@ internal fun Route.pictureRoutes(server: LocalServer) {
     }
 }
 
-/** A form's "decided" field (a picture "make" decided for a card's figure, as JSON): its object;
- * not one, a request that isn't valid. */
+/** A form's "decided" field (a picture "make" decided for a card's figure, as JSON): as
+ * [decidedPicture]; not JSON, a request that isn't valid. */
 internal fun decidedField(value: String): JsonObject =
     try {
         Json.parseToJsonElement(value) as? JsonObject
     } catch (e: SerializationException) {
         null
-    } ?: throw BadRequest("invalid") // errors.invalid
+    }?.let(::decidedPicture) ?: throw BadRequest("invalid") // errors.invalid
+
+/** A picture "make" decided for a card's figure ("decided", sent back with the picture chosen),
+ * checked as the computer's DecidedPicture (app/models.py): a picture_prompt not empty, a
+ * picture_search ("" when not said), each at most MAX_SUBJECT characters, picture_on_back (false
+ * when not said), those three only. Null when not sent; anything else, a request that isn't
+ * valid (400 errors.invalid), never a figure cleared for an empty picture. */
+internal fun decidedPicture(value: JsonElement?): JsonObject? {
+    if (value == null || value is JsonNull) return null
+    val decided = value as? JsonObject ?: throw BadRequest("invalid")
+    fun text(field: String, least: Int): String {
+        val given = decided[field]
+        val text = if (given == null) "" else (given as? JsonPrimitive)?.takeIf { it.isString }?.content ?: throw BadRequest("invalid")
+        if (text.codePointCount(0, text.length) !in least..MAX_SUBJECT) throw BadRequest("invalid")
+        return text
+    }
+    val onBack = decided["picture_on_back"]?.let { given ->
+        (given as? JsonPrimitive)?.takeIf { !it.isString }?.booleanOrNull ?: throw BadRequest("invalid")
+    } ?: false
+    return buildJsonObject {
+        put("picture_prompt", text("picture_prompt", 1))
+        put("picture_search", text("picture_search", 0))
+        put("picture_on_back", onBack)
+    }
+}
+
+// A card's figure, served: nothing in it may run or load (the computer's app/origins.py, PICTURE_POLICY)
+internal const val PICTURE_POLICY = "default-src 'none'; style-src 'unsafe-inline'"
+
+// A picture's subject, a figure's description, at most (core's relay_api.MAX_SUBJECT)
+internal const val MAX_SUBJECT = 1000

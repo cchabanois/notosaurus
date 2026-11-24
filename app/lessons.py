@@ -319,13 +319,6 @@ def _save(
     return lesson
 
 
-# What a card's picture is drawn from (its description and its family): described anew while
-# an edit drew its picture, that picture is not the card's (merged_cards)
-DESCRIBED = ("figure", "figure_kind", "picture_prompt")
-# What a picture drawn (or found) sets on its card
-DRAWN = ("picture", *pictures.PICTURE_FIELDS)
-
-
 def merged_cards(before: list[Card], after: list[Card], now: list[Card]) -> list[Card]:
     """The cards an edit made of `before` (`after`), merged into the lesson's as saved now
     (`now`), card by card (by id): of each card the edit changed, only the fields it changed
@@ -347,7 +340,7 @@ def merged_cards(before: list[Card], after: list[Card], now: list[Card]) -> list
         elif new is not None:  # else removed by the edit
             changed = {f: getattr(new, f) for f in type(card).model_fields if getattr(new, f) != getattr(old, f)}
             if stale_picture(old, new, card):
-                changed = {f: v for f, v in changed.items() if f not in DRAWN}
+                changed = {f: v for f, v in changed.items() if f not in pictures.READY}
             merged.append(card.model_copy(update=changed, deep=True) if changed else card)
     return merged + [c for c in after if c.id not in was]
 
@@ -356,8 +349,8 @@ def stale_picture(before: Card, after: Card, now: Card) -> bool:
     """The picture an edit gave a card (`before` → `after`) no longer the card's to take: its
     picture changed meanwhile in the lesson as saved `now` (another edit gave it one: a photo
     the user chose while a batch drew it, written over then pruned), or it was drawn from what
-    the card no longer says, its description (DESCRIBED) changed meanwhile (a correction saved
-    while it was drawn), not to what the edit set itself. The user's own photo is not drawn
+    the card no longer says, its description (pictures.DESCRIBED) changed meanwhile (a
+    correction saved while it was drawn), not to what the edit set itself. The user's own photo is not drawn
     from it (chosen as the card's, kept); nor is a picture removed."""
     if not after.picture or after.picture == before.picture:
         return False
@@ -365,7 +358,7 @@ def stale_picture(before: Card, after: Card, now: Card) -> bool:
         return False
     if now.picture not in (before.picture, after.picture):
         return True
-    described = [tuple(getattr(c, f) for f in DESCRIBED) for c in (before, after, now)]
+    described = [tuple(getattr(c, f) for f in pictures.DESCRIBED) for c in (before, after, now)]
     return described[2] not in (described[0], described[1])
 
 

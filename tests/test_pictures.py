@@ -640,7 +640,7 @@ def test_a_picture_showing_the_answer_goes_on_the_back(monkeypatch):
 
         monkeypatch.setattr(llm, "plan_picture", plan)
         card = Card(front="Quels pays forment la Triple-Alliance ?", back="Allemagne, Autriche-Hongrie, Italie")
-        decided = run(pictures.decided(AIConfig(llm="gemini"), card))
+        decided = run(pictures.planned(AIConfig(llm="gemini"), card))
         assert decided.picture_on_back is on_back and decided.figure == "Carte de l'Europe"
 
 

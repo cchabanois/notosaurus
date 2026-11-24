@@ -153,6 +153,26 @@ const GAP_END = /(?:::[^{}]*?)?\}\}/g;
 const escapeHtml = (text) => text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 let nextKey = 0;
+// A card on the page: the lesson's fields (withKey's defaults), `key` (the page's own, stable
+// while the card is shown) and fields starting with "_", the page's only: never sent nor saved
+// (payload, a correction's `plain`), gone with the card when the lesson is shown again.
+//   _state      "new" / "modified" by the last correction (its badge), until it is done with
+//   _editing    the field focused ("front", "choice:1"…); _allFields: every field shown to edit
+//   _menu       its ⋯ menu open; _subdecks: its subdeck picker ({ fresh }) open
+//   _linked     just reached from a link (highlighted a moment)
+//   _explain    "Explain" ({ open, blocks, more, loading, error, kept })
+//   _fix        "✨ Correct this card"'s field ({ text, busy, blank, job, cancelling })
+//   _fixed      what that correction changed ({ summary, before, instruction, quick }), to undo
+//   _subject    what its picture page says to show (makePicture's subject)
+//   _drawing    its own picture being made (pictureAction); _step, _problem, _first: the step
+//               it is at, what a check found wrong, the figure's first try (pictureSteps)
+//   _check      a figure's check ({ ok, problem }); _checking: under way; _triedQuick: drawn
+//               again quickly once (redrawFigure: with care from then on)
+//   _searching  free pictures being looked for; _found: those found to pick from
+//   _decided    the picture makePicture decided for a figure, sent with the one chosen
+//   _madeFor    what the card said then (madeStill); _ask: whether to have one drawn, asked
+//   _replaced   a picture replaced, until the card has one again ({ url, notFromLesson,
+//               previous }: replacedPicture)
 // The server's settings read (or not): what waits for them (a PDF's pages counted against
 // the lesson's room, maxPhotos) waits for this, not for the defaults
 let configKnown;

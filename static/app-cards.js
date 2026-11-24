@@ -229,7 +229,7 @@ const cardsPart = {
   // time, or the next open.
   async prunePictures() {
     if (!this.lessonId || this.readOnly() || this.editing !== "" || this.revision.undo) return;
-    if (this.drawingHere() || this.pictureJobs || this.cards.some((c) => c._previous && !c.picture)) return;
+    if (this.drawingHere() || this.pictureJobs || this.cards.some((c) => this.pictureReplaced(c)?.previous)) return;
     const id = this.lessonId;
     if (this.saveTimer || this.snapshot() !== this.lastSaved) await this.saveNow();
     if (this.lessonId !== id || this.editing !== "" || this.snapshot() !== this.lastSaved || this.saveState !== "saved") return;
