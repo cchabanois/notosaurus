@@ -2,7 +2,11 @@ package app.notosaurus
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
+import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Color
+import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mockwebserver3.Dispatcher
@@ -12,11 +16,13 @@ import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 /**
  * The phone turned while a lesson is being made: the same activity, the same page (not
@@ -95,6 +101,40 @@ class RotationTest {
             // Turned back: still the same page
             assertSame(before, activity(app))
             assertEquals("true", Device.js(app, "window.notReloaded === true"))
+        }
+    }
+
+    /** A photo shared to Notosaurus, then the activity made again with the intent that opened
+     * it (as a change of theme, language or font size does: those aren't in its configChanges):
+     * the share taken once, its page not added a second time. */
+    @Test
+    fun aShareTakenOnceWhenTheActivityIsMadeAgain() {
+        val file = File(Device.context.cacheDir, "photos/shared-once.jpg").apply { parentFile!!.mkdirs() }
+        val picture = Bitmap.createBitmap(400, 300, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
+        file.outputStream().use { picture.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+        val share = Intent(Intent.ACTION_SEND).setClass(Device.context, MainActivity::class.java)
+            .setType("image/jpeg")
+            .putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(Device.context, "${Device.context.packageName}.photos", file))
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        ActivityScenario.launch<MainActivity>(share).use { app ->
+            try {
+                // Taken: its page added (to a lesson in progress a test may have left), kept as the
+                // lesson in progress the page opens again
+                val taken = "$PAGE.draftKept && location.search === '' && !$PAGE.shareTaking && $PAGE.photos.length > 0"
+                Device.waitFor(app, taken, "the share taken")
+                val pages = Device.js(app, "$PAGE.photos.length")
+                Device.waitFor(app, "$PAGE.draftPhotosSent === $PAGE.draftPhotos().map((p) => p.url).join(' ')", "the lesson in progress kept")
+                assertEquals(pages, Device.run(app, "return (await (await api('/api/draft')).json()).photos"))
+                val before = activity(app)
+
+                app.recreate()
+                assertNotSame("the activity made again", before, activity(app))
+                Device.waitFor(app, "typeof Alpine === 'object' && $taken && $PAGE.photos.length >= $pages", "the page opened again")
+                Thread.sleep(2_000) // a second take, if any, done by then
+                assertEquals("the share taken once", pages, Device.js(app, "$PAGE.photos.length"))
+            } finally {
+                runCatching { Device.run(app, "await api('/api/draft', { method: 'DELETE' })") } // no lesson in progress left to other tests
+            }
         }
     }
 

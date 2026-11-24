@@ -1151,6 +1151,42 @@ test("what was shared to the app: a lesson made kept and a new one started, a le
   assert.deepEqual(added, ["p2.jpg image/jpeg"]);
 });
 
+test("what a share left out: said by reason (a type, a file unreadable, how many past the limit), an older app's list too", async () => {
+  let shared;
+  const page = await loadScripts("app.js", {
+    languages: ["fr-FR"],
+    routes: (url, options) => (url === "/api/shared" && !options?.method ? new Response(shared) : new Response(new Blob(["x"]))),
+  });
+  const c = page.component();
+  const added = [];
+  c.addFiles = async (files) => added.push(...files.map((f) => f.name));
+  c.newLesson = async () => {};
+  c.maxPhotos = 30;
+  const photos = Array.from({ length: 30 }, (_, i) => ({ n: i + 1, name: `p${i + 1}.jpg`, type: "image/jpeg" }));
+  shared = { files: photos, text: "", skipped: { type: ["devoir.docx"], unreadable: ["huge.jpg", "abîmé.pdf"], over: 3 }, id: "s" };
+  await c.takeShared();
+  assert.equal(added.length, 30);
+  assert.equal(c.error, "Notosaurus prend les photos, les PDF et le texte : « devoir.docx » n'a pas été ajouté."
+    + " « huge.jpg, abîmé.pdf » n'a pas pu être lu (trop gros ou abîmé)."
+    + " Une leçon tient en 30 pages : 3 fichiers de plus n'ont pas été ajoutés.");
+  c.error = "";
+  shared = { files: [], text: "", skipped: { type: [], unreadable: [], over: 1 }, id: "s" };  // nothing else: said all the same
+  await c.takeShared();
+  assert.equal(c.error, "Une leçon tient en 30 pages : 1 fichier de plus n'a pas été ajouté.");
+  c.error = "";
+  shared = { files: [], text: "", skipped: { type: [], unreadable: ["huge.jpg"], over: 0 }, id: "s" };
+  await c.takeShared();
+  assert.equal(c.error, "« huge.jpg » n'a pas pu être lu (trop gros ou abîmé).");
+  c.error = "";
+  shared = { files: [], text: "", skipped: ["archive.zip"] };  // kept by an older app: its names, said as before
+  await c.takeShared();
+  assert.equal(c.error, "Notosaurus prend les photos, les PDF et le texte : « archive.zip » n'a pas été ajouté.");
+  c.error = "";
+  shared = { files: [], text: "", skipped: { type: [], unreadable: [], over: 0 } };  // nothing left out, nothing waiting
+  await c.takeShared();
+  assert.equal(c.error, "");
+});
+
 test("a web page's address alone shared: nothing added, the lesson as it is, said what to share instead", async () => {
   const calls = [];
   const page = await loadScripts("app.js", {

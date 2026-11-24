@@ -650,6 +650,11 @@
     },
     "share": {
       "skipped": "Notosaurus prend les photos, les PDF et le texte : « {names} » n'a pas été ajouté.",
+      "unreadable": "« {names} » n'a pas pu être lu (trop gros ou abîmé).",
+      "over": {
+        "one": "Une leçon tient en {max} pages : {count} fichier de plus n'a pas été ajouté.",
+        "other": "Une leçon tient en {max} pages : {count} fichiers de plus n'ont pas été ajoutés."
+      },
       "waiting": "Partage reçu : il sera ajouté dès que la tâche en cours sera finie ou la carte fermée.",
       "cards": {
         "lessons": "📤 Partager des leçons",

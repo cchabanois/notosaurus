@@ -20,21 +20,26 @@ import java.io.InputStream
  * What was shared to the app (Android's "Share" to Notosaurus: photos, PDFs, a text), kept until
  * the page takes it (static/app-photos.js, takeShared): copied here at once, the grant to read
  * another app's files lasting only a while. `dir`: file-N (what was shared, in order), files.json
- * (their names and types), text.txt, skipped.json (what the page can't take: their names).
- * A new share replaces what the page hasn't taken.
+ * (their names and types), text.txt, skipped.json (what was left out, by reason: {type: [names],
+ * unreadable: [names], over: count}; an older app's, a plain list of names). A new share replaces
+ * what the page hasn't taken.
  */
 class Shared(private val dir: File) {
     /** One thing shared: its name, its type ("image/jpeg", "application/pdf", "text/plain"…), its bytes. */
     class Item(val name: String, val type: String?, val open: () -> InputStream?)
 
-    /** Kept, replacing what was there: the photos and PDFs (at most MAX_BYTES each), a text file's
-     * text added to `text`; anything else skipped, by name. */
+    /** Kept, replacing what was there: the photos and PDFs (at most MAX_BYTES each, MAX_ITEMS of
+     * them), a text file's text added to `text`; the rest left out, by reason: a type the page
+     * can't take, a file unreadable or too large (by name), the photos and PDFs past MAX_ITEMS
+     * (counted). */
     @Synchronized
     fun take(items: List<Item>, text: String?) {
         clear()
         dir.mkdirs()
         val files = mutableListOf<JsonObject>()
-        val skipped = mutableListOf<String>()
+        val ofType = mutableListOf<String>()
+        val unreadable = mutableListOf<String>()
+        var over = 0
         val texts = mutableListOf<String>()
         var linkOnly = false
         // A text that is only a web page's address (a browser shares its page so): no lesson in
@@ -44,7 +49,7 @@ class Shared(private val dir: File) {
             if (isLinkOnly(t)) linkOnly = true else texts += t
         }
         addText(text)
-        for (item in items.take(MAX_ITEMS)) {
+        for (item in items) {
             val type = item.type?.lowercase().orEmpty()
             val kind = when {
                 type.startsWith("image/") -> "image"
@@ -53,12 +58,17 @@ class Shared(private val dir: File) {
                 else -> null
             }
             if (kind == null) {
-                skipped += item.name
+                ofType += item.name
+                continue
+            }
+            // A lesson's pages: the photos and PDFs past them never read, only counted
+            if (kind != "text" && files.size >= MAX_ITEMS) {
+                over++
                 continue
             }
             val bytes = runCatching { item.open()?.use { it.readAtMost(MAX_BYTES) } }.getOrNull()
             when {
-                bytes == null -> skipped += item.name // unreadable, or too large
+                bytes == null -> unreadable += item.name // unreadable, or too large
                 kind == "text" -> addText(bytes.decodeToString())
                 else -> {
                     val n = files.size + 1
@@ -73,12 +83,18 @@ class Shared(private val dir: File) {
         }
         File(dir, FILES).writeText(JsonArray(files).toString())
         File(dir, TEXT).writeText(texts.joinToString("\n\n").take(MAX_TEXT))
-        File(dir, SKIPPED).writeText(JsonArray(skipped.map(::JsonPrimitive)).toString())
+        val skipped = buildJsonObject {
+            put("type", JsonArray(ofType.map(::JsonPrimitive)))
+            put("unreadable", JsonArray(unreadable.map(::JsonPrimitive)))
+            put("over", over)
+        }
+        File(dir, SKIPPED).writeText(skipped.toString())
         File(dir, ERROR).apply { if (linkOnly) writeText(LINK_ONLY) else delete() }
         File(dir, ID).writeText(java.util.UUID.randomUUID().toString())
     }
 
-    /** What the page may take: {files: [{n, name, type}], text, skipped: [names], id}; empty when nothing waits. */
+    /** What the page may take: {files: [{n, name, type}], text, skipped: {type, unreadable, over}
+     * (a share an older app kept: [names]), id}; empty when nothing waits. */
     @Synchronized
     fun get(): JsonObject {
         val files = File(dir, FILES).takeIf { it.isFile }?.let { json.parseToJsonElement(it.readText()) } ?: JsonArray(emptyList())
@@ -116,7 +132,7 @@ class Shared(private val dir: File) {
 
     companion object {
         const val PDF = "application/pdf"
-        const val MAX_ITEMS = LocalServer.MAX_PHOTOS // a lesson's pages: the page says which didn't fit
+        const val MAX_ITEMS = LocalServer.MAX_PHOTOS // a lesson's pages: those past it counted, the page says how many
         const val MAX_BYTES = 50L * 1024 * 1024 // a school's PDF, a phone's photo (the page shrinks it)
         const val MAX_TEXT = 100_000 // characters: the page makes pages of it, as many as the lesson has room for
         private const val FILES = "files.json"

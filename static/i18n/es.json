@@ -650,6 +650,11 @@
     },
     "share": {
       "skipped": "Notosaurus acepta fotos, PDF y texto: «{names}» no se ha añadido.",
+      "unreadable": "«{names}» no se ha podido leer (demasiado grande o dañado).",
+      "over": {
+        "one": "Una lección admite {max} páginas: {count} archivo más no se ha añadido.",
+        "other": "Una lección admite {max} páginas: {count} archivos más no se han añadido."
+      },
       "waiting": "Contenido compartido recibido: se añadirá en cuanto termine la tarea en curso o se cierre la tarjeta.",
       "cards": {
         "lessons": "📤 Compartir lecciones",
