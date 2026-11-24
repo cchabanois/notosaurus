@@ -209,21 +209,26 @@ const lessonsPart = {
 
   // A language picked: the voice a lesson made with the "auto" voice gets (the settings' first);
   // none: the cards aren't read. Saved with the lesson, its sounds made as for any lesson.
-  async chooseVoiceLanguage(locale) {
+  // `select`: the list it was picked in, showing the lesson's voice once answered (none for
+  // it: the one it had); an answer coming after another lesson was opened, dropped
+  async chooseVoiceLanguage(locale, select = null) {
     if (!locale) {
       this.voice = "";
       return;
     }
     if (locale === this.voiceLocale()) return;
+    const lessonId = this.lessonId;
     this.choosingVoice = true;
     try {
       const { voice } = await (await api(`/api/voices/for?language=${encodeURIComponent(locale)}`)).json();
+      if (this.lessonId !== lessonId) return;
       if (voice) this.voice = voice;
       else this.error = t("app.review.voiceUnavailable");
     } catch (e) {
-      this.error = e.message;
+      if (this.lessonId === lessonId) this.error = e.message;
     } finally {
       this.choosingVoice = false;
+      if (select) this.$nextTick(() => { select.value = this.voiceLocale(); });
     }
   },
 

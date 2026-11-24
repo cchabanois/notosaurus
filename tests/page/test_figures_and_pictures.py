@@ -851,3 +851,55 @@ def test_a_figure_turned_into_a_photo_stays_the_figure_until_one_is_chosen(page,
     assert (after["figure"], after["figure_kind"]) == ("", "")
     assert (after["picture_prompt"], after["picture_search"]) == ("a set square on a desk", "set square")
     assert after["picture"].endswith(".jpg") and after["picture_source"]["source"] == "commons"
+
+
+def test_a_figure_turned_into_a_photo_none_found_asked_about_the_photo_once(page, monkeypatch):
+    """A figure the AI turns into a photo, no free one fitting: the question names the photo
+    decided (the card is still the figure: its own description isn't it). The picture's page
+    left and opened again: nothing of that visit left (neither the question nor a decision sent
+    later with the user's own photo)."""
+    from notosaurus_core import llm
+    from notosaurus_core.models import PicturePlan
+
+    async def plan(s, front, back, asked, language):
+        return PicturePlan(kind="picture", description="a set square on a desk", search="set square")
+
+    monkeypatch.setattr(llm, "plan_picture", plan)
+    page.route("**/api/pictures/search", lambda route: route.fulfill(json={"results": []}))
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    figure = card.locator(".card-picture.figure img:not(.first):visible")
+    figure.click()
+    dialog = page.get_by_role("dialog", name="Image")
+    dialog.get_by_label("La figure à dessiner (étiquettes comprises)").fill("")
+    dialog.get_by_role("button", name="📐 Redessiner la figure").click()
+    asked = dialog.locator(".draw-ask")
+    sync_api.expect(asked).to_contain_text("« a set square on a desk »")
+    dialog.get_by_role("button", name="Terminé").click()
+
+    figure.click()  # again: afresh
+    sync_api.expect(asked).to_be_hidden()
+    with page.expect_request(lambda r: r.method == "POST" and r.url.endswith("/picture")) as sent:
+        dialog.locator("label", has_text="🖼️ Galerie").locator("input[type=file]").set_input_files(
+            [{"name": "photo.png", "mimeType": "image/png", "buffer": png("teal")}]
+        )
+    assert b'name="decided"' not in (sent.value.post_data_buffer or b"")
+    sync_api.expect(dialog.locator(".picture-source:visible")).to_contain_text("Votre photo")
+    (summary,) = lessons(page)
+    after = lesson(page, summary["id"])["cards"][0]
+    assert after["figure"] and after["picture_prompt"] == ""  # still the figure, its photo the user's
+
+
+def test_the_pictures_camera_off_while_pages_are_read(page):
+    """While files are read into the lesson's pages, the picture's 📷 is off as the lesson's is:
+    on the phone, its capture would empty the folder they are read from."""
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    card.locator(".card-picture.figure img:not(.first):visible").click()
+    camera = page.get_by_role("dialog", name="Image").locator("label", has_text="📷 Prendre une photo")
+    sync_api.expect(camera.locator("input[type=file]")).to_be_enabled()
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).filesReading++")
+    sync_api.expect(camera.locator("input[type=file]")).to_be_disabled()
+    sync_api.expect(camera).to_have_class(re.compile(r"\bdisabled\b"))
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).filesReading--")
+    sync_api.expect(camera.locator("input[type=file]")).to_be_enabled()

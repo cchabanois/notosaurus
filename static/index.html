@@ -292,7 +292,7 @@
       <!-- The lesson's voice, by its language: chosen once it is made too (one made without any) -->
       <label class="field lesson-voice" x-show="!off('speech.speak')" x-effect="cards.length && loadVoiceLanguages()">
         <span x-text="$t('app.review.voice')"></span>
-        <select :disabled="readOnly() || choosingVoice" @change="chooseVoiceLanguage($event.target.value)">
+        <select :disabled="readOnly() || choosingVoice" @change="chooseVoiceLanguage($event.target.value, $event.target)">
           <option value="" :selected="!voiceLocale()" x-text="$t('app.review.voiceNone')"></option>
           <template x-for="l in voiceLanguages()" :key="l.locale">
             <option :value="l.locale" :selected="l.locale === voiceLocale()" x-text="l.name"></option>
@@ -727,10 +727,11 @@
                         @click="makePicture(card)" :disabled="Boolean(card._drawing || card._searching)" :class="{ waiting: card._searching }"
                         x-text="$t(card._searching ? 'app.pictures.searching' : card.figure ? (card.picture ? 'app.pictures.figureRedraw' : 'app.pictures.figureDraw') : card.picture ? 'app.pictures.change' : 'app.pictures.make')"></button>
                 <!-- A photo of one's own, as the lesson's pages: taken now (on the phone, the document
-                     scanner: a drawing of the book cropped and straightened) or chosen -->
-                <label class="btn soft" :class="{ disabled: card._drawing }">
+                     scanner: a drawing of the book cropped and straightened) or chosen. Not while
+                     pages are read (the phone's next capture would empty the folder they come from) -->
+                <label class="btn soft" :class="{ disabled: card._drawing || filesReading > 0 }">
                   📷 <span x-text="$t('app.photos.takePhoto')"></span>
-                  <input type="file" accept="image/*" capture="environment" hidden :disabled="Boolean(card._drawing)" @change="uploadPicture(card, $event)">
+                  <input type="file" accept="image/*" capture="environment" hidden :disabled="Boolean(card._drawing) || filesReading > 0" @change="uploadPicture(card, $event)">
                 </label>
                 <label class="btn soft" :class="{ disabled: card._drawing }">
                   🖼️ <span x-text="$t('app.photos.gallery')"></span>
@@ -758,7 +759,8 @@
               </template>
               <!-- No free picture fits: drawn by the image model only if the user says yes (it costs) -->
               <div class="draw-ask" x-show="card._ask">
-                <p x-text="$t('app.pictures.drawAsk', { subject: card.picture_prompt })"></p>
+                <!-- (a figure turned into a picture: the picture decided, the card still the figure) -->
+                <p x-text="$t('app.pictures.drawAsk', { subject: card._decided?.picture_prompt || card.picture_prompt })"></p>
                 <small class="muted" x-show="drawingCost()" x-text="drawingCost()"></small>
                 <div class="picture-actions">
                   <button type="button" class="btn primary" @click="drawPicture(card)" :disabled="Boolean(card._drawing)"
