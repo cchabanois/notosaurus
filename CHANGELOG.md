@@ -121,6 +121,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A formula's web commands (links, styles) no longer reach Anki: a colour kept as \color.
 - A picture drawn with the lesson's others and meant for the answer side no longer moves to the question when the lesson is next saved.
 - 🗂️ **Each lesson its own deck on Android too**: a deck that already exists in AnkiDroid or belongs to another lesson gets " (2)", as on the computer.
 - 🏷️ **A lesson shared as a package from the Android app keeps its tests' tags**, as when it is sent to AnkiDroid.
