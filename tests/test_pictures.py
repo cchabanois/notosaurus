@@ -128,6 +128,39 @@ def test_a_picture_drawn_from_what_its_card_no_longer_says_set_aside(client, dra
     assert "a green apple" in drawn and cards[0]["picture"]
 
 
+def test_a_picture_chosen_while_the_lesson_is_drawn_kept(client, drawn, monkeypatch):
+    """A picture the user chooses for a card the lesson's drawing hasn't reached (a found one
+    picked, its controls still there): the drawing ending after it doesn't write its own over
+    it (the page kept showing the one chosen, then pruned it from disk); pruned, the drawing's."""
+    from app.models import FoundPicture
+    from app.routes import pictures as routes
+
+    lesson = lesson_with_pictures(client)
+    id, apple = lesson["id"], lesson["cards"][0]["id"]
+    draw = pictures.draw
+    chosen = {}
+
+    async def fetch(source, id_, pixabay_key=""):
+        return plain_image(300, 200, "teal", "JPEG"), PictureSource(source="commons", licence="CC0")
+
+    async def meanwhile(s, subject):
+        if subject == "an apple":  # the user picks a found picture while it is drawn
+            chosen.update(await routes.found_picture(id, apple, FoundPicture(source="commons", id="File:Apple.jpg")))
+        return await draw(s, subject)
+
+    monkeypatch.setattr(stock, "fetch", fetch)
+    monkeypatch.setattr(pictures, "draw", meanwhile)
+    cards = client.post(f"/api/lessons/{id}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    picture = chosen["card"].picture
+    assert (cards[0]["picture"], cards[0]["picture_source"]["source"]) == (picture, "commons")
+    assert cards[1]["picture"]  # the dog's, drawn
+    assert client.get(f"/api/lessons/{id}").json()["cards"] == cards  # as saved
+    folder = lessons.folder(id)
+    assert folder
+    assert client.post(f"/api/lessons/{id}/pictures/prune").json() == {"removed": 1}  # the apple drawn
+    assert (folder / "images" / picture).is_file()
+
+
 def test_merged_cards():
     """An edit's cards merged into the lesson's as saved now: what it changed of each card
     (field by field), the cards added since kept, the ones it removed or added."""
