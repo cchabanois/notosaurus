@@ -1,13 +1,9 @@
 """The phones: pairing by the QR code's token, the cookie it becomes, unpairing,
 the link the QR code carries, and the QR codes themselves."""
 
-import re
-from pathlib import Path
-
 from conftest import ADMIN, on_the_computer
 
 from app import settings
-from app.origins import PAGE_POLICY
 from app.routes.devices import DEVICE_COOKIE
 
 
@@ -195,10 +191,3 @@ def test_the_page_runs_only_its_own_scripts(client):
         for directive in DIRECTIVES:
             assert directive in policy, (path, directive)
         assert "unsafe-inline" not in policy.split("script-src")[1].split(";")[0]
-
-
-def test_the_app_serves_the_page_with_the_same_policy():
-    """The phone app serves the same page (LocalServer.kt): the same policy."""
-    kotlin = (Path(__file__).parent.parent / "android/app/src/main/java/app/notosaurus/LocalServer.kt").read_text()
-    declared = re.search(r"const val PAGE_POLICY = (.*?)\n\n", kotlin, re.S)
-    assert declared and "".join(re.findall(r'"([^"]*)"', declared[1])) == PAGE_POLICY

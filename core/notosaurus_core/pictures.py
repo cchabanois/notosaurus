@@ -364,7 +364,7 @@ async def card_picture(
     again from it when its engine is one a figure is drawn again from (Typst), else anew;
     nothing assumed of it. A figure's figure_kind becomes the family it was drawn in (not
     asked again)."""
-    card = await decided(s, card, asked, language, step)
+    card = await planned(s, card, asked, language, step)
     if card.figure.strip():
         # A text with gaps: its question as shown, each gap hidden (its answers are in them, its
         # back only an extra); another card's, its question and its answer
@@ -404,7 +404,7 @@ async def card_picture(
     return CardPicture(card, jpeg, "jpg")
 
 
-async def decided(
+async def planned(
     s: AIConfig, card: Card, asked: str | None = None, language: str = "English", step: Step | None = None
 ) -> Card:
     """What a card's picture should be, decided (card_picture's first step; the "✨ Image"
@@ -437,7 +437,7 @@ async def decided(
 def changed_figure(card: Card, asked: str | None) -> bool:
     """A figure's description written anew (`asked`, the "✨ Image" button's): drawn again from
     what it was drawn from, what is asked changed and the rest kept. The same, or none: drawn
-    anew (another drawing wanted); not a figure: decided anew (decided)."""
+    anew (another drawing wanted); not a figure: decided anew (planned)."""
     written = (asked or "").strip()
     return bool(card.figure.strip() and written and written != card.figure.strip())
 
@@ -487,9 +487,13 @@ async def figure_or_picture(
     return save(folder, card, made.data)
 
 
-# What is decided of a card's picture (decided, card_picture): taken into the card with it
+# What is decided of a card's picture (planned, card_picture): taken into the card with it
 # (Pictures.PICTURE_FIELDS on the phone)
 PICTURE_FIELDS = ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back")
+# What a card's picture is drawn from (its description and its family): described anew while
+# its picture was drawn, that picture is not the card's (app/lessons.py's merged_cards; the
+# phone's Pictures.DESCRIBED, the page's describedAs)
+DESCRIBED = ("figure", "figure_kind", "picture_prompt")
 # What removing a card's picture clears ("" each, picture_source None): its search words and
 # where it shows kept (Pictures.REMOVED on the phone)
 REMOVED = ("picture", "picture_prompt", "figure", "figure_kind", "picture_source")

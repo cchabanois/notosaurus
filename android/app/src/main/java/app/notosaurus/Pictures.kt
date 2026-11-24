@@ -447,7 +447,7 @@ class Pictures(
             return now.mapNotNull { card ->
                 val old = was[card.string("id")] ?: return@mapNotNull card // added since
                 val new = made[card.string("id")] ?: return@mapNotNull null // removed by the edit
-                val changed = (old.keys + new.keys).filter { old[it] != new[it] && !(it in DRAWN && stalePicture(old, new, card)) }
+                val changed = (old.keys + new.keys).filter { old[it] != new[it] && !(it in READY && stalePicture(old, new, card)) }
                 JsonObject(card.filterKeys { it !in changed || it in new } + changed.mapNotNull { k -> new[k]?.let { k to it } })
             } + after.filter { it.string("id") !in was }
         }
@@ -527,10 +527,8 @@ class Pictures(
         // where it shows kept (core's pictures.REMOVED)
         private val REMOVED = listOf("picture", "picture_prompt", "figure", "figure_kind", "picture_source")
         // What a card's picture is drawn from (its description and its family): described anew
-        // while an edit drew its picture, that picture is not the card's (app/lessons.py's DESCRIBED)
+        // while an edit drew its picture, that picture is not the card's (core's pictures.DESCRIBED)
         private val DESCRIBED = listOf("figure", "figure_kind", "picture_prompt")
-        // What a picture drawn (or found) sets on its card (app/lessons.py's DRAWN)
-        private val DRAWN = PICTURE_FIELDS + "picture"
         // A card's picture fields, told with "ready" (drawMissing) the moment it has them (core's pictures.READY)
         private val READY = PICTURE_FIELDS + "picture"
         private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py

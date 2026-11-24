@@ -686,4 +686,35 @@ class PictureRoutesTest : LocalServerTestBase() {
         val noIds = listOf(JsonObject(mapOf("front" to JsonPrimitive("x"))))
         assertEquals(listOf(card("a")), Pictures.mergedCards(noIds, listOf(card("a")), listOf(card("b")))) // the edit's
     }
+
+    @Test
+    fun aDecidedPictureCheckedAsTheComputersBeforeItReplacesAFigure() = app { client ->
+        // An empty one cleared the figure and gave the card an empty picture to draw
+        val asked = mutableListOf<JsonObject>()
+        val lesson = client.figureLesson(asked, emptyList())
+        val id = lesson.string("id")
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject
+        val drawnBefore = asked.size
+        for (decided in listOf("{}", """{"picture_prompt": ""}""", """{"picture_prompt": 3}""", """{"picture_prompt": "a", "picture_on_back": "no"}""", "[]")) {
+            for (path in listOf("draw", "found")) {
+                val refused = client.post("/api/lessons/$id/cards/${card.string("id")}/picture/$path") {
+                    page(); contentType(ContentType.Application.Json)
+                    setBody("""{"source": "commons", "id": "File:A.jpg", "decided": $decided}""")
+                }
+                assertEquals("$path $decided", HttpStatusCode.BadRequest, refused.status)
+                assertEquals("invalid", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
+            }
+        }
+        assertEquals(drawnBefore, asked.size) // the relay never asked
+        val now = client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray[0].jsonObject
+        assertEquals(card.string("figure") to card.string("picture"), now.string("figure") to now.string("picture"))
+
+        // A valid one: as the computer's model, its defaults filled
+        assertEquals(
+            buildJsonObject { put("picture_prompt", "a set square"); put("picture_search", ""); put("picture_on_back", false) },
+            decidedPicture(json.parseToJsonElement("""{"picture_prompt": "a set square", "other": 1}""")),
+        )
+        assertEquals(null, decidedPicture(JsonNull))
+        assertEquals(null, decidedPicture(null))
+    }
 }

@@ -29,6 +29,8 @@ PAGE_POLICY = (
     "connect-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; "
     "form-action 'self'; frame-ancestors 'none'"
 )
+# A card's figure (an SVG, cleaned already), even opened on its own: nothing in it may run or load
+PICTURE_POLICY = "default-src 'none'; style-src 'unsafe-inline'"
 
 
 def _endpoint(netloc: str, scheme: str) -> tuple[str, int | None] | None:
