@@ -111,6 +111,8 @@ async def extract_cards(
     says (prompts.ExtractOptions; None: the defaults); `on_card`: each card as soon as it
     is written (see _ask_provider)."""
     options = options or ExtractOptions()
+    if on_card and not options.card_pages:
+        on_card = _without_page(on_card)
     fmt = ai._box_format(s)
     images, sizes = ai._prepare(images)
     text = options.instructions + _user_text(prompt, options, len(images), sizes, fmt)
@@ -129,7 +131,9 @@ async def extract_cards(
     result = Extraction.model_validate(ai._accepted(answer).model_dump())
     plain_cards(result.cards)  # a tag the AI wrote all the same would show as it is
     result.cards = without_repeats(result.cards)  # an AI caught in a loop
-    pages_within(result.cards, len(images))  # numbered among this call's photos (lessons.completed: the lesson's)
+    # Numbered among this call's photos (lessons.completed: the lesson's); none for a client
+    # that doesn't number them so
+    pages_within(result.cards, len(images) if options.card_pages else 0)
     if result.dictation:  # a dictation alone: no front giving its answer away
         blank_dictations(result.cards)
     diagrams.normalize(result.cards, sizes, fmt)
@@ -147,6 +151,15 @@ async def extract_cards(
         read_aloud=result.read_aloud,
         speed=result.speed,
     )
+
+
+def _without_page(on_card: OnCard) -> OnCard:
+    """`on_card` given each card without its page (ExtractOptions.card_pages)."""
+
+    async def told(card: dict | None) -> None:
+        await on_card({k: v for k, v in card.items() if k != "page"} if card is not None else None)
+
+    return told
 
 
 async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card]) -> None:

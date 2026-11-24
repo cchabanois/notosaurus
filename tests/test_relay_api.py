@@ -67,8 +67,12 @@ def test_the_extract_request_is_extract_cards_options():
     options = {f.name for f in dataclasses.fields(llm.ExtractOptions)}
     assert set(api.ExtractRequest.model_fields) == {"prompt", *options}
     request = api.ExtractRequest(prompt="p", deck="D", decks=["A"], helps=True, quick=True, existing=["x"])
-    expected = llm.ExtractOptions(deck="D", decks=["A"], helps=True, page_texts=[], quick=True, existing=["x"])
+    expected = llm.ExtractOptions(
+        deck="D", decks=["A"], helps=True, page_texts=[], quick=True, existing=["x"], card_pages=False
+    )
     assert request.options() == expected
+    # The cards' pages kept for the core's callers (the computer), asked for by a client
+    assert llm.ExtractOptions().card_pages and not api.ExtractRequest(prompt="p").card_pages
 
 
 def test_answers_carry_core_results():
