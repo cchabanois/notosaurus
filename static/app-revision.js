@@ -65,11 +65,7 @@ const revisionPart = {
       const was = new Map(before.cards.map((c) => [c.key, c]));
       cards.forEach((c) => {
         const old = was.get(c.key);
-        // Its picture replaced: shown faded until then, not the lesson's drawing again, a figure
-        // drawn again from the one it had
-        if (old?.picture && !c.picture && (c.figure || c.picture_prompt)) {
-          Object.assign(c, { _replacing: this.pictureUrl(old), _notFromLesson: true, _previous: this.previousFigure(old, c) });
-        } else if (old && !old.picture && !c.picture) Object.assign(c, this.stillReplacing(old, c));
+        if (old) c._replaced = this.replacedPicture(old, c);  // its picture replaced (or still to be)
       });
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
@@ -130,11 +126,7 @@ const revisionPart = {
       if (this.lessonId !== lessonId || i === -1) return;  // another lesson opened, or the card removed, meanwhile
       const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card), instruction, quick } };
       fixed._fix = this.newFix(fixed);  // the field ready for the next one
-      // Its picture replaced: shown faded until drawn again, not the lesson's drawing again, a
-      // figure drawn again from the one it had
-      if (card.picture && !fixed.picture) {
-        Object.assign(fixed, { _replacing: this.pictureUrl(card), _notFromLesson: true, _previous: this.previousFigure(card, fixed) });
-      } else if (!card.picture && !fixed.picture) Object.assign(fixed, this.stillReplacing(card, fixed));
+      fixed._replaced = this.replacedPicture(card, fixed);  // its picture replaced (or still to be)
       this.cards.splice(i, 1, fixed);
       await this.saveNow();  // its picture is drawn from the saved lesson
       if (res.figure_problem) {
@@ -143,7 +135,7 @@ const revisionPart = {
         const drawn = this.cards[i];
         drawn._check = { ok: false, problem: res.figure_problem };
         await this.redrawFigure(drawn);
-      } else if ((fixed.figure || fixed.picture_prompt) && !fixed.picture) this.drawPictures();
+      } else if (needsPicture(fixed)) this.drawPictures();
     } catch (e) {
       if (!fix.cancelling) this.error = e.message;  // cancelled: nothing to say
       fix.busy = false;

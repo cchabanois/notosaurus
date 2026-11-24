@@ -364,7 +364,7 @@ async def card_picture(
     again from it when its engine is one a figure is drawn again from (Typst), else anew;
     nothing assumed of it. A figure's figure_kind becomes the family it was drawn in (not
     asked again)."""
-    card = await decided(s, card, asked, language, step)
+    card = await planned(s, card, asked, language, step)
     if card.figure.strip():
         # A text with gaps: its question as shown, each gap hidden (its answers are in them, its
         # back only an extra); another card's, its question and its answer
@@ -399,12 +399,19 @@ async def card_picture(
     except AppError as e:
         if e.code != "picture.needs_drawing":
             raise
-        # What was decided, for the client to look for free pictures itself or ask the user
-        raise AppError("picture.needs_drawing", 409, description=card.picture_prompt, search=card.picture_search) from e
+        # What was decided, for the client to look for free pictures itself or ask the user,
+        # and the side it shows on (decided's: the computer's "✨ Image" sets it too)
+        raise AppError(
+            "picture.needs_drawing",
+            409,
+            description=card.picture_prompt,
+            search=card.picture_search,
+            on_back=card.picture_on_back,
+        ) from e
     return CardPicture(card, jpeg, "jpg")
 
 
-async def decided(
+async def planned(
     s: AIConfig, card: Card, asked: str | None = None, language: str = "English", step: Step | None = None
 ) -> Card:
     """What a card's picture should be, decided (card_picture's first step; the "✨ Image"
@@ -437,7 +444,7 @@ async def decided(
 def changed_figure(card: Card, asked: str | None) -> bool:
     """A figure's description written anew (`asked`, the "✨ Image" button's): drawn again from
     what it was drawn from, what is asked changed and the rest kept. The same, or none: drawn
-    anew (another drawing wanted); not a figure: decided anew (decided)."""
+    anew (another drawing wanted); not a figure: decided anew (planned)."""
     written = (asked or "").strip()
     return bool(card.figure.strip() and written and written != card.figure.strip())
 
@@ -487,9 +494,13 @@ async def figure_or_picture(
     return save(folder, card, made.data)
 
 
-# What is decided of a card's picture (decided, card_picture): taken into the card with it
+# What is decided of a card's picture (planned, card_picture): taken into the card with it
 # (Pictures.PICTURE_FIELDS on the phone)
 PICTURE_FIELDS = ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back")
+# What a card's picture is drawn from (its description and its family): described anew while
+# its picture was drawn, that picture is not the card's (app/lessons.py's merged_cards; the
+# phone's Pictures.DESCRIBED, the page's describedAs)
+DESCRIBED = ("figure", "figure_kind", "picture_prompt")
 # What removing a card's picture clears ("" each, picture_source None): its search words and
 # where it shows kept (Pictures.REMOVED on the phone)
 REMOVED = ("picture", "picture_prompt", "figure", "figure_kind", "picture_source")
@@ -677,6 +688,14 @@ class Drawn(NamedTuple):
 READY = {"picture", *PICTURE_FIELDS}
 
 
+def needs_picture(card: Card) -> bool:
+    """A card whose picture is still to be made: it says what to show (a picture_prompt or a
+    figure) and has none. A sentence with gaps' too: its note type shows it (cloze v3), on its
+    question or its answer. The one rule of the computer, the phone (Pictures.needsPicture) and
+    the page (needsPicture): core/shared-cases.json's needs_picture."""
+    return bool((card.picture_prompt.strip() or card.figure.strip()) and not card.picture)
+
+
 async def draw_all(
     s: AIConfig,
     folder: Path,
@@ -701,8 +720,7 @@ async def draw_all(
     looked for as any other. `previous`: by card
     id, the figure a correction replaced, where it came from (its sources, kept_sources) and
     its family: drawn again from it, what is asked changed and the rest kept."""
-    # A sentence with gaps' too: its note type shows it (cloze v3), on its question or its answer
-    todo = [c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture]
+    todo = [c for c in cards if needs_picture(c)]
     if photos:
         by_page = photos if isinstance(photos, Mapping) else dict(enumerate(photos, 1))
         await _from_the_lesson(s, folder, [c for c in todo if c.id not in not_from_lesson], by_page, step)

@@ -452,7 +452,8 @@ class CardPictureRequest(BaseModel):
     draw: bool = Field(
         default=True,
         description="A picture no free one fits drawn by the image model (it costs: the user said yes). False: "
-        "409 picture.needs_drawing instead, its params what was decided (description, search).",
+        "409 picture.needs_drawing instead, its params what was decided (description, search, on_back: the "
+        "side it shows on).",
     )
     problem: str = Field(
         default="",

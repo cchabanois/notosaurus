@@ -4,8 +4,8 @@
 
 // A card's picture fields, as the server tells them (core's pictures.READY): its answer to a
 // card's picture, a "ready" step, a lesson's cards (takePicture)
-const PICTURE_FIELDS = ["picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"];
-// What a card's picture is drawn from: its description and its family (app/lessons.py's DESCRIBED)
+const READY = ["picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"];
+// What a card's picture is drawn from: its description and its family (core's pictures.DESCRIBED)
 const DESCRIBED = ["figure", "figure_kind", "picture_prompt"];
 // The free pictures' sources, as their credit line says them
 const SOURCE_NAMES = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
@@ -19,9 +19,16 @@ function describedAs(card) {
   return JSON.stringify(DESCRIBED.map((field) => card[field] ?? ""));
 }
 
+// A card whose picture is still to be made: it says what to show (a picture_prompt or a
+// figure) and has none; a sentence with gaps' too (the computer's pictures.needs_picture, the
+// phone's Pictures.needsPicture: core/shared-cases.json's needs_picture)
+function needsPicture(card) {
+  return Boolean((card.picture_prompt?.trim() || card.figure?.trim()) && !card.picture);
+}
+
 // A card's picture fields as they are, each as JSON (to tell those changed since: takeDrawn)
 function pictureFieldsOf(card) {
-  return Object.fromEntries(PICTURE_FIELDS.map((field) => [field, JSON.stringify(card[field] ?? null)]));
+  return Object.fromEntries(READY.map((field) => [field, JSON.stringify(card[field] ?? null)]));
 }
 
 // `text` cut to `max` characters, "…" last when it was longer, never half a character (as the
@@ -68,7 +75,6 @@ const picturesPart = {
       );
       if (!res) return null;  // cancelled: the card as it was
       this.takePicture(card, res.card);
-      if (card.picture) card._previous = null;  // the figure a correction replaced: no longer drawn from
       return res;
     } catch (e) {
       this.error = e.message;
@@ -80,11 +86,13 @@ const picturesPart = {
   },
 
   // A card's picture fields taken from the server's (`from`): one an older server leaves out
-  // kept as the card has it; no picture_source said, where it comes from isn't known
+  // kept as the card has it; no picture_source said, where it comes from isn't known. A
+  // picture again: what a correction replaced done with (replacedPicture)
   takePicture(card, from) {
-    for (const field of PICTURE_FIELDS) card[field] = from[field] ?? (field === "picture_source" ? null : card[field]);
+    for (const field of READY) card[field] = from[field] ?? (field === "picture_source" ? null : card[field]);
     card.figure_kind ??= "";
     card.picture_search ??= "";
+    if (card.picture) card._replaced = null;
   },
 
   // "✨ Image", the cheapest first: the AI decides from what was written (any language; none:
@@ -98,7 +106,8 @@ const picturesPart = {
   async makePicture(card) {
     this.forgetMade(card);
     const had = card.picture_source?.page ?? "";  // "Change": not the one it has
-    const previous = card._previous && !card.picture ? { previous: card._previous } : {};
+    const replaced = this.pictureReplaced(card);
+    const previous = replaced?.previous ? { previous: replaced.previous } : {};
     const res = await this.pictureAction(card, {
       path: "/make",
       method: "POST",
@@ -184,7 +193,7 @@ const picturesPart = {
     const problem = card._check?.problem ?? "";
     const careful = Boolean(card._triedQuick) && !this.off("ai.careful");
     this.forgetMade(card);  // the figure kept: no picture decided in its place
-    Object.assign(card, { _check: null, _replacing: this.pictureUrl(card) });
+    Object.assign(card, { _check: null, _replaced: { notFromLesson: false, previous: null, ...card._replaced, url: this.pictureUrl(card) } });
     try {
       const res = await this.pictureAction(card, {
         path: "/draw",
@@ -194,7 +203,7 @@ const picturesPart = {
       });
       if (res) card._triedQuick = true;  // a careful one too: once thinking was paid for, never less
     } finally {
-      card._replacing = "";
+      this.replacedShown(card);
     }
   },
 
@@ -311,8 +320,11 @@ const picturesPart = {
     if (card.picture) card._found = null;
   },
 
-  removePicture(card) {
-    return this.pictureAction(card, { method: "DELETE" });
+  // Removed by the user: none to replace any more, the next one drawn as any (the lesson's too)
+  async removePicture(card) {
+    const res = await this.pictureAction(card, { method: "DELETE" });
+    if (res) card._replaced = null;
+    return res;
   },
 
   // The open lesson's pictures are being drawn (not another's, left while they were)
@@ -332,7 +344,7 @@ const picturesPart = {
   // One drawing at a time for a lesson (two drew the same cards, each paid): asked while one
   // runs, done again once it ends (a card a correction added meanwhile)
   async drawPictures(draw = false) {
-    if (this.readOnly() || !this.cards.some((c) => (c.picture_prompt || c.figure) && !c.picture)) return;
+    if (this.readOnly() || !this.cards.some(needsPicture)) return;
     const lessonId = this.lessonId;
     if (this.drawingLessons.includes(lessonId)) {
       this.drawLater[lessonId] = Boolean(this.drawLater[lessonId] || draw);
@@ -355,8 +367,9 @@ const picturesPart = {
         // drawn again from the one it had (previousFigure)
         body: JSON.stringify({
           draw,
-          not_from_lesson: this.cards.filter((c) => c._notFromLesson && !c.picture).map((c) => c.id),
-          previous: Object.fromEntries(this.cards.filter((c) => c._previous && !c.picture).map((c) => [c.id, c._previous])),
+          not_from_lesson: this.cards.filter((c) => this.pictureReplaced(c)?.notFromLesson).map((c) => c.id),
+          previous: Object.fromEntries(this.cards.filter((c) => this.pictureReplaced(c)?.previous)
+            .map((c) => [c.id, c._replaced.previous])),
         }),
       }));
       // Cancelled (nothing drawn: the cards as they were), or another lesson opened meanwhile
@@ -365,10 +378,7 @@ const picturesPart = {
       const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
       this.cards.forEach((c) => {
         const made = drawn.get(c.id);
-        if (!c.picture && made?.picture && drawnFrom.get(c.id) === describedAs(c)) {
-          this.takeDrawn(c, made, began.get(c.id));
-          Object.assign(c, { _replacing: "", _previous: null });
-        }
+        if (!c.picture && made?.picture && drawnFrom.get(c.id) === describedAs(c)) this.takeDrawn(c, made, began.get(c.id));
       });
       this.toDraw = res.to_draw ?? [];
       if (res.failures) {
@@ -382,7 +392,10 @@ const picturesPart = {
       delete this.drawLater[lessonId];
       if (this.lessonId === lessonId) {
         // (the one replaced shown until then; one drawn again on its own, by redrawFigure, its own)
-        this.cards.forEach((c) => Object.assign(c, { _step: "", _problem: "", _first: "", ...(c._drawing ? {} : { _replacing: "" }) }));
+        this.cards.forEach((c) => {
+          Object.assign(c, { _step: "", _problem: "", _first: "" });
+          if (!c._drawing) this.replacedShown(c);
+        });
         if (later !== undefined) this.drawPictures(later);
       }
     }
@@ -392,18 +405,41 @@ const picturesPart = {
   // changed since the drawing began (`began`: as they were then; where it shows, switched on
   // its page meanwhile), kept as they are now: the drawing's are the card's as it began
   takeDrawn(card, from, began) {
-    const changed = PICTURE_FIELDS.filter((field) => began && JSON.stringify(card[field] ?? null) !== began[field]);
+    const changed = READY.filter((field) => began && JSON.stringify(card[field] ?? null) !== began[field]);
     const own = Object.fromEntries(changed.map((field) => [field, card[field]]));
     this.takePicture(card, from);
     Object.assign(card, own);
   },
 
-  // A card corrected again before the picture a correction replaced was drawn again (`old`, the
-  // card as it was, still waiting for it): still not the lesson's drawing again, its figure still
-  // drawn from the one it had; {} when it waited for none
-  stillReplacing(old, card) {
-    if (!old._notFromLesson && !old._previous) return {};
-    return { _replacing: old._replacing ?? "", _notFromLesson: Boolean(old._notFromLesson), _previous: card.figure ? old._previous ?? null : null };
+  // What a correction leaves of a card's picture it replaced (`old`, the card as it was; `card`,
+  // as corrected), its card._replaced until it has a picture again (or the user removes it):
+  // its old one shown faded while it is drawn (`url`), not the lesson's drawing again
+  // (`notFromLesson`), a figure drawn again from the one it had (`previous`: previousFigure).
+  // Corrected again before then (`old` still waiting for it): still not the lesson's, its figure
+  // still drawn from the one it had. Null when it replaced none (a picture removed, nothing to
+  // draw in its place, is no picture replaced)
+  replacedPicture(old, card) {
+    if (card.picture) return null;
+    if (old.picture) {
+      if (!card.figure && !card.picture_prompt) return null;
+      return { url: this.pictureUrl(old), notFromLesson: true, previous: this.previousFigure(old, card) };
+    }
+    const still = this.pictureReplaced(old);
+    if (!still?.notFromLesson && !still?.previous) return null;
+    return { url: still.url, notFromLesson: still.notFromLesson, previous: card.figure ? still.previous : null };
+  },
+
+  // What a correction replaced of a card still waiting for its picture (replacedPicture), or
+  // null: none once it has one
+  pictureReplaced(card) {
+    return (!card.picture && card._replaced) || null;
+  },
+
+  // The picture a card's new one replaces no longer shown (its drawing over): what else it says
+  // kept while the card still waits for one
+  replacedShown(card) {
+    const replaced = this.pictureReplaced(card);
+    card._replaced = replaced && (replaced.notFromLesson || replaced.previous) ? { ...replaced, url: "" } : null;
   },
 
   // The figure a correction replaced on a card (`old`, the card as it was), to draw the new one
@@ -426,7 +462,6 @@ const picturesPart = {
       if (step === "ready") {  // its picture, shown at once: not when the others are done
         if (!card.picture && drawnFrom.get(card.id) === describedAs(card)) {
           this.takeDrawn(card, item, began.get(card.id));
-          card._previous = null;
         }
         Object.assign(card, { _step: "", _problem: "", _first: "" });
       } else Object.assign(card, { _step: step, _problem: item.problem ?? "", _first: item.first ?? "" });
@@ -462,7 +497,7 @@ const picturesPart = {
   // The figure found wrong, shown faded while it's drawn again (never kept): the one being
   // replaced (redrawFigure), or a first one the server sent
   firstFigureUrl(card) {
-    if (card._replacing) return card._replacing;
+    if (card._replaced?.url) return card._replaced.url;
     return card._first ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card._first)}` : "";
   },
 };

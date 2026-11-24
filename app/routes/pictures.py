@@ -14,6 +14,7 @@ from notosaurus_core.relay_api import STREAM_TYPE
 from .. import access, i18n, lessons, settings, usage
 from ..errors import AppError
 from ..models import DecidedPicture, DrawPictures, FoundPicture, Lesson, PictureRequest, PictureSearch, RedrawRequest
+from ..origins import PICTURE_POLICY
 from .common import IMAGE_TYPES, Step, page_lang, read_photo, streamed, wants_stream
 
 router = APIRouter()
@@ -88,7 +89,7 @@ async def _edit_card(id: str, card_id: str, change) -> dict:
 async def make_picture(
     id: str, card_id: str, req: PictureRequest, lang: str = Depends(page_lang), accept: str | None = Header(None)
 ):
-    """ "✨ Image", its first step (pictures.decided): from what was written for it (any
+    """ "✨ Image", its first step (pictures.planned): from what was written for it (any
     language; none: the card), the AI decides a figure, then drawn (cheap), or a picture,
     its description and search words set: the page then looks for free ones (search) and
     asks the user before the image model draws one (draw). A card with a figure the AI turns
@@ -112,7 +113,7 @@ async def make_picture(
                 # when its description was written anew: read before it is decided anew
                 replaced = (req.previous.source, req.previous.kind) if req.previous is not None else None
                 redraw = pictures.redraw_from(folder, card, replaced, req.subject)
-                decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang), step)
+                decided = await pictures.planned(s, card, req.subject, i18n.language_name(lang), step)
                 if card.figure.strip() and not decided.figure.strip():
                     found["decided"] = DecidedPicture(
                         picture_prompt=decided.picture_prompt,
@@ -350,10 +351,6 @@ async def get_picture(id: str, name: str) -> FileResponse:
     if path is None or not path.is_file():
         raise AppError("photo.not_found", 404)
     if path.suffix == ".svg":
-        # Cleaned already; and even opened on its own, nothing in it may run or load
-        headers = {
-            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'",
-            "X-Content-Type-Options": "nosniff",
-        }
+        headers = {"Content-Security-Policy": PICTURE_POLICY, "X-Content-Type-Options": "nosniff"}
         return FileResponse(path, media_type="image/svg+xml", headers=headers)
     return FileResponse(path, media_type="image/jpeg")

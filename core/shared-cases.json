@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's photos (a number n: its pages 1 to n; a list: the numbers of its pages there, one missing leaving a gap): their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by the lesson's photos (as fix_photos'): their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's photos (as fix_photos'): each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level and decks_for_ai: Python and Kotlin only (decks_for_ai also the page's decksForChild, which offers the decks whole: what the AI sees of them compared). next_page: the number of a page added to a lesson (lessons.next_page, Lessons.nextPage), by its pages' files (their numbers) and the lesson (its cards' pages and masks, its frames, its pages' texts): after the highest used anywhere; Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only. merged_card: a card an edit changed (before → after: a picture drawn, found, the user's, removed) merged into the card as saved now (app/lessons.py's merged_cards, Pictures.mergedCards): the fields the edit changed, but none of a picture's it drew from a description changed meanwhile, nor for a card given another picture meanwhile (stale_picture); Python and Kotlin only. redraw_from: which earlier figure a card's figure is drawn again from (pictures.redraw_from, Pictures.redrawFrom), by the card (its figure, figure_kind and picture_source), the figure a correction replaced ({source, kind}), what was written for it (asked), whether it is drawn again as it is (again) and the files in the lesson's images (each holding its own name): its sources' contents, family and engine, null when drawn anew; Python and Kotlin only. voice_for: the voice for a language (tts.pick_voice, Speech.pick) among one of voice_lists (edge-tts's, the relay's, none) and those chosen per locale; Python and Kotlin only.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's photos (a number n: its pages 1 to n; a list: the numbers of its pages there, one missing leaving a gap): their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by the lesson's photos (as fix_photos'): their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's photos (as fix_photos'): each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level and decks_for_ai: Python and Kotlin only (decks_for_ai also the page's decksForChild, which offers the decks whole: what the AI sees of them compared). next_page: the number of a page added to a lesson (lessons.next_page, Lessons.nextPage), by its pages' files (their numbers) and the lesson (its cards' pages and masks, its frames, its pages' texts): after the highest used anywhere; Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only. merged_card: a card an edit changed (before → after: a picture drawn, found, the user's, removed) merged into the card as saved now (app/lessons.py's merged_cards, Pictures.mergedCards): the fields the edit changed, but none of a picture's it drew from a description changed meanwhile, nor for a card given another picture meanwhile (stale_picture); Python and Kotlin only. redraw_from: which earlier figure a card's figure is drawn again from (pictures.redraw_from, Pictures.redrawFrom), by the card (its figure, figure_kind and picture_source), the figure a correction replaced ({source, kind}), what was written for it (asked), whether it is drawn again as it is (again) and the files in the lesson's images (each holding its own name): its sources' contents, family and engine, null when drawn anew; Python and Kotlin only. voice_for: the voice for a language (tts.pick_voice, Speech.pick) among one of voice_lists (edge-tts's, the relay's, none) and those chosen per locale; Python and Kotlin only. needs_picture: a card whose picture is still to be made (pictures.needs_picture, Pictures.needsPicture, the page's needsPicture): it says what to show (a picture_prompt or a figure, not blank) and has none; a sentence with gaps too.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -4286,6 +4286,80 @@
    "voices": "relay",
    "chosen": {},
    "out": ""
+  }
+ ],
+ "needs_picture": [
+  {
+   "name": "a picture described, none yet",
+   "front": "Le chat ?",
+   "back": "cat",
+   "picture_prompt": "a cat",
+   "figure": "",
+   "picture": "",
+   "out": true
+  },
+  {
+   "name": "a figure described, none yet",
+   "front": "Ce triangle ?",
+   "back": "rectangle",
+   "picture_prompt": "",
+   "figure": "Un triangle rectangle ABC.",
+   "picture": "",
+   "out": true
+  },
+  {
+   "name": "a sentence with gaps, its picture described",
+   "front": "Le {{c1::chat}} dort.",
+   "back": "",
+   "picture_prompt": "a sleeping cat",
+   "figure": "",
+   "picture": "",
+   "out": true
+  },
+  {
+   "name": "a sentence with gaps, its figure described",
+   "front": "Un angle {{c1::droit}} mesure {{c2::90°}}.",
+   "back": "",
+   "picture_prompt": "",
+   "figure": "Un angle droit.",
+   "picture": "",
+   "out": true
+  },
+  {
+   "name": "its picture there",
+   "front": "Le chat ?",
+   "back": "cat",
+   "picture_prompt": "a cat",
+   "figure": "",
+   "picture": "picture-c1-ab12cd34.jpg",
+   "out": false
+  },
+  {
+   "name": "a sentence with gaps, its picture there",
+   "front": "Le {{c1::chat}} dort.",
+   "back": "",
+   "picture_prompt": "a sleeping cat",
+   "figure": "",
+   "picture": "picture-c1-ab12cd34.jpg",
+   "out": false
+  },
+  {
+   "name": "nothing described",
+   "front": "Le chat ?",
+   "back": "cat",
+   "picture_prompt": "",
+   "figure": "",
+   "picture": "",
+   "out": false
+  },
+  {
+   "name": "blank descriptions",
+   "front": "Le chat ?",
+   "back": "cat",
+   "picture_prompt": "  ",
+   "figure": "\n",
+   "picture": "",
+   "out": false
   }
  ]
 }

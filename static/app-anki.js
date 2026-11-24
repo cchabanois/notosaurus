@@ -182,7 +182,7 @@ const ankiPart = {
   // Pictures being drawn or changed: the cards sent must have them. The wait said on the
   // button meanwhile, with how many are there ("2 / 5 ready"): a figure can take a minute
   async picturesDone() {
-    const waited = () => this.cards.filter((c) => c._drawing || ((c.figure || c.picture_prompt) && !c.picture));
+    const waited = () => this.cards.filter((c) => c._drawing || needsPicture(c));
     const total = waited().length;
     while (this.drawingHere() || this.pictureJobs) {
       if (total) this.sendStep = t("app.actions.waitingPictures", { done: total - waited().length, total });

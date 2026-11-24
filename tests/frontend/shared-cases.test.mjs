@@ -43,6 +43,14 @@ test("a card's sound: what it says, as tts.spoken", async () => {
   }
 });
 
+test("a card whose picture is to be made, as pictures.needs_picture", async () => {
+  const page = await loadScripts("app.js");
+  for (const c of cases.needs_picture) {
+    const card = { front: c.front, back: c.back, picture_prompt: c.picture_prompt, figure: c.figure, picture: c.picture };
+    assert.equal(page.run(`needsPicture(${JSON.stringify(card)})`), c.out, c.name);
+  }
+});
+
 test("two deck levels the same, as children.same_level", async () => {
   const page = await loadScripts("app.js");
   for (const c of cases.same_level) {

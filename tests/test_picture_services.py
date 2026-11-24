@@ -567,3 +567,18 @@ def test_a_lesson_drawing_cut_out_off_the_loop(monkeypatch):
     photo = llm.Image(_page_with_a_drawing(), "image/jpeg")
     found = run(pictures.lesson_drawings(AIConfig(llm="gemini", gemini_api_key="k"), [photo], cards))
     assert found == {0: b"jpeg"} and len(threads) == 2 and threads[1] is not threads[0]
+
+
+def test_a_picture_to_draw_says_its_side(monkeypatch, tmp_path):
+    """A picture nothing free fits, not drawn (draw False): its 409 says what was decided,
+    the side it shows on too (on_back), for the phone's "✨ Image" to set it as the computer's."""
+    monkeypatch.setattr(files, "_cache_root", lambda: tmp_path / "cache")
+
+    async def plan(s, front, back, asked, language):
+        return PicturePlan(kind="picture", description="a red apple", search="apple", on_back=True)
+
+    monkeypatch.setattr(llm, "plan_picture", plan)
+    with pytest.raises(pictures.AppError) as raised:
+        run(pictures.card_picture(AIConfig(), Card(front="What fruit?", back="an apple"), "", find=False, draw=False))
+    assert raised.value.code == "picture.needs_drawing" and raised.value.status == 409
+    assert raised.value.params == {"description": "a red apple", "search": "apple", "on_back": True}
