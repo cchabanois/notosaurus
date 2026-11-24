@@ -1142,6 +1142,7 @@
       "overloaded": "{provider} is overloaded right now ({status}), try again in a minute.",
       "api_error": "{provider} API error ({status}): {detail}",
       "unreachable": "Can't reach the {provider} API.",
+      "interrupted": "The connection to {provider} dropped while it was answering: try again.",
       "empty_answer": "{provider} returned nothing (images refused or unreadable?).",
       "invalid_answer": "The model didn't return valid cards, try again.",
       "truncated": "Answer cut off: too many cards at once, try with fewer pages.",

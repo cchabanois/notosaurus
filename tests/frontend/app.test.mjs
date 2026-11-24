@@ -650,9 +650,12 @@ test("a picture's source: said in its panel, kept when the pictures come", async
   assert.equal(c.pictureSourceText({ picture_source: { source: "drawn", model: "gpt-image-2" } }), "Drawn by the AI (gpt-image-2)");
   assert.equal(c.pictureSourceText({ picture_source: { source: "photo" } }), "Your photo");
   assert.equal(c.pictureSourceText({}), "");
-  // Its page a link only when it is an https: address
+  // Its page a link only when it is an http: or https: address (an Openverse picture's may be http:)
   assert.equal(c.pictureSourcePage(c.cards[0]), "https://commons.wikimedia.org/wiki/File:A.jpg");
-  for (const page of ["javascript:alert(1)", " javascript:alert(1)", "data:text/html,x", "http://example.org", ""]) {
+  for (const page of ["http://www.flickr.com/photos/x/1", "HTTP://example.org"]) {
+    assert.equal(c.pictureSourcePage({ picture_source: { source: "openverse", page } }), page);
+  }
+  for (const page of ["javascript:alert(1)", " javascript:alert(1)", "data:text/html,x", "file:///etc/passwd", "ftp://example.org", "//example.org", ""]) {
     assert.equal(c.pictureSourcePage({ picture_source: { source: "commons", page } }), "", page);
   }
   assert.equal(c.pictureSourcePage({}), "");

@@ -344,7 +344,7 @@ def test_search_words_with_gemini(monkeypatch):
 class Scripted(FakeGemini):
     """A Gemini whose models each do as told (`by_model`): "stall" (never answers),
     "unreachable" (no connection), an HTTP status (an error still there after the SDK's
-    retries), or answer (by default)."""
+    retries), an exception (raised as the SDK lets it through), or answer (by default)."""
 
     def __init__(self, **by_model):
         super().__init__()
@@ -357,6 +357,8 @@ class Scripted(FakeGemini):
             await asyncio.sleep(3600)
         if what == "unreachable":
             raise httpx.ConnectError("[Errno 111] Connection refused")
+        if isinstance(what, Exception):
+            raise what
         if isinstance(what, int):
             error = errors.ClientError if what < 500 else errors.ServerError
             message = "API key not valid" if model == "bad-key" else "no"
@@ -424,6 +426,42 @@ def test_gemini_not_reached_said_as_such():
     fake = Scripted(a="unreachable", b="unreachable")
     assert _failure(gemini._fallback(_request(fake), ["a", "b"])) == ("llm.unreachable", {"provider": "Gemini"})
     assert fake.models == ["a", "b"]
+
+
+def test_gemini_never_reached_the_next_model_tried():
+    """No connection made (refused, its name unknown, too slow to connect, the credentials
+    not refreshed): nothing was sent, nothing billed: the fallback model asked."""
+    import aiohttp
+    from google.auth.exceptions import TransportError
+
+    key = aiohttp.client_reqrep.ConnectionKey("x", 443, True, True, None, None, None)
+    for error in (
+        httpx.ConnectError("Name or service not known"),
+        httpx.ConnectTimeout("too slow"),
+        aiohttp.ClientConnectorError(key, OSError(111, "refused")),
+        TransportError("credentials not refreshed"),
+    ):
+        fake = Scripted(a=error)
+        assert run(gemini._fallback(_request(fake), ["a", "b"])).text == SVG
+        assert fake.models == ["a", "b"], error
+
+
+def test_a_connection_lost_mid_answer_not_asked_again():
+    """A connection lost once made (a read failing, the answer's body cut, the server gone):
+    the photos may have been taken and the answer begun, billed: no other model asked (it
+    would pay for them again), the page told the connection dropped."""
+    import aiohttp
+
+    for error in (
+        httpx.ReadError("connection reset"),
+        httpx.RemoteProtocolError("peer closed connection without sending complete message body"),
+        httpx.ReadTimeout("read timed out"),
+        aiohttp.ClientPayloadError("Response payload is not completed"),
+        aiohttp.ServerDisconnectedError(),
+    ):
+        fake = Scripted(a=error)
+        assert _failure(gemini._fallback(_request(fake), ["a", "b"])) == ("llm.interrupted", {"provider": "Gemini"})
+        assert fake.models == ["a"], error
 
 
 def test_a_cancelled_call_stays_cancelled():

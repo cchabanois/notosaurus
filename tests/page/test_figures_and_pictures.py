@@ -86,7 +86,9 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     real, go_on = routes.pictures.draw_all, threading.Event()
     first = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"></svg>'
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None):
+    async def draw_all(
+        s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None, saved=None
+    ):
         step({"card": cards[0].id, "step": "drawing"})
         step({"card": cards[0].id, "step": "redrawing", "problem": "L'angle est du mauvais côté.", "first": first})
         await asyncio.to_thread(go_on.wait, 30)
@@ -340,9 +342,9 @@ def test_a_figure_corrected_while_others_are_drawn_redrawn_as_corrected(page, mo
 
 
 def test_a_figure_corrected_while_drawn_not_given_the_drawing_of_what_it_said(page, monkeypatch):
-    """A card corrected again while the figure its first correction asked for is being drawn:
-    that drawing (of what it said before) is set aside, by the page and by the saved lesson, and
-    the card drawn again as it says now, still from the figure it had."""
+    """A card corrected again while the figure its first correction asked for is to be drawn:
+    what it said before never drawn (the saved card read again when its turn comes: nothing
+    paid for a drawing set aside), the card drawn as it says now, still from the figure it had."""
     import asyncio
 
     from app.routes import pictures as routes
@@ -392,8 +394,9 @@ def test_a_figure_corrected_while_drawn_not_given_the_drawing_of_what_it_said(pa
     previous = {was["id"]: {"source": was["source"], "kind": "geometry"}}
     assert asked[0]["previous"] == asked[1]["previous"] == previous  # from the figure it had, both times
     page.wait_for_function(f"() => !{APP}.drawingLessons.length && {APP}.cards[0].picture")
-    assert [figure for figure, _ in told] == [first, corrected]
-    assert [sources for _, sources in told] == [["#circle()"], ["#circle()"]]
+    assert first != corrected
+    assert [figure for figure, _ in told] == [corrected]  # the first correction's never drawn
+    assert [sources for _, sources in told] == [["#circle()"]]
     page.wait_for_function(f"() => {APP}.saveState === 'saved' && !{APP}.saveTimer")
     saved = lesson(page, summary["id"])["cards"][0]
     assert (saved["figure"], saved["picture"]) == (corrected, page.evaluate(f"() => {APP}.cards[0].picture"))
@@ -486,7 +489,9 @@ def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
 
     real, go_on = routes.pictures.draw_all, threading.Event()
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None):
+    async def draw_all(
+        s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None, saved=None
+    ):
         folder.mkdir(parents=True, exist_ok=True)
         name = f"picture-{cards[0].id}-0123abcd.svg"
         (folder / name).write_text(
@@ -568,7 +573,9 @@ def test_a_figures_credits_link_its_projects(page, monkeypatch):
         source="drawn", model="gemini-x", engine="typst", made_with=["Typst 0.15.0", "lilaq 0.6.0"]
     )
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None):
+    async def draw_all(
+        s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None, saved=None
+    ):
         def told(said):  # each card's picture as Typst drew it
             step({**said, "picture_source": typst.model_dump()} if said["step"] == "ready" else said)
 

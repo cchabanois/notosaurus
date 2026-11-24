@@ -1142,6 +1142,7 @@
       "overloaded": "{provider} ist gerade überlastet ({status}), versuch es in einer Minute noch einmal.",
       "api_error": "{provider}-API-Fehler ({status}): {detail}",
       "unreachable": "Die {provider}-API ist nicht erreichbar.",
+      "interrupted": "Die Verbindung zu {provider} ist während der Antwort abgebrochen: versuch es noch einmal.",
       "empty_answer": "{provider} hat nichts zurückgegeben (Bilder abgelehnt oder unlesbar?).",
       "invalid_answer": "Das Modell hat keine gültigen Karten geliefert, versuch es noch einmal.",
       "truncated": "Antwort abgeschnitten: zu viele Karten auf einmal, versuch es mit weniger Seiten.",

@@ -292,9 +292,11 @@ class GenerationRoutesTest : LocalServerTestBase() {
         val drawn = client.post("/api/lessons/$id/pictures") {
             page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""")
         }.json().jsonObject
-        // One call for the lesson's drawings (the pictures' cards, the photo), then the others one by one
-        assertEquals("lesson-drawings 2 true", asked.first())
-        assertEquals(setOf("card-picture le chien", "card-picture Ce triangle ?"), asked.drop(1).toSet())
+        // One call for the lesson's drawings (the pictures' cards, the photo), the figure drawn meanwhile;
+        // then the dog's, not found there
+        assertEquals("lesson-drawings 2 true", asked.single { it.startsWith("lesson-drawings") })
+        assertEquals(setOf("card-picture le chien", "card-picture Ce triangle ?"), asked.filter { it.startsWith("card-picture") }.toSet())
+        assertTrue(asked.indexOf("card-picture le chien") > asked.indexOf("lesson-drawings 2 true"))
         val cat = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.first().jsonObject
         assertEquals("lesson", cat["picture_source"]!!.jsonObject.string("source"))
         assertEquals("the cat, cut out", client.get("/api/lessons/$id/pictures/${cat.string("picture")}") { page() }.bodyAsText())
@@ -593,21 +595,77 @@ class GenerationRoutesTest : LocalServerTestBase() {
         val drawn = client.post("/api/lessons/$id/pictures") {
             page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""")
         }.json().jsonObject
-        // The known pages' neighbourhoods in one call; the unknown one's on every page, ten at a time
-        assertEquals(
-            listOf(
-                "lesson-drawings [1, 2, 3, 10, 11, 12] [le chat, l'oiseau]",
-                "lesson-drawings [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] [le chien]",
-                "lesson-drawings [11, 12] [le chien]",
-            ),
-            asked,
-        )
+        // The known pages' neighbourhoods in one call, the unknown one asked there too: found on page
+        // 12, the pages not sent yet (4 to 9) never sent; no page sent twice
+        assertEquals(listOf("lesson-drawings [1, 2, 3, 10, 11, 12] [le chat, le chien, l'oiseau]"), asked)
         val cards = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
         assertEquals(listOf("le chat", "le chien", "l'oiseau"), cards.map { it.string("front") })
         for (card in cards) {
             assertEquals("lesson", card["picture_source"]!!.jsonObject.string("source"))
             assertEquals("${card.string("front")}, cut out", client.get("/api/lessons/$id/pictures/${card.string("picture")}") { page() }.bodyAsText())
         }
+    }
+
+    @Test
+    fun aFigureDrawnWhileTheLessonsDrawingsAreLookedAt() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "le chat", "back": "the cat", "picture_prompt": "a cat"},
+            {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"}]}, "turns": [0], "usage": {"credits": 1, "credits_left": 99}}""")
+        val id = client.submitFormWithBinaryData("/api/extract", pageForm(1..1)) { page() }.json().jsonObject.string("id")
+        val figureAsked = java.util.concurrent.CountDownLatch(1)
+        val asked: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.url.encodedPath) {
+                "/v1/lesson-drawings" -> {
+                    // Held until the figure is asked for: it never comes from the lesson's pages
+                    asked += "lesson-drawings " + figureAsked.await(5, java.util.concurrent.TimeUnit.SECONDS)
+                    MockResponse.Builder().body("""{"drawings": [], "usage": {"credits": 1, "credits_left": 98}}""").build()
+                }
+                "/v1/card-picture" -> {
+                    val front = json.parseToJsonElement(request.body!!.utf8()).jsonObject["card"]!!.jsonObject.string("front")
+                    asked += "card-picture $front"
+                    if (front == "Ce triangle ?") figureAsked.countDown()
+                    cardPicture(request)
+                }
+                else -> MockResponse.Builder().code(404).build()
+            }
+        }
+        client.post("/api/lessons/$id/pictures") { page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""") }
+        assertEquals(listOf("card-picture Ce triangle ?", "lesson-drawings true", "card-picture le chat"), asked)
+    }
+
+    @Test
+    fun aCardCorrectedBeforeItsTurnNotDrawn() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "le chat", "back": "the cat", "picture_prompt": "a cat"},
+            {"front": "le chien", "back": "the dog", "picture_prompt": "a dog"}]}, "turns": [0], "usage": {"credits": 1, "credits_left": 99}}""")
+        val id = client.submitFormWithBinaryData("/api/extract", pageForm(1..1)) { page() }.json().jsonObject.string("id")
+        val asked: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.url.encodedPath) {
+                "/v1/lesson-drawings" -> {
+                    // The page's correction of the dog, saved while the lesson's drawings are looked at
+                    val cards = local.lessons.get(id)!!.cards()
+                    cards[1] = cards[1].with("picture_prompt" to JsonPrimitive("a black dog"))
+                    local.lessons.update(id, buildJsonObject { put("cards", JsonArray(cards)) })
+                    asked += "lesson-drawings"
+                    MockResponse.Builder().body("""{"drawings": [], "usage": {"credits": 1, "credits_left": 98}}""").build()
+                }
+                "/v1/card-picture" -> {
+                    asked += "card-picture " + json.parseToJsonElement(request.body!!.utf8()).jsonObject["card"]!!.jsonObject.string("front")
+                    cardPicture(request)
+                }
+                else -> MockResponse.Builder().code(404).build()
+            }
+        }
+        val drawn = client.post("/api/lessons/$id/pictures") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""")
+        }.json().jsonObject
+        // The dog not drawn from what it said before: nothing paid for a picture set aside (stalePicture)
+        assertEquals(listOf("lesson-drawings", "card-picture le chat"), asked)
+        val dog = drawn["lesson"]!!.jsonObject.cards()[1]
+        assertEquals("a black dog" to "", dog.string("picture_prompt") to dog.string("picture"))
+        assertEquals(0, drawn["failures"]!!.jsonPrimitive.int)
     }
 
     @Test
@@ -647,8 +705,8 @@ class GenerationRoutesTest : LocalServerTestBase() {
             page(); contentType(ContentType.Application.Json); setBody("""{"draw": true, "not_from_lesson": ["$cat"]}""")
         }.json().jsonObject
         // The lesson looked at for the dog only; the cat's picture looked for as any other
-        assertEquals("lesson-drawings 1 true", asked.first())
-        assertEquals(setOf("card-picture le chat", "card-picture Ce triangle ?"), asked.drop(1).toSet())
+        assertEquals("lesson-drawings 1 true", asked.single { it.startsWith("lesson-drawings") })
+        assertEquals(setOf("card-picture le chat", "card-picture Ce triangle ?"), asked.filter { it.startsWith("card-picture") }.toSet())
         val drawnCat = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.first().jsonObject
         assertTrue(drawnCat.string("picture").isNotBlank())
         assertTrue((drawnCat["picture_source"] as? JsonObject)?.string("source") != "lesson")

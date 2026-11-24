@@ -48,7 +48,13 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
                     photos=photos,
                     not_from_lesson=not_from_lesson,
                     previous=previous,
+                    saved=saved_card,
                 )
+
+        def saved_card(card_id: str) -> Card | None:
+            """A card as the lesson is saved now: the page saves while pictures are drawn."""
+            now = lessons.get(id)
+            return next((c for c in now.cards if c.id == card_id), None) if now else None
 
         lesson, made = await lessons.edit(id, draw)
         return {"lesson": lesson, "failures": made.failures, "error": made.error, "to_draw": made.to_draw}
