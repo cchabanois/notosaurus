@@ -121,6 +121,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A lesson missing one of its pages (its photo deleted) no longer sends the AI the wrong page when correcting a card or the lesson, or when looking for the lesson's own drawings: each page is used by its own number, and a card from the missing page is handled as one whose page is unknown.
+- Adding pages to a lesson missing one of its photos no longer overwrites an existing page or reuses a number its cards still point to.
+- On Android, choosing your own photo for a card refuses a file that isn't a JPEG, PNG, WebP or GIF image, as on the computer.
+- Finding a picture for a very long card (over 4000 characters) no longer fails.
 - A formula's web commands (links, styles) no longer reach Anki: a colour kept as \color.
 - A picture drawn with the lesson's others and meant for the answer side no longer moves to the question when the lesson is next saved.
 - 🗂️ **Each lesson its own deck on Android too**: a deck that already exists in AnkiDroid or belongs to another lesson gets " (2)", as on the computer.
