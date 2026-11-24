@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import FileResponse
 
 from notosaurus_core import tts
@@ -32,10 +32,18 @@ async def voice_for(language: str) -> dict:
 
 @router.get("/api/tts")
 async def preview(
-    text: str, voice: str, lesson: str | None = None, rate: Annotated[str, Query(pattern=r"^([+-]\d{1,2}%)?$")] = ""
+    request: Request,
+    text: str,
+    voice: str,
+    lesson: str | None = None,
+    rate: Annotated[str, Query(pattern=r"^([+-]\d{1,2}%)?$")] = "",
 ) -> FileResponse:
     """Listen to a text, at the lesson's `rate` (none: the settings'): stored in the lesson's
-    audio/ folder when a lesson is given (so the export reuses it), in the preview cache otherwise."""
+    audio/ folder when a lesson is given (so the export reuses it), in the preview cache otherwise.
+    A GET that writes: never for another site (an <audio> of its page: Sec-Fetch-Site), as a
+    change it asks is refused (origins.py); the page's own sounds are same-origin."""
+    if request.headers.get("sec-fetch-site", "").lower() == "cross-site":
+        raise AppError("origin.not_allowed", 403)
     if tts.is_anki_locale(voice):
         raise AppError("tts.no_preview_for_anki_locale")
     directory = lessons.audio_dir(lesson) if lesson else None

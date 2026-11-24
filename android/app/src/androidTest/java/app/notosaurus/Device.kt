@@ -1,8 +1,12 @@
 package app.notosaurus
 
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
+import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.provider.MediaStore
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -18,6 +22,21 @@ import java.util.concurrent.TimeUnit
 /** What the tests on a device share: the app's context, a shell, AnkiDroid ready, the
  * app's WebView and JavaScript run in its page. */
 object Device {
+    /** A file as another app shares it: in Android's shared storage (Downloads), its address
+     * MediaStore's (content://media/…), not the app's own provider, whose files a share is refused
+     * (Shared.accepted). */
+    fun shared(name: String, mime: String, bytes: ByteArray): Uri {
+        assumeTrue("MediaStore's Downloads: Android 10+", Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        val resolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, mime)
+        }
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: error("not added to MediaStore: $name")
+        resolver.openOutputStream(uri)!!.use { it.write(bytes) }
+        return uri
+    }
+
     val context get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     /** A shell command, as `adb shell` runs it (e.g. granting a permission). */

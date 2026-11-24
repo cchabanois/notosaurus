@@ -284,14 +284,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** The files shared: content:// only (a file:// one could name the app's own files). */
+    /** The files shared: content:// only, never the app's own provider (Shared.accepted). */
     private fun sharedUris(intent: Intent): List<Uri> {
         val extra = when (intent.action) {
             Intent.ACTION_SEND -> listOfNotNull(IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java))
             else -> IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java).orEmpty()
         }
         val clip = intent.clipData?.let { clip -> (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri } }.orEmpty()
-        return (extra.ifEmpty { clip }).filter { it.scheme == "content" }.distinct()
+        return (extra.ifEmpty { clip }).filter { Shared.accepted(it.scheme, it.authority, packageName) }.distinct()
     }
 
     private fun sharedItem(uri: Uri, intentType: String?): Shared.Item {

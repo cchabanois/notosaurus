@@ -88,7 +88,8 @@
    same everywhere (🔊, 💬, a picture checked or looked for, the instructions tidied up) */
 .waiting { animation: pulse 1.4s ease-in-out infinite; }
 .flash.has-picture { flex-wrap: wrap; }
-.math-preview { margin: .1rem 0 .4rem; padding: .35rem .6rem; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 1.05rem; overflow-x: auto; }
+/* contained: a formula's own CSS (MathJax's \bbox…) never drawn outside its preview */
+.math-preview { position: relative; contain: paint; margin: .1rem 0 .4rem; padding: .35rem .6rem; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 1.05rem; overflow-x: auto; }
 .math-preview.back { color: var(--accent, inherit); }
 .math-preview mjx-container[display="true"] { margin: .2rem 0 !important; }
 .front-row .math-preview.shown { flex: 1; min-width: 0; margin: 0; font-weight: 700; }

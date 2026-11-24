@@ -137,6 +137,17 @@ def test_nothing_loaded_or_read_however_written(body):
         figures_typst.source("geometry", body)
 
 
+@pytest.mark.parametrize("call", ['#eval("1+1")', '#read("x")', '#plugin("x.wasm")'])
+def test_nothing_loaded_once_the_body_is_rewritten(call):
+    """What the body becomes before it is compiled is what is checked: a quote escaped in a
+    formula (unescaped then, latex_math) pairs again with another, and what was within a string
+    is code; refused, the AI told the word."""
+    body = '$ \\" a " ' + call + ' \\" b " $'
+    word = call[1 : call.index("(")]
+    with pytest.raises(figures_typst.Unusable, match=f'Only drawing commands.*"{word}" is refused'):
+        figures_typst.source("geometry", body)
+
+
 @pytest.mark.parametrize("form", ALIASED)
 def test_no_image_drawn_however_written(form):
     """`image`, a word a label or a comment says (l'image A'B'), isn't refused as a name: the

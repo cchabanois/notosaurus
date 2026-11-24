@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Color
-import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mockwebserver3.Dispatcher
@@ -22,7 +21,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
 
 /**
  * The phone turned while a lesson is being made: the same activity, the same page (not
@@ -109,12 +107,12 @@ class RotationTest {
      * the share taken once, its page not added a second time. */
     @Test
     fun aShareTakenOnceWhenTheActivityIsMadeAgain() {
-        val file = File(Device.context.cacheDir, "photos/shared-once.jpg").apply { parentFile!!.mkdirs() }
         val picture = Bitmap.createBitmap(400, 300, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
-        file.outputStream().use { picture.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+        val jpeg = java.io.ByteArrayOutputStream().also { picture.compress(Bitmap.CompressFormat.JPEG, 90, it) }.toByteArray()
+        val shared = Device.shared("shared-once-${System.currentTimeMillis()}.jpg", "image/jpeg", jpeg) // another app's
         val share = Intent(Intent.ACTION_SEND).setClass(Device.context, MainActivity::class.java)
             .setType("image/jpeg")
-            .putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(Device.context, "${Device.context.packageName}.photos", file))
+            .putExtra(Intent.EXTRA_STREAM, shared)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         ActivityScenario.launch<MainActivity>(share).use { app ->
             try {

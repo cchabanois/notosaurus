@@ -19,6 +19,7 @@ from typing import cast
 
 from notosaurus_core import pictures
 from notosaurus_core.cards import kept_ids
+from notosaurus_core.models import MAX_PAGE_NUMBER
 
 from . import storage
 from .errors import AppError
@@ -73,7 +74,8 @@ PAGE_FILE = re.compile(r"^page-([1-9][0-9]*)\.jpg$")
 def _page_numbers(path: Path) -> list[int]:
     """The numbers of the pages in a lesson's folder (page-N.jpg), in order."""
     found = (PAGE_FILE.match(photo.name) for photo in path.glob("page-*.jpg"))
-    return sorted(int(m[1]) for m in found if m)
+    # a file numbered past any page (an imported lesson's) is none
+    return sorted(n for m in found if m and (n := int(m[1])) <= MAX_PAGE_NUMBER)
 
 
 def pages(id: str) -> list[int]:

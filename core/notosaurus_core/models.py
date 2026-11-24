@@ -1,11 +1,26 @@
 """What the AI is asked for and answers: cards, decks, diagram masks and frames,
 corrections, explanations, and the record of each call."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, field_validator
 
 from .figures_typst import KINDS, FigureKind
+
+# The highest page number a lesson's card, label or frame may say (a lesson has 30 pages at
+# most): a page added after it (next_page) is always a file that can be written
+MAX_PAGE_NUMBER = 1000
+
+
+def _known_page(value: object) -> object:
+    """A page number out of range (an imported lesson's 10**300, -1) unknown, 0: the lesson
+    still read, never a page numbered after it."""
+    if isinstance(value, int | float) and not isinstance(value, bool) and not 0 <= value <= MAX_PAGE_NUMBER:
+        return 0
+    return value
+
+
+PageNumber = Annotated[int, BeforeValidator(_known_page), AfterValidator(_known_page)]
 
 
 class Mask(BaseModel):
@@ -14,7 +29,7 @@ class Mask(BaseModel):
     From the AI, `box` is in the format its instructions give (depends on the model);
     once saved, it is [x_min, y_min, x_max, y_max] as fractions of the photo's size."""
 
-    page: int = Field(description="Number of the photo showing the label (1 = first photo).")
+    page: PageNumber = Field(description="Number of the photo showing the label (1 = first photo).")
     n: int = Field(description="Number drawn in place of the label: 1, 2, 3… on each photo.")
     box: list[float] = Field(description="Bounding box of the label's text, in the format of the instructions.")
 
@@ -141,7 +156,7 @@ class Card(BaseModel):
     )
     # The lesson's photo it was made from (1 = its first; 0 unknown: a card from the instructions
     # alone, or made before cards knew theirs): correcting the card sends that photo alone
-    page: int = Field(
+    page: PageNumber = Field(
         default=0,
         description="Number of the photo this card's content is taken from, counting the photos given from 1 "
         "in their order (the one most of it comes from, when several do); 0 when it comes from no photo.",
@@ -162,7 +177,7 @@ class Deck(BaseModel):
 class Frame(BaseModel):
     """Where a diagram is on a photo: the image Anki gets is cropped to it."""
 
-    page: int = Field(description="Number of the photo (1 = first photo).")
+    page: PageNumber = Field(description="Number of the photo (1 = first photo).")
     box: list[float] = Field(
         description="Box of the whole diagram (its drawing and all its labels), in the format of the instructions."
     )

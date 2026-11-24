@@ -242,9 +242,19 @@ class Lessons(private val root: File) {
         private val PHOTO = Regex("^page-\\d+\\.jpg$")
         private val PAGE = Regex("^page-([1-9][0-9]*)\\.jpg$")
 
-        /** The numbers of the pages in a lesson's folder (page-N.jpg), in order. */
-        private fun pageNumbers(dir: File): List<Int> =
-            dir.list().orEmpty().mapNotNull { PAGE.matchEntire(it)?.groupValues?.get(1)?.toIntOrNull() }.sorted()
+        // The highest page number a lesson's card, label or frame may say (a lesson has 30 pages at
+        // most), as the computer's (models.MAX_PAGE_NUMBER): a page added after it never overflows
+        const val MAX_PAGE_NUMBER = 1000
+
+        /** A page number as a lesson says it: out of range (an imported lesson's 10^300, Int.MAX_VALUE,
+         * -1) unknown, 0, as the computer reads it. */
+        private fun pageNumber(value: JsonElement?): Int =
+            (value as? JsonPrimitive)?.intOrNull?.takeIf { it in 0..MAX_PAGE_NUMBER } ?: 0
+
+        /** The numbers of the pages in a lesson's folder (page-N.jpg), in order: a file numbered
+         * past any page (an imported lesson's) is none. */
+        private fun pageNumbers(dir: File): List<Int> = dir.list().orEmpty()
+            .mapNotNull { PAGE.matchEntire(it)?.groupValues?.get(1)?.toIntOrNull()?.takeIf { n -> n <= MAX_PAGE_NUMBER } }.sorted()
 
         /** The number of a page added to a lesson: after the highest one used anywhere in it, its
          * pages' files (`files`, their numbers), its cards' pages, their masks', its frames' and its
@@ -252,7 +262,7 @@ class Lessons(private val root: File) {
          * a card that came from it never points at another, and no page is written over. As the
          * computer's lessons.next_page (core/shared-cases.json). */
         fun nextPage(files: List<Int>, lesson: JsonObject): Int {
-            fun page(item: JsonObject?) = (item?.get("page") as? JsonPrimitive)?.intOrNull ?: 0
+            fun page(item: JsonObject?) = pageNumber(item?.get("page"))
             val cards = (lesson["cards"] as? JsonArray).orEmpty().mapNotNull { it as? JsonObject }
             val used = files + cards.map(::page) + cards.map { page(it["mask"] as? JsonObject) } +
                 (lesson["frames"] as? JsonArray).orEmpty().map { page(it as? JsonObject) } +
