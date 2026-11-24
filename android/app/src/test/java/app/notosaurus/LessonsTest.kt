@@ -110,6 +110,25 @@ class LessonsTest {
     }
 
     @Test
+    fun aLessonNumberingItsPagesPastAnyStillGetsAPageAdded() {
+        // An imported lesson: a card's page Int.MAX_VALUE, a file so numbered; a page added after
+        // its own (3), never "page--2147483648.jpg"
+        val lessons = lessons()
+        val cards = buildJsonArray { add(buildJsonObject { put("front", "a"); put("back", "b"); put("page", Int.MAX_VALUE) }) }
+        val id = lessons.create(mapOf("deck" to JsonPrimitive("D"), "cards" to cards), listOf(byteArrayOf(1), byteArrayOf(2))).string("id")
+        folder.root.resolve("$id/page-${Int.MAX_VALUE}.jpg").writeBytes(byteArrayOf(7))
+        val done = lessons.completed(
+            id,
+            mapOf("cards" to buildJsonArray { add(buildJsonObject { put("front", "new"); put("back", "b"); put("page", 1) }) }),
+            listOf(byteArrayOf(9)),
+        )!!
+        assertEquals(listOf(1, 2, 3), pages(done))
+        assertArrayEquals(byteArrayOf(9), lessons.photo(id, 3)!!.readBytes())
+        assertEquals(3, done.cards().last()["page"]!!.jsonPrimitive.int)
+        assertFalse(folder.root.resolve(id).list()!!.any { it.startsWith("page--") })
+    }
+
+    @Test
     fun twoLessonsOfTheSameDeckHaveTheirOwnFolder() {
         val lessons = lessons()
         val a = lessons.create(mapOf("deck" to JsonPrimitive("Maths")), emptyList())

@@ -647,11 +647,7 @@ def source(family: str, body: str) -> str:
         body = typst_source.broken_lines(edged)
     if family == "circuit":
         body = typst_source.joined_ends(body)
-    if word := forbidden(body):
-        raise Unusable(
-            "Only drawing commands: no import (but from a module given: import cetz.draw: *), include, "
-            f'file or plugin. "{word}" is refused, even held in a variable or in a text: write it otherwise.'
-        )
+    _refuse_forbidden(body)
     body = typst_source.latex_math(typst_source.no_fractions(typst_source.unshadowed(body)))
     separator = typst_source.decimal_separator(body)
     body = typst_source.decimal_commas(body, separator == ",")
@@ -660,7 +656,19 @@ def source(family: str, body: str) -> str:
         body = typst_source.LQ_DIAGRAM.sub("diagram-apart", body)
     if "#let line-kept(" in preamble:
         body = typst_source.LQ_LINE.sub("line-kept", body)
+    # checked again as it is compiled: a rewrite may turn what was no code into code (a quote
+    # unescaped in a formula ends a string there, what followed it read as code)
+    _refuse_forbidden(body)
     return FONT + preamble + SHADOWED + body.strip() + "\n"
+
+
+def _refuse_forbidden(body: str) -> None:
+    """Unusable, telling the AI the word, when the body writes as code what it may not (forbidden)."""
+    if word := forbidden(body):
+        raise Unusable(
+            "Only drawing commands: no import (but from a module given: import cetz.draw: *), include, "
+            f'file or plugin. "{word}" is refused, even held in a variable or in a text: write it otherwise.'
+        )
 
 
 COMPILER = HERE / "typst_compile.py"  # run apart: a figure that loops never stops the server

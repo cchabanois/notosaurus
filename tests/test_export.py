@@ -128,6 +128,19 @@ def test_preview_then_export_reuses_the_sound(client):
     assert synthesized == ["la madre"]
 
 
+def test_a_sound_never_written_for_another_site(client):
+    """/api/tts writes a file: another site's page (an <audio> of its own, Sec-Fetch-Site:
+    cross-site) gets none written; the page's own (same-origin) does."""
+    lesson = extract_lesson(client)
+    params = {"text": "la madre", "voice": "es-ES-ElviraNeural", "lesson": lesson["id"]}
+    for preview in (params, {"text": "hola", "voice": "es-ES-ElviraNeural"}):
+        res = client.get("/api/tts", params=preview, headers={"Sec-Fetch-Site": "cross-site"})
+        assert (res.status_code, res.json()["detail"]["code"]) == (403, "origin.not_allowed")
+    assert synthesized == []
+    assert client.get("/api/tts", params=params, headers={"Sec-Fetch-Site": "same-origin"}).status_code == 200
+    assert synthesized == ["la madre"]
+
+
 def test_the_lesson_s_rate(client):
     """A lesson's sounds at its own speed, chosen at generation, the 🔊 as the export;
     a lesson made before (none): the settings'."""

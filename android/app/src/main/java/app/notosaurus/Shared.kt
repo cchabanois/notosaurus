@@ -145,6 +145,12 @@ class Shared(private val dir: File) {
 
         private val URL = Regex("""https?://\S+""", RegexOption.IGNORE_CASE)
 
+        /** Whether a file shared (its address's scheme and authority) is taken: content:// only (a
+         * file:// one could name the app's own files), never the app's own provider (`packageName`.photos:
+         * the camera's photos, its files a share would hand the page). */
+        fun accepted(scheme: String?, authority: String?, packageName: String): Boolean =
+            scheme == "content" && !authority.equals("$packageName.photos", ignoreCase = true)
+
         /** Only a web page's address: one http(s) address alone on its line, and at most one other
          * line, short, with no address (the page's title). An address among sentences is a text. */
         fun isLinkOnly(text: String): Boolean {
