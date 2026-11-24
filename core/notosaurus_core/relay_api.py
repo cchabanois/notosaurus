@@ -164,9 +164,16 @@ class ExtractRequest(BaseModel):
         max_length=MAX_EXISTING,
         description='The photos are a lesson\'s next pages: its cards made already ("front [part]"), not made again.',
     )
+    card_pages: bool = Field(
+        default=False,
+        description="Each card's \"page\" as the AI gives it, numbered among this call's photos: asked by a "
+        "client that numbers them among the lesson's when the photos are its next pages. Not asked (the "
+        "apps 1.1.x, which store a card's fields unchanged): every card's \"page\" 0, in the answer and its lines.",
+    )
 
     def options(self) -> ExtractOptions:
-        """All but the prompt, as llm.extract_cards takes them."""
+        """All but the prompt, as llm.extract_cards takes them (card_pages too: unlike the
+        core's callers, a client asks for the cards' pages)."""
         return ExtractOptions(**self.model_dump(exclude={"prompt"}))
 
 
