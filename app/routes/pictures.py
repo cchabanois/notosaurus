@@ -95,8 +95,10 @@ async def make_picture(
     into a picture keeps its figure until a picture replaces it: never a picture's description
     beside a figure's drawing, nor a figure's drawing left without its description (the user
     may give up the search). Its picture's fields then come as "decided" (DecidedPicture),
-    sent back with the picture chosen (found, draw, the user's). Asked as
-    application/x-ndjson: its steps as they begin (relay_api.PictureStep), then the answer."""
+    sent back with the picture chosen (found, draw, the user's). `previous`: the figure a
+    correction replaced, not drawn again since (as /pictures'): its figure drawn again from it,
+    whatever the description asked (it always differs from what that figure was drawn from).
+    Asked as application/x-ndjson: its steps as they begin (relay_api.PictureStep), then the answer."""
     await access.editable(id)
 
     async def made(step: Step | None = None) -> dict:
@@ -106,8 +108,13 @@ async def make_picture(
             async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
                 s = settings.current()
                 folder = lessons.existing_folder(id) / "images"
-                origin, kind = card.picture_source, card.figure_kind  # the figure it had, if any
-                previous = pictures.kept_sources(folder, origin) if pictures.changed_figure(card, req.subject) else []
+                if req.previous is not None:  # the figure a correction replaced: the description changed
+                    origin, kind = req.previous.source, req.previous.kind
+                    again = True
+                else:
+                    origin, kind = card.picture_source, card.figure_kind  # the figure it had, if any
+                    again = pictures.changed_figure(card, req.subject)
+                previous = pictures.kept_sources(folder, origin) if again else []
                 decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang), step)
                 if card.figure.strip() and not decided.figure.strip():
                     found["decided"] = DecidedPicture(

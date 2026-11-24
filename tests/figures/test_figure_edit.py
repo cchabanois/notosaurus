@@ -213,3 +213,28 @@ def test_drawn_again_after_a_correction_from_the_figure_it_had(client, monkeypat
     res = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"previous": previous})
     assert res.status_code == 200
     assert sorted(told) == sorted([([TRIANGLE], "geometry", "typst"), ([], "", "typst"), ([], "", "")])
+
+
+def test_made_again_after_a_correction_from_the_figure_it_had(client, monkeypatch):
+    """ "📐 Redraw the figure" (/picture/make) on a figure a correction changed, not drawn again
+    since (its drawing failed): the page's `previous` (the figure it had: its source and family)
+    reaches the drawing, from its Typst, its description the same as the card's; none sent (a
+    figure drawn since), or a source not ours: drawn anew."""
+    from app import lessons, storage
+
+    lesson, cards, origin = _typst_lesson(client)
+    folder = lessons.existing_folder(lesson["id"])
+    saved = storage.read_json(folder / "lesson.json")
+    corrected = saved["cards"][0]
+    # As the correction left it
+    corrected.update(picture="", picture_source=None, figure=corrected["figure"] + " en rouge")
+    storage.write_json(folder / "lesson.json", saved)
+    told = _told(monkeypatch)
+    make = f"/api/lessons/{lesson['id']}/cards/{cards[0]['id']}/picture/make"
+    asked = {"subject": corrected["figure"], "previous": {"source": origin, "kind": "geometry"}}
+    assert client.post(make, json=asked).status_code == 200
+    assert told[-1] == ([TRIANGLE], "geometry", "typst")
+    assert client.post(make, json={"subject": corrected["figure"]}).status_code == 200
+    unknown = {"source": {**origin, "sources": [{"file": "../lesson.json"}]}, "kind": "geometry"}
+    assert client.post(make, json={"subject": corrected["figure"], "previous": unknown}).status_code == 200
+    assert [previous for previous, *_ in told[1:]] == [[], []]

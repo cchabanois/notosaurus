@@ -376,6 +376,33 @@ class PictureRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aFigureACorrectionReplacedMadeAgainFromIt() = app { client ->
+        val asked = mutableListOf<JsonObject>()
+        val lesson = client.figureLesson(asked, listOf("#rect(width: 2cm)", "#circle()"))
+        val id = lesson.string("id")
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject
+        // As a correction left it: its figure changed, its picture and where it came from cleared
+        val corrected = JsonObject(
+            card + mapOf("figure" to JsonPrimitive("a right triangle, in red"), "picture" to JsonPrimitive(""), "picture_source" to JsonNull),
+        )
+        client.put("/api/lessons/$id") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Maths", "cards": [$corrected]}""") }
+        val make = "/api/lessons/$id/cards/${card.string("id")}/picture/make"
+        suspend fun made(body: String): JsonObject {
+            client.post(make) { page(); contentType(ContentType.Application.Json); setBody(body) }
+            return asked.last()
+        }
+        // "📐 Draw the figure", its description as corrected, with the page's "previous" (the figure
+        // it had: its sources, its family): drawn again from it
+        val previous = """{"source": ${card["picture_source"]}, "kind": "geometry"}"""
+        val again = made("""{"subject": "a right triangle, in red", "previous": $previous}""")
+        assertEquals(listOf("#rect(width: 2cm)", "#circle()"), again.previous())
+        assertEquals("geometry", again.string("previous_kind"))
+        assertEquals("typst", again.string("previous_engine"))
+        // None (a figure drawn since): anew
+        assertEquals(emptyList<String>(), made("""{"subject": "a right triangle, in red"}""").previous())
+    }
+
+    @Test
     fun aGoneFiguresSourcesPrunedAUsedOnesKept() = app { client ->
         val lesson = client.extract()
         relay.takeRequest(5, TimeUnit.SECONDS)

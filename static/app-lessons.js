@@ -467,8 +467,10 @@ const lessonsPart = {
   async saveNow(keepalive = false) {
     clearTimeout(this.saveTimer);
     this.saveTimer = null;
+    // Also while the server draws pictures: a drawing saves only what it changed, onto the
+    // lesson as saved when it ends (lessons.edit), and a picture drawn next must be drawn from
+    // the cards as shown (a description just corrected)
     if (!this.lessonId || this.readOnly()) return;
-    if (this.drawingHere() || this.pictureJobs) return this.scheduleSave();  // after: the server is changing its pictures
     const body = this.snapshot();
     // Before the request: otherwise clearing saveTimer re-runs the autosave effect,
     // which would see an unsaved snapshot and schedule the same save again.

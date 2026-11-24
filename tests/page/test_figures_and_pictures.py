@@ -16,6 +16,7 @@ sync_api = pytest.importorskip("playwright.sync_api")
 from page.support import (  # noqa: E402
     FRONT_PROMPT,
     edit,
+    eventually,
     generate_free,
     lesson,
     lessons,
@@ -220,6 +221,122 @@ def test_a_figure_a_lesson_correction_replaced_drawn_again_from_it(page):
             break
         page.wait_for_timeout(100)
     assert asked[-1]["previous"] == {was["id"]: {"source": was["source"], "kind": "geometry"}}
+
+
+APP = "Alpine.$data(document.querySelector('[x-data]'))"
+
+
+def _drawn_with(monkeypatch) -> list[tuple[str, list[str]]]:
+    """What each figure drawn was drawn from: (its card's description, the Typst it started from)."""
+    from app.routes import pictures as routes
+
+    told = []
+    real = routes.pictures.figure_or_picture
+
+    async def draw(s, folder, card, *args, previous=(), **kwargs):
+        told.append((card.figure, list(previous)))
+        return await real(s, folder, card, *args, **kwargs)
+
+    monkeypatch.setattr(routes.pictures, "figure_or_picture", draw)
+    return told
+
+
+def test_a_figure_a_correction_replaced_redrawn_from_it_by_hand(page, monkeypatch):
+    """A card's correction changing what its figure shows, its drawing failing: its old Typst
+    kept (not pruned once the card is done with), "📐 Dessiner la figure" draws the corrected
+    description from it (`previous`); once a figure is drawn, "Redessiner" draws anew, and the
+    old figure's Typst is no longer kept for it."""
+    from app import lessons as saved_lessons
+
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    sync_api.expect(page.locator(".card-picture.figure img").first).to_be_visible()
+    was = page.evaluate(DRAWN_IN_TYPST)
+    (summary,) = lessons(page)
+    typst = saved_lessons.existing_folder(summary["id"]) / "images" / was["source"]["sources"][0]["file"]
+    typst.write_text("#circle()", encoding="utf-8")
+
+    def fix(route):  # what the figure shows changed: its picture and where it came from cleared
+        changed = {**route.request.post_data_json["card"], "picture": "", "picture_source": None}
+        changed["figure"] += " Le carré en rouge."
+        route.fulfill(json={"card": changed, "summary": "Figure changée."})
+
+    page.route("**/fix-card*", fix)
+    asked = _asked_to_draw(page)  # its drawing fails
+    card = open_card(page.locator(".flash").first)
+    field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("Le carré en rouge")
+    field.press("Enter")
+    eventually(page, lambda: asked, "drawn again")
+    page.wait_for_function(f"() => !{APP}.drawingLessons.length")
+    page.evaluate(f"() => {APP}.doneEditing()")  # its pictures pruned: not the figure it is drawn from
+    page.wait_for_function(f"() => {APP}.saveState === 'saved' && !{APP}.saveTimer")
+    page.wait_for_timeout(300)
+    assert typst.is_file()
+
+    told = _drawn_with(monkeypatch)
+    corrected = page.evaluate(f"() => {APP}.cards[0].figure")
+    assert corrected.endswith("Le carré en rouge.")
+    page.get_by_role("alert").get_by_role("button", name="Fermer").click()  # its drawing's failure, said
+    open_card(card)
+    card.get_by_role("button", name="Plus d'actions").click()
+    card.get_by_role("button", name="🖼️ Ajouter une image").click()
+    dialog = page.get_by_role("dialog", name="Image")
+
+    def redraw(name: str) -> dict:
+        with page.expect_response(lambda r: r.url.endswith("/picture/make")) as made:
+            dialog.get_by_role("button", name=name).click()
+        assert made.value.ok
+        sync_api.expect(dialog.locator(".picture-shown")).to_be_visible()
+        return made.value.request.post_data_json
+
+    sent = redraw("📐 Dessiner la figure")  # none shown
+    assert sent["previous"] == {"source": was["source"], "kind": "geometry"}
+    assert told[-1] == (corrected, ["#circle()"])
+    sent = redraw("📐 Redessiner la figure")  # a figure drawn for its description since: another drawing wanted, anew
+    assert "previous" not in sent
+    assert told[-1] == (corrected, [])
+    # Removed then: the old figure no longer waited for, its Typst pruned once the card is done with
+    with page.expect_response(lambda r: r.request.method == "DELETE"):
+        dialog.get_by_role("button", name="✕ Pas d'image").click()
+    dialog.get_by_role("button", name="Terminé").click()
+    page.evaluate(f"() => {APP}.doneEditing()")
+    eventually(page, lambda: not typst.exists(), "the old figure's Typst pruned")
+
+
+def test_a_figure_corrected_while_others_are_drawn_redrawn_as_corrected(page, monkeypatch):
+    """A card's correction about its figure as drawn, its description changed with it, while
+    another card's picture is being drawn: drawn again from the description corrected (the
+    lesson saved meanwhile), and the card keeps it."""
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    page.wait_for_function(f"() => !{APP}.drawingLessons.length && {APP}.cards.every((c) => !c.figure || c.picture)")
+    held = []
+    page.route("**/api/lessons/*/pictures", lambda route: held.append(route))
+    page.evaluate(f"() => {{ {APP}.cards[1].picture = ''; {APP}.drawPictures(); }}")
+    eventually(page, lambda: held, "the other card's drawing")
+    told = _drawn_with(monkeypatch)
+
+    def fix(route):  # about its figure as drawn, its description changed too: drawn again
+        changed = {**route.request.post_data_json["card"]}
+        changed["figure"] += " Le carré en rouge."
+        problem = "Le carré n'est pas rouge."
+        route.fulfill(json={"card": changed, "summary": "Figure changée.", "figure_problem": problem})
+
+    page.route("**/fix-card*", fix)
+    card = open_card(page.locator(".flash").first)
+    field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("Le carré en rouge")
+    with page.expect_response(lambda r: r.url.endswith("/picture/draw")) as drawn:
+        field.press("Enter")
+    assert drawn.value.ok
+    drawn.value.finished()
+    corrected = page.evaluate(f"() => {APP}.cards[0].figure")
+    assert corrected.endswith("Le carré en rouge.")
+    assert [figure for figure, _ in told] == [corrected]
+    for route in held:
+        route.continue_()
+    page.wait_for_function(f"() => !{APP}.drawingLessons.length && {APP}.saveState === 'saved' && !{APP}.saveTimer")
+    (summary,) = lessons(page)
+    assert lesson(page, summary["id"])["cards"][0]["figure"] == corrected
 
 
 def test_a_picture_a_correction_replaced_not_taken_from_the_lesson_again(page):
