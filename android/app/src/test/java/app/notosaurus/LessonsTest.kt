@@ -21,6 +21,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.time.LocalDate
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 /** Lessons on the phone, in the computer's format (app/lessons.py). */
 class LessonsTest {
@@ -187,5 +190,28 @@ class LessonsTest {
             assertEquals(deck, lessons.get(id)!!.string("deck")) // found again by its id
             assertEquals(folder.root.canonicalFile, folder.root.resolve(id).canonicalFile.parentFile)
         }
+    }
+
+    @Test
+    fun aSaveLandingWhileAPictureIsMergedKept() {
+        val lessons = lessons()
+        val id = lessons.create(mapOf("deck" to JsonPrimitive("D"), "cards" to cards("a")), emptyList()).string("id")
+        val lesson = lessons.get(id)!!
+        val pictures = Pictures(lessons, relay = { error("no relay") })
+        val reached = CountDownLatch(1)
+        val go = CountDownLatch(1)
+        // The picture's merge held between its reading of the lesson and its writing
+        pictures.merging = { reached.countDown(); go.await(5, TimeUnit.SECONDS) }
+        val drawing = thread { pictures.own(lesson, 0, byteArrayOf(1, 2, 3)) }
+        assertTrue(reached.await(5, TimeUnit.SECONDS))
+        // The page's correction saved meanwhile
+        val corrected = JsonArray(listOf(lesson.cards()[0].with("back" to JsonPrimitive("b (corrected)"))))
+        val saving = thread { lessons.update(id, buildJsonObject { put("cards", corrected) }) }
+        saving.join(300) // unlocked: written here, then over by the merge
+        go.countDown()
+        drawing.join(5000)
+        saving.join(5000)
+        assertFalse(drawing.isAlive || saving.isAlive)
+        assertEquals("b (corrected)", lessons.get(id)!!.cards().single().string("back"))
     }
 }

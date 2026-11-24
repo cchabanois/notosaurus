@@ -79,14 +79,17 @@ internal fun Route.lessonRoutes(server: LocalServer) {
         }
         // A photo turned a quarter turn clockwise (it came out sideways), its masks and frame with it
         api("POST", "/api/lessons/{id}/photos/{n}/rotate") {
-            val lesson = lesson()
-            val id = lesson.string("id")
+            val id = lesson().string("id")
             val n = param("n").toIntOrNull() ?: notFound()
-            val photo = lessons.photo(id, n) ?: notFound()
-            photo.writeBytes(turnPhoto(photo.readBytes(), 90))
-            val cards = lesson.cards().map { Diagrams.turnedMask(it, n, 90) }
-            val frames = (lesson["frames"] as? JsonArray)?.map { Diagrams.turnedFrame(it.jsonObject, n, 90) }.orEmpty()
-            lessons.update(id, buildJsonObject { put("cards", JsonArray(cards)); put("frames", JsonArray(frames)) }) ?: notFound()
+            // Read, turned and written under the lessons' lock: a save meanwhile not written over
+            lessons.locked {
+                val lesson = lessons.get(id) ?: notFound()
+                val photo = lessons.photo(id, n) ?: notFound()
+                photo.writeBytes(turnPhoto(photo.readBytes(), 90))
+                val cards = lesson.cards().map { Diagrams.turnedMask(it, n, 90) }
+                val frames = (lesson["frames"] as? JsonArray)?.map { Diagrams.turnedFrame(it.jsonObject, n, 90) }.orEmpty()
+                lessons.update(id, buildJsonObject { put("cards", JsonArray(cards)); put("frames", JsonArray(frames)) }) ?: notFound()
+            }
         }
         get("/api/lessons/{id}/photos/{n}") {
             if (!allowed()) return@get

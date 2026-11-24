@@ -373,12 +373,14 @@ const photosPart = {
 
   // What a share must not land in the middle of: a lesson being made, corrected or sent (its
   // answer would empty the pages added, or go to the new lesson), a card corrected, a card
-  // or a page open full screen (the user at work in it: never closed under them), pages
-  // being added
+  // or a page open full screen (the user at work in it: never closed under them), the
+  // lesson's pages all shown (some maybe chosen to be removed), the lesson being copied for
+  // another child, pages being added
   shareWaits() {
     return Boolean(this.loading || this.revision.busy || this.sending || this.exporting
       || this.cards.some((c) => c._fix?.busy)
       || this.editing !== "" || this.diagramOpen || this.pictureOpen || this.viewer.open || this.hiding.open
+      || this.allPages || this.pagesChosen || this.copySheet.open || this.copySheet.busy
       || this.pdf.open || this.pdfBusy || this.filesReading);
   },
 

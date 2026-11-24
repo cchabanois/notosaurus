@@ -11,6 +11,7 @@ from PIL import Image as PILImage
 from app import lessons
 from app.routes import generation
 from notosaurus_core import ai, llm
+from notosaurus_core import relay_api as api
 from notosaurus_core.calls import Image
 from notosaurus_core.config import AIConfig
 from notosaurus_core.models import Card, CardFix, Deck, Extraction, Revision
@@ -58,6 +59,35 @@ def test_a_page_not_among_the_calls_photos_is_unknown(monkeypatch):
     photos = [Image(plain_image(40, 30), "image/jpeg")] * 2
     found = run(llm.extract_cards(S, photos, "p"))
     assert [c.page for c in found.deck.cards] == [1, 2, 0, 0, 0]
+
+
+def test_a_client_that_doesnt_ask_for_the_cards_pages_gets_none(monkeypatch):
+    """/v1/extract: an app that stores a card's fields as they come without numbering its page
+    among the lesson's (1.1.x, completing a lesson) gets every page 0, in the answer and its
+    lines; one asking for them (card_pages) gets the AI's."""
+    cards = [{"front": f"q{n}", "back": "a", "page": page} for n, page in enumerate([1, 2, 0])]
+    answer = {"deck": "D", "cards": cards}
+
+    async def ask(s, images, text, schema, *args, on_card=None, **kwargs):
+        for card in cards:
+            await on_card(dict(card))
+        await on_card(None)  # a restart passes as it is
+        return schema.model_validate(answer)
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", ask)
+    photos = [Image(plain_image(40, 30), "image/jpeg")] * 2
+    for asked, pages in ((None, [0, 0, 0]), (False, [0, 0, 0]), (True, [1, 2, 0])):
+        request = api.ExtractRequest(prompt="p", **({} if asked is None else {"card_pages": asked}))
+        request = api.ExtractRequest.model_validate_json(request.model_dump_json(exclude_unset=True))
+        lines = []
+
+        async def on_card(card, lines=lines):
+            lines.append(card)
+
+        found = run(llm.extract_cards(S, photos, request.prompt, request.options(), on_card=on_card))
+        assert [c.page for c in found.deck.cards] == pages
+        assert [line.get("page", 0) for line in lines[:-1]] == pages and lines[-1] is None
+        assert all("page" not in line for line in lines[:-1]) == (not asked)
 
 
 def test_the_demo_ai_gives_its_cards_a_page():

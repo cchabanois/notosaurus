@@ -26,6 +26,11 @@ function needsPicture(card) {
   return Boolean((card.picture_prompt?.trim() || card.figure?.trim()) && !card.picture);
 }
 
+// A card's picture fields as they are, each as JSON (to tell those changed since: takeDrawn)
+function pictureFieldsOf(card) {
+  return Object.fromEntries(PICTURE_FIELDS.map((field) => [field, JSON.stringify(card[field] ?? null)]));
+}
+
 // `text` cut to `max` characters, "…" last when it was longer, never half a character (as the
 // phone's Pictures.cut and the computer's PictureSearch)
 function cutText(text, max = MAX_CARD) {
@@ -45,9 +50,11 @@ const picturesPart = {
   // The card's picture touched: in the card edited, its page full screen (what it shows, where it
   // comes from, changed, a photo of one's own, none), as a diagram's is, until « Terminé »;
   // elsewhere (a lesson read only), only shown large. A card without one: ⋯ → its page.
+  // Each visit begins afresh: nothing an earlier one left to choose (forgetMade)
   openPicture(card) {
     if (!this.isEditing(card) || !this.lessonId) return this.openViewer([this.pictureUrl(card)], 0, card);
     card._menu = false;
+    this.forgetMade(card);
     card._subject = card.figure || card.picture_prompt || "";
     this.pictureOpen = card.key;
   },
@@ -96,9 +103,7 @@ const picturesPart = {
   // A figure a correction replaced, not drawn again since (its automatic drawing failed, or
   // not done yet): drawn again from it (`previous`, as drawPictures'), until one is drawn
   async makePicture(card) {
-    card._found = null;
-    card._ask = false;
-    card._decided = null;
+    this.forgetMade(card);
     const had = card.picture_source?.page ?? "";  // "Change": not the one it has
     const previous = card._previous && !card.picture ? { previous: card._previous } : {};
     const res = await this.pictureAction(card, {
@@ -109,6 +114,7 @@ const picturesPart = {
     });
     if (!res) return;
     card._decided = res.decided ?? null;
+    card._madeFor = describedAs(card);  // what it was decided for (madeStill)
     // Decided for a figure, from nothing written (a figure stays one when it is): left as it
     // was, the card still the figure (written, the picture's description would be drawn as one)
     if (!card._decided) card._subject = card.figure || card.picture_prompt;
@@ -124,19 +130,43 @@ const picturesPart = {
   },
 
   // The user said yes: drawn by the image model (a figure: drawn again)
+  // (asked about what the card no longer says: nothing drawn, the question gone)
   async drawPicture(card) {
     card._ask = false;
+    if (!this.madeStill(card)) return;
     const decided = this.pendingPicture(card);
     const res = await this.pictureAction(card, card._decided
       ? { path: "/draw", method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(decided) }
       : { path: "/draw", method: "POST" });
-    if (res) card._decided = null;
+    if (res) this.chosenMade(card);
   },
 
   // The picture makePicture decided for a figure, still to be chosen: sent with the one chosen
-  // (found, drawn, one's own), the figure then replaced; {} when there is none
+  // (found, drawn, one's own), the figure then replaced; {} when there is none (or it was
+  // decided for what the card no longer says: madeStill)
   pendingPicture(card) {
-    return card._decided ? { decided: card._decided } : {};
+    return this.madeStill(card) && card._decided ? { decided: card._decided } : {};
+  },
+
+  // What makePicture left to choose from (the picture decided for a figure, the free pictures
+  // found, the question whether to draw one): forgotten, offered again by "✨ Image" only
+  forgetMade(card) {
+    Object.assign(card, { _decided: null, _found: null, _ask: false, _madeFor: "" });
+  },
+
+  // What makePicture left is still for the card as it says now (or it left nothing): described
+  // anew since (by hand, by a correction), forgotten, false (never a decision sent for what it
+  // no longer says)
+  madeStill(card) {
+    if (!card._madeFor || card._madeFor === describedAs(card)) return true;
+    this.forgetMade(card);
+    return false;
+  },
+
+  // A picture chosen with what makePicture decided: the decision done with, the pictures
+  // found still to pick from, for the card as it now says
+  chosenMade(card) {
+    Object.assign(card, { _decided: null, _madeFor: card._madeFor && describedAs(card) });
   },
 
   // "🔍 Check": the figure looked at by the AI against its description, on demand (never on
@@ -160,6 +190,7 @@ const picturesPart = {
   async redrawFigure(card) {
     const problem = card._check?.problem ?? "";
     const careful = Boolean(card._triedQuick) && !this.off("ai.careful");
+    this.forgetMade(card);  // the figure kept: no picture decided in its place
     Object.assign(card, { _check: null, _replacing: this.pictureUrl(card) });
     try {
       const res = await this.pictureAction(card, {
@@ -187,9 +218,10 @@ const picturesPart = {
     if (!file) return;
     const body = new FormData();
     body.append("photo", await resize(file), "photo.jpg");
-    if (card._decided) body.append("decided", JSON.stringify(card._decided));
+    const { decided } = this.pendingPicture(card);
+    if (decided) body.append("decided", JSON.stringify(decided));
     const res = await this.pictureAction(card, { method: "POST", body });
-    if (res) card._decided = null;
+    if (res) this.chosenMade(card);
     return res;
   },
 
@@ -273,14 +305,16 @@ const picturesPart = {
     return [...new Set((card._found ?? []).map((f) => SOURCE_NAMES[f.source]))].join(", ");
   },
 
+  // (found for what the card no longer says: none chosen, the pictures gone)
   async chooseFound(card, found) {
+    if (!this.madeStill(card)) return;
     const res = await this.pictureAction(card, {
       path: "/found",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ source: found.source, id: found.id, ...this.pendingPicture(card) }),
     });
-    if (res) card._decided = null;
+    if (res) this.chosenMade(card);
     if (card.picture) card._found = null;
   },
 
@@ -306,19 +340,22 @@ const picturesPart = {
   // runs, done again once it ends (a card a correction added meanwhile)
   async drawPictures(draw = false) {
     if (this.readOnly() || !this.cards.some(needsPicture)) return;
-    if (this.saveTimer) await this.saveNow();
     const lessonId = this.lessonId;
     if (this.drawingLessons.includes(lessonId)) {
       this.drawLater[lessonId] = Boolean(this.drawLater[lessonId] || draw);
       return;
     }
+    // Drawing from now on, before the save: a send waiting for the pictures (picturesDone)
+    // never sees none drawn meanwhile (a drawing asked again once one ends: drawLater)
     this.drawingLessons.push(lessonId);
     this.toDraw = [];
-    // What each card is drawn from: one corrected meanwhile left to be drawn again as it says
-    // now (drawLater: its correction asked for it), not given the drawing of what it said before
-    const drawnFrom = new Map(this.cards.map((c) => [c.id, describedAs(c)]));
     try {
-      const res = await this.pictureSteps(lessonId, drawnFrom, await api(`/api/lessons/${lessonId}/pictures`, {
+      if (this.saveTimer) await this.saveNow();
+      // What each card is drawn from: one corrected meanwhile left to be drawn again as it says
+      // now (drawLater: its correction asked for it), not given the drawing of what it said before
+      const drawnFrom = new Map(this.cards.map((c) => [c.id, describedAs(c)]));
+      const began = new Map(this.cards.map((c) => [c.id, pictureFieldsOf(c)]));
+      const res = await this.pictureSteps(lessonId, drawnFrom, began, await api(`/api/lessons/${lessonId}/pictures`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         // A card whose picture a correction replaced: not the lesson's drawing again; its figure
@@ -336,7 +373,7 @@ const picturesPart = {
       this.cards.forEach((c) => {
         const made = drawn.get(c.id);
         if (!c.picture && made?.picture && drawnFrom.get(c.id) === describedAs(c)) {
-          this.takePicture(c, made);
+          this.takeDrawn(c, made, began.get(c.id));
           Object.assign(c, { _replacing: "", _previous: null });
         }
       });
@@ -358,6 +395,16 @@ const picturesPart = {
     }
   },
 
+  // A picture drawn with the lesson's (`from`) taken into its card, but for the fields the user
+  // changed since the drawing began (`began`: as they were then; where it shows, switched on
+  // its page meanwhile), kept as they are now: the drawing's are the card's as it began
+  takeDrawn(card, from, began) {
+    const changed = PICTURE_FIELDS.filter((field) => began && JSON.stringify(card[field] ?? null) !== began[field]);
+    const own = Object.fromEntries(changed.map((field) => [field, card[field]]));
+    this.takePicture(card, from);
+    Object.assign(card, own);
+  },
+
   // A card corrected again before the picture a correction replaced was drawn again (`old`, the
   // card as it was, still waiting for it): still not the lesson's drawing again, its figure still
   // drawn from the one it had; {} when it waited for none
@@ -377,14 +424,15 @@ const picturesPart = {
   // The pictures' answer, each card's steps shown on it as they begin (resultAsItComes): a
   // figure drawn, checked, redrawn when wrong (its first one shown meanwhile, faded); a
   // picture looked for, drawn. Null when it was cancelled. `drawnFrom`: what each card was
-  // drawn from (describedAs); a card described anew since doesn't take its drawing
-  pictureSteps(lessonId, drawnFrom, res) {
+  // drawn from (describedAs); a card described anew since doesn't take its drawing. `began`:
+  // each card's picture fields as the drawing began (takeDrawn)
+  pictureSteps(lessonId, drawnFrom, began, res) {
     return resultAsItComes(res, (step, item) => {
       const card = this.lessonId === lessonId && this.cards.find((c) => c.id === item.card);
       if (!card) return;
       if (step === "ready") {  // its picture, shown at once: not when the others are done
         if (!card.picture && drawnFrom.get(card.id) === describedAs(card)) {
-          this.takePicture(card, item);
+          this.takeDrawn(card, item, began.get(card.id));
           card._previous = null;
         }
         Object.assign(card, { _step: "", _problem: "", _first: "" });

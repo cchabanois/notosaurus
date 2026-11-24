@@ -122,6 +122,14 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- The picture's page no longer reuses an earlier visit's choice: a picture found or a photo of one's own no longer replaces a figure edited since with what was decided for the figure it had.
+- "Draw it?" now names the picture decided for a figure, no longer an empty subject.
+- A picture drawn with the lesson's keeps where it shows when this was changed while it was drawn.
+- A lesson sent to Anki while a second drawing of its pictures was about to start now waits for it.
+- A share no longer lands while all the lesson's pages are shown or the lesson is being copied for another child.
+- The voice's list shows the lesson's voice when the language picked has none, and an answer meant for another lesson is ignored.
+- On the phone, the picture's 📷 is off while pages are being read, and pages being read are no longer deleted by a new photo.
+- "✨ Image" that changes nothing no longer marks a lesson as changed since it was sent to Anki.
 - 🐛 Cards to be read aloud in a lesson without a voice: said, instead of a correction saying the audio is on.
 - 🐛 The app: a Chinese lesson gets a voice (Mandarin, or Cantonese for Hong Kong); it had none, nothing read aloud.
 - A card corrected while its picture was being drawn keeps its correction: the drawing of what it said before is set aside
