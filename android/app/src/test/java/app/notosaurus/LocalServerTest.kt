@@ -187,7 +187,10 @@ class LocalServerTest : LocalServerTestBase() {
         assertEquals(listOf("cahier.jpg", "Leçon 5.pdf"), files.map { it.string("name") })
         assertEquals(listOf("image/jpeg", Shared.PDF), files.map { it.string("type") })
         assertEquals("En 1789, le peuple de Paris prend la Bastille.\n\nLa Révolution française", shared.string("text"))
-        assertEquals(listOf("archive.zip", "huge.jpg"), shared["skipped"]!!.jsonArray.map { it.jsonPrimitive.content })
+        val skipped = shared["skipped"]!!.jsonObject
+        assertEquals(listOf("archive.zip"), skipped["type"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(listOf("huge.jpg"), skipped["unreadable"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(0, skipped["over"]!!.jsonPrimitive.int)
         assertArrayEquals(pdf, client.get("/api/shared/2") { page() }.bodyAsBytes())
         assertEquals(HttpStatusCode.NotFound, client.get("/api/shared/3") { page() }.status)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/api/shared").status) // never without the WebView's cookie
@@ -209,6 +212,39 @@ class LocalServerTest : LocalServerTestBase() {
         local.shared.take(listOf(Shared.Item("a.jpg", "image/jpeg") { "a".byteInputStream() }), null)
         local.shared.take(listOf(Shared.Item("b.png", "image/png") { "b".byteInputStream() }), null)
         assertEquals(listOf("b.png"), client.get("/api/shared") { page() }.json().jsonObject["files"]!!.jsonArray.map { it.jsonObject.string("name") })
+    }
+
+    @Test
+    fun whatAShareLeftOutKeptByReason() = app { client ->
+        // More photos and PDFs than a lesson's pages, among them a .docx, a file too large and a
+        // text: the first MAX_ITEMS photos and PDFs kept, the text too, the rest said by reason
+        // (the type, the file unreadable, how many past the limit), none silently dropped
+        val photos = (1..Shared.MAX_ITEMS + 3).map { n -> Shared.Item("p$n.jpg", "image/jpeg") { "p$n".byteInputStream() } }
+        val items = photos.take(10) +
+            Shared.Item("devoir.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document") { "docx".byteInputStream() } +
+            Shared.Item("huge.jpg", "image/jpeg") { java.io.ByteArrayInputStream(ByteArray((Shared.MAX_BYTES + 1).toInt())) } +
+            photos.drop(10) +
+            Shared.Item("notes.txt", "text/plain") { "La Bastille".byteInputStream() }
+        local.shared.take(items, null)
+        val shared = client.get("/api/shared") { page() }.json().jsonObject
+        assertEquals(photos.take(Shared.MAX_ITEMS).map { it.name }, shared["files"]!!.jsonArray.map { it.jsonObject.string("name") })
+        assertEquals("La Bastille", shared.string("text")) // a text past the limit: no page of its own, kept
+        val skipped = shared["skipped"]!!.jsonObject
+        assertEquals(listOf("devoir.docx"), skipped["type"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(listOf("huge.jpg"), skipped["unreadable"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(3, skipped["over"]!!.jsonPrimitive.int)
+    }
+
+    @Test
+    fun aShareAnOlderAppKeptStillGivenAsItWas() {
+        // skipped.json as an older app wrote it (the names, every reason in one list), the app
+        // updated before the page took it: given as it is, the page says it as before
+        val dir = java.nio.file.Files.createTempDirectory("shared").toFile()
+        val shared = Shared(dir)
+        shared.take(listOf(Shared.Item("cahier.jpg", "image/jpeg") { "photo".byteInputStream() }), null)
+        File(dir, "skipped.json").writeText("[\"archive.zip\"]")
+        assertEquals(listOf("archive.zip"), shared.get()["skipped"]!!.jsonArray.map { it.jsonPrimitive.content })
+        dir.deleteRecursively()
     }
 
     @Test

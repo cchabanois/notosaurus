@@ -650,6 +650,11 @@
     },
     "share": {
       "skipped": "Notosaurus takes photos, PDFs and text: “{names}” was not added.",
+      "unreadable": "“{names}” could not be read (too large or damaged).",
+      "over": {
+        "one": "A lesson holds {max} pages: {count} more file was not added.",
+        "other": "A lesson holds {max} pages: {count} more files were not added."
+      },
       "waiting": "Share received: it will be added once the current task is done or the card is closed.",
       "cards": {
         "lessons": "📤 Share lessons",

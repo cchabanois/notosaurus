@@ -197,11 +197,18 @@ class MainActivity : ComponentActivity() {
         // The document scanner's module fetched ahead, once (Scanner): never waited for. Not
         // while the relay has the scanner turned off (lesson.scan): the camera then
         if (prefs[SCANNER_READY] == null && !server.switches.off("lesson.scan")) DocumentScanner.preinstall(applicationContext) { prefs[SCANNER_READY] = "1" }
+        // A share is taken once: the activity made again with the intent that brought it (a
+        // change of theme, language or font size: its state saved; reopened from the recent
+        // apps after Android ended the app) opens the page as without it, the share taken
+        // already or still kept for the page (Shared), which takes it from ?shared=1. Taken
+        // again, its files were copied and added to the lesson again
+        val shareAgain = intent.action in SHARES &&
+            (savedInstanceState != null || intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0)
         lifecycleScope.launch {
             val port = withContext(Dispatchers.IO) { server.start() }
             origin = "http://127.0.0.1:$port"
             CookieManager.getInstance().setCookie(origin, "${LocalServer.COOKIE}=${server.token}; path=/")
-            useMode(intent)
+            useMode(intent.takeUnless { shareAgain }, shareWaits = shareAgain)
             Shortcuts.update(this@MainActivity, server)
             withContext(Dispatchers.IO) { server.relays.refresh() } // a relay moved: followed from now on
         }
@@ -232,8 +239,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** The mode a shortcut asks for, else the last one: the page of the phone or of the computer. */
-    private fun useMode(intent: Intent?) {
+    /** The mode a shortcut asks for, else the last one: the page of the phone or of the computer;
+     * [shareWaits]: the phone's told to take a share that may wait for it. */
+    private fun useMode(intent: Intent?, shareWaits: Boolean = false) {
         when (intent?.action) {
             Shortcuts.PHONE -> prefs[LocalServer.MODE] = LocalServer.PHONE_MODE
             Shortcuts.COMPUTER -> if (prefs[LocalServer.COMPUTER] != null) prefs[LocalServer.MODE] = LocalServer.COMPUTER_MODE
@@ -249,7 +257,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         val computer = prefs[LocalServer.COMPUTER]
-        web.loadUrl(if (prefs[LocalServer.MODE] == LocalServer.COMPUTER_MODE && computer != null) computer else "$origin/")
+        web.loadUrl(if (prefs[LocalServer.MODE] == LocalServer.COMPUTER_MODE && computer != null) computer else "$origin/" + if (shareWaits) "?shared=1" else "")
     }
 
     /** Something shared to Notosaurus ("Share" in another app): copied at once (reading it is
@@ -352,6 +360,7 @@ class MainActivity : ComponentActivity() {
         const val APP_LINKS = "notosaurus-app" // links the pages make to the app itself
         const val SCANNER_READY = "scanner_module" // the document scanner's module installed (Scanner)
         private const val TAG = "Notosaurus"
+        private val SHARES = setOf(Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE) // "Share" to Notosaurus
     }
 
     /** The page's camera (📷): its pages scanned (Scanner), as many as the lesson has room for

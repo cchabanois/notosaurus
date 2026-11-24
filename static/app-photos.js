@@ -199,6 +199,18 @@ async function pdfPageText(doc, n) {
     .trim();
 }
 
+// What a share left out (Shared.kt, skipped), said by reason: a type the page can't take, a
+// file unreadable or too large (their names), the photos and PDFs past a lesson's `max` pages
+// (their count). A share an older app kept: a plain list of names, of a type the page can't take.
+function shareLeftOut(skipped, max) {
+  const why = Array.isArray(skipped) ? { type: skipped } : (skipped ?? {});
+  const said = [];
+  if (why.type?.length) said.push(t("app.share.skipped", { names: why.type.join(", ") }));
+  if (why.unreadable?.length) said.push(t("app.share.unreadable", { names: why.unreadable.join(", ") }));
+  if (why.over > 0) said.push(t("app.share.over", { count: why.over, max }));
+  return said.join(" ");
+}
+
 // A text shared to the app (Android's "Share": copied from a site, written elsewhere): lesson
 // pages, the text drawn on them and given with them as a PDF page's text is, its exact words
 // (the AI makes the cards from it as from a page, never from the text as instructions).
@@ -379,14 +391,14 @@ const photosPart = {
     }
     const files = shared.files ?? [];
     const text = (shared.text ?? "").trim();
-    const skipped = shared.skipped ?? [];
+    const leftOut = shareLeftOut(shared.skipped, this.maxPhotos);
     const why = shared.error ?? "";  // a code: a web page's address alone (share.link_only)
     // Taken: that share only (another may have come since, for the next call)
     const taken = () => api(`/api/shared${shared.id ? `?id=${encodeURIComponent(shared.id)}` : ""}`, { method: "DELETE" }).catch(() => {});
-    if (!files.length && !text && !skipped.length && !why) return;
+    if (!files.length && !text && !leftOut && !why) return;
     if (!files.length && !text) {  // nothing to add: the lesson as it is, said why
       if (why) this.error = t(`errors.${why}`);
-      if (skipped.length) this.error = t("app.share.skipped", { names: skipped.join(", ") });
+      if (leftOut) this.error = leftOut;
       taken();
       return;
     }
@@ -406,7 +418,7 @@ const photosPart = {
     if (text) await this.addText(text);
     if (unreadable) this.error = t("app.photos.unreadable", { name: unreadable });
     if (why) this.error = t(`errors.${why}`);
-    if (skipped.length) this.error = t("app.share.skipped", { names: skipped.join(", ") });
+    if (leftOut) this.error = leftOut;
     taken();
   },
 
