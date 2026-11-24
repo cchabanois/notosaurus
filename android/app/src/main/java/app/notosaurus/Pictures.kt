@@ -430,8 +430,10 @@ class Pictures(
 
         /** The cards an edit made of `before` (`after`), merged into the lesson's as saved now
          * (`now`), card by card (by id): of each card the edit changed, only the fields it
-         * changed; a card added since kept, one it removed gone, one it added at the end. As
-         * app/lessons.py's merged_cards. Without ids to go by (or twice the same): `after`. */
+         * changed; a card added since kept, one it removed gone, one it added at the end. A
+         * picture the edit drew for a card described anew meanwhile (stalePicture): none of its
+         * picture's fields, the card left to be drawn as it says now. As app/lessons.py's
+         * merged_cards. Without ids to go by (or twice the same): `after`. */
         internal fun mergedCards(before: List<JsonObject>, after: List<JsonObject>, now: List<JsonObject>): List<JsonObject> {
             fun ids(cards: List<JsonObject>) = cards.map { it.string("id") }
             if (listOf(before, after, now).any { cards -> ids(cards).let { it.any(String::isEmpty) || it.toSet().size != it.size } }) return after
@@ -440,9 +442,22 @@ class Pictures(
             return now.mapNotNull { card ->
                 val old = was[card.string("id")] ?: return@mapNotNull card // added since
                 val new = made[card.string("id")] ?: return@mapNotNull null // removed by the edit
-                val changed = (old.keys + new.keys).filter { old[it] != new[it] }
+                val changed = (old.keys + new.keys).filter { old[it] != new[it] && !(it in DRAWN && stalePicture(old, new, card)) }
                 JsonObject(card.filterKeys { it !in changed || it in new } + changed.mapNotNull { k -> new[k]?.let { k to it } })
             } + after.filter { it.string("id") !in was }
+        }
+
+        /** The picture an edit gave a card (`before` → `after`) drawn from what it no longer says:
+         * its description (DESCRIBED) changed meanwhile in the lesson as saved `now` (a correction
+         * saved while it was drawn), not to what the edit set itself. The user's own photo is not
+         * drawn from it (chosen as the card's, kept); nor is a picture removed. As app/lessons.py's
+         * stale_picture. */
+        internal fun stalePicture(before: JsonObject, after: JsonObject, now: JsonObject): Boolean {
+            val picture = after.string("picture")
+            if (picture.isEmpty() || picture == before.string("picture")) return false
+            if ((after["picture_source"] as? JsonObject)?.string("source") == "photo") return false
+            fun described(card: JsonObject) = DESCRIBED.map { card.string(it) }
+            return described(now) != described(before) && described(now) != described(after)
         }
 
         /** The pictures in `folder` no card uses (`used`) removed, with the sources a figure was
@@ -503,6 +518,11 @@ class Pictures(
         // What removing a card's picture clears ("" each, picture_source null): its search words and
         // where it shows kept (core's pictures.REMOVED)
         private val REMOVED = listOf("picture", "picture_prompt", "figure", "figure_kind", "picture_source")
+        // What a card's picture is drawn from (its description and its family): described anew
+        // while an edit drew its picture, that picture is not the card's (app/lessons.py's DESCRIBED)
+        private val DESCRIBED = listOf("figure", "figure_kind", "picture_prompt")
+        // What a picture drawn (or found) sets on its card (app/lessons.py's DRAWN)
+        private val DRAWN = PICTURE_FIELDS + "picture"
         // A card's picture fields, told with "ready" (drawMissing) the moment it has them (core's pictures.READY)
         private val READY = PICTURE_FIELDS + "picture"
         private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py

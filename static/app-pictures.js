@@ -5,11 +5,19 @@
 // A card's picture fields, as the server tells them (core's pictures.READY): its answer to a
 // card's picture, a "ready" step, a lesson's cards (takePicture)
 const PICTURE_FIELDS = ["picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"];
+// What a card's picture is drawn from: its description and its family (app/lessons.py's DESCRIBED)
+const DESCRIBED = ["figure", "figure_kind", "picture_prompt"];
 // The free pictures' sources, as their credit line says them
 const SOURCE_NAMES = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
 // A whole card's text the server takes as a search's context (relay_api.MAX_CARD): a card has
 // no length limit of its own, so a longer one is cut to it, "…" last, never refused
 const MAX_CARD = 4000;
+
+// What a card's picture is drawn from, to compare: a card described anew (corrected) while its
+// picture was drawn doesn't take the drawing of what it said before
+function describedAs(card) {
+  return JSON.stringify(DESCRIBED.map((field) => card[field] ?? ""));
+}
 
 // `text` cut to `max` characters, "…" last when it was longer, never half a character (as the
 // phone's Pictures.cut and the computer's PictureSearch)
@@ -299,8 +307,11 @@ const picturesPart = {
     }
     this.drawingLessons.push(lessonId);
     this.toDraw = [];
+    // What each card is drawn from: one corrected meanwhile left to be drawn again as it says
+    // now (drawLater: its correction asked for it), not given the drawing of what it said before
+    const drawnFrom = new Map(this.cards.map((c) => [c.id, describedAs(c)]));
     try {
-      const res = await this.pictureSteps(lessonId, await api(`/api/lessons/${lessonId}/pictures`, {
+      const res = await this.pictureSteps(lessonId, drawnFrom, await api(`/api/lessons/${lessonId}/pictures`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         // A card whose picture a correction replaced: not the lesson's drawing again; its figure
@@ -317,7 +328,7 @@ const picturesPart = {
       const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
       this.cards.forEach((c) => {
         const made = drawn.get(c.id);
-        if (!c.picture && made?.picture) {
+        if (!c.picture && made?.picture && drawnFrom.get(c.id) === describedAs(c)) {
           this.takePicture(c, made);
           Object.assign(c, { _replacing: "", _previous: null });
         }
@@ -340,6 +351,14 @@ const picturesPart = {
     }
   },
 
+  // A card corrected again before the picture a correction replaced was drawn again (`old`, the
+  // card as it was, still waiting for it): still not the lesson's drawing again, its figure still
+  // drawn from the one it had; {} when it waited for none
+  stillReplacing(old, card) {
+    if (!old._notFromLesson && !old._previous) return {};
+    return { _replacing: old._replacing ?? "", _notFromLesson: Boolean(old._notFromLesson), _previous: card.figure ? old._previous ?? null : null };
+  },
+
   // The figure a correction replaced on a card (`old`, the card as it was), to draw the new one
   // from: where it came from (its sources, kept beside it until pruned) and its family; what the
   // correction asks changed, the rest kept. None when it had no sources (drawn anew)
@@ -350,13 +369,14 @@ const picturesPart = {
 
   // The pictures' answer, each card's steps shown on it as they begin (resultAsItComes): a
   // figure drawn, checked, redrawn when wrong (its first one shown meanwhile, faded); a
-  // picture looked for, drawn. Null when it was cancelled
-  pictureSteps(lessonId, res) {
+  // picture looked for, drawn. Null when it was cancelled. `drawnFrom`: what each card was
+  // drawn from (describedAs); a card described anew since doesn't take its drawing
+  pictureSteps(lessonId, drawnFrom, res) {
     return resultAsItComes(res, (step, item) => {
       const card = this.lessonId === lessonId && this.cards.find((c) => c.id === item.card);
       if (!card) return;
       if (step === "ready") {  // its picture, shown at once: not when the others are done
-        if (!card.picture) {
+        if (!card.picture && drawnFrom.get(card.id) === describedAs(card)) {
           this.takePicture(card, item);
           card._previous = null;
         }

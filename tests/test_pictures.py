@@ -100,6 +100,34 @@ def test_pictures_drawn_drop_no_card_added_meanwhile(client, drawn, monkeypatch)
     assert client.get(f"/api/lessons/{id}").json()["cards"] == cards  # as saved
 
 
+def test_a_picture_drawn_from_what_its_card_no_longer_says_set_aside(client, drawn, monkeypatch):
+    """A card corrected while its picture is drawn (its description changed, saved by the page
+    meanwhile): the drawing of what it said before is not put on it, nor told as its picture;
+    drawn next time as it says now. The other cards' pictures taken."""
+    from app.models import LessonIn
+
+    lesson = lesson_with_pictures(client)
+    id = lesson["id"]
+    draw = pictures.draw
+
+    async def meanwhile(s, subject):
+        if subject == "an apple":
+            saved = lessons.get(id)
+            assert saved
+            saved.cards[0].picture_prompt = "a green apple"  # the page's correction, saved
+            lessons.update(id, LessonIn(deck=saved.deck, cards=saved.cards))
+        return await draw(s, subject)
+
+    monkeypatch.setattr(pictures, "draw", meanwhile)
+    cards = client.post(f"/api/lessons/{id}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    assert (cards[0]["picture_prompt"], cards[0]["picture"], cards[0]["picture_source"]) == ("a green apple", "", None)
+    assert cards[1]["picture"]  # the dog's, its description unchanged
+    assert client.get(f"/api/lessons/{id}").json()["cards"] == cards  # as saved
+    drawn.clear()
+    cards = client.post(f"/api/lessons/{id}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    assert "a green apple" in drawn and cards[0]["picture"]
+
+
 def test_merged_cards():
     """An edit's cards merged into the lesson's as saved now: what it changed of each card
     (field by field), the cards added since kept, the ones it removed or added."""

@@ -122,6 +122,12 @@ class SharedCasesTest {
     }
 
     @Test
+    fun anEditsCardMergedIntoTheSavedOne() = cases("merged_card").forEach { c ->
+        val (before, after, now) = listOf("before", "after", "now").map { c[it]!!.jsonObject }
+        assertEquals(c.string("name"), listOf(c["out"]!!.jsonObject), Pictures.mergedCards(listOf(before), listOf(after), listOf(now)))
+    }
+
+    @Test
     fun aCardsSound() = cases("spoken").forEach { c ->
         val card = Card(c.string("front"), c.string("back"))
         assertEquals("${c.string("front")} | ${c.string("back")}", c.string("out"), Speech.spoken(card, c["dictation"]!!.jsonPrimitive.boolean))

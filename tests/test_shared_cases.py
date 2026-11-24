@@ -281,3 +281,13 @@ def test_a_cards_formulas_as_they_go_to_anki(case):
     from app.note_types.formulas import anki_text
 
     assert anki_text(case["in"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["merged_card"], ids=lambda c: c["name"])
+def test_an_edits_card_merged_into_the_saved_one(case):
+    """A card an edit changed merged into the card as saved now: a picture drawn from a
+    description changed meanwhile set aside. The phone's Pictures.mergedCards the same."""
+    from app.lessons import merged_cards
+
+    before, after, now = (Card(**case[k]) for k in ("before", "after", "now"))
+    assert merged_cards([before], [after], [now]) == [Card(**case["out"])]

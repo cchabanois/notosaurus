@@ -319,13 +319,21 @@ def _save(
     return lesson
 
 
+# What a card's picture is drawn from (its description and its family): described anew while
+# an edit drew its picture, that picture is not the card's (merged_cards)
+DESCRIBED = ("figure", "figure_kind", "picture_prompt")
+# What a picture drawn (or found) sets on its card
+DRAWN = ("picture", *pictures.PICTURE_FIELDS)
+
+
 def merged_cards(before: list[Card], after: list[Card], now: list[Card]) -> list[Card]:
     """The cards an edit made of `before` (`after`), merged into the lesson's as saved now
     (`now`), card by card (by id): of each card the edit changed, only the fields it changed
     (a picture drawn: its picture's; the card's text the page saved meanwhile stays); a card
     added since kept (the next pages' cards, a /complete ending while pictures were drawn),
-    one the edit removed gone, one it added at the end. Without ids to go by (or twice the
-    same): `after`, as it is."""
+    one the edit removed gone, one it added at the end. A picture the edit drew for a card
+    described anew meanwhile (stale_picture): none of its picture's fields, the card left to
+    be drawn as it says now. Without ids to go by (or twice the same): `after`, as it is."""
     lists = (before, after, now)
     if any(not all(c.id for c in cards) or len({c.id for c in cards}) != len(cards) for cards in lists):
         return after
@@ -338,8 +346,23 @@ def merged_cards(before: list[Card], after: list[Card], now: list[Card]) -> list
             merged.append(card)
         elif new is not None:  # else removed by the edit
             changed = {f: getattr(new, f) for f in type(card).model_fields if getattr(new, f) != getattr(old, f)}
+            if stale_picture(old, new, card):
+                changed = {f: v for f, v in changed.items() if f not in DRAWN}
             merged.append(card.model_copy(update=changed, deep=True) if changed else card)
     return merged + [c for c in after if c.id not in was]
+
+
+def stale_picture(before: Card, after: Card, now: Card) -> bool:
+    """The picture an edit gave a card (`before` → `after`) drawn from what it no longer says:
+    its description (DESCRIBED) changed meanwhile in the lesson as saved `now` (a correction
+    saved while it was drawn), not to what the edit set itself. The user's own photo is not
+    drawn from it (chosen as the card's, kept); nor is a picture removed."""
+    if not after.picture or after.picture == before.picture:
+        return False
+    if after.picture_source is not None and after.picture_source.source == "photo":
+        return False
+    described = [tuple(getattr(c, f) for f in DESCRIBED) for c in (before, after, now)]
+    return described[2] not in (described[0], described[1])
 
 
 # The lessons an edit is changing (their id → how many edits): a picture it writes is in
