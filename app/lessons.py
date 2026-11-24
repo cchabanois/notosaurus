@@ -2,7 +2,7 @@
 
 <yyyy-mm-dd-deck-slug>/
   lesson.json     deck, cards, prompt text, voice, dates
-  page-1.jpg …    the photos, in order
+  page-1.jpg …    the photos, by their page number (a page removed by hand leaves a gap)
   audio/          mp3 of the card backs, embedded in exported packages
 """
 
@@ -12,7 +12,7 @@ import logging
 import re
 import shutil
 import uuid
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import cast
@@ -22,7 +22,7 @@ from notosaurus_core.cards import kept_ids
 
 from . import storage
 from .errors import AppError
-from .models import AiCall, Card, Generated, Lesson, LessonIn, LessonSummary
+from .models import AiCall, Card, Frame, Generated, Lesson, LessonIn, LessonSummary
 
 log = logging.getLogger("notosaurus")
 
@@ -67,16 +67,43 @@ def audio_dir(id: str) -> Path | None:
     return path / "audio" if path else None
 
 
-def photos(id: str) -> list[Path]:
-    """The lesson's photos, in their order (page-1.jpg, page-2.jpg…); none: []."""
+PAGE_FILE = re.compile(r"^page-([1-9][0-9]*)\.jpg$")
+
+
+def _page_numbers(path: Path) -> list[int]:
+    """The numbers of the pages in a lesson's folder (page-N.jpg), in order."""
+    found = (PAGE_FILE.match(photo.name) for photo in path.glob("page-*.jpg"))
+    return sorted(int(m[1]) for m in found if m)
+
+
+def pages(id: str) -> list[int]:
+    """The numbers of the lesson's pages there, in order (page 3 missing: [1, 2, 4…]); none: []."""
     path = folder(id)
-    if path is None:
-        return []
-    return sorted(path.glob("page-*.jpg"), key=lambda photo: int(photo.stem.removeprefix("page-")))
+    return _page_numbers(path) if path else []
 
 
-def _count_photos(path: Path) -> int:
-    return len(list(path.glob("page-*.jpg")))
+def photos(id: str) -> dict[int, Path]:
+    """The lesson's photos by their page number, in order; a page missing is not there (never
+    another in its place: a card's page is its number); none: {}."""
+    path = folder(id)
+    return {n: path / f"page-{n}.jpg" for n in _page_numbers(path)} if path else {}
+
+
+def next_page(files: Iterable[int], cards: Iterable[Card], frames: Iterable[Frame], page_texts: Sequence[str]) -> int:
+    """The number of a page added to a lesson: after the highest one used anywhere in it, its
+    pages' files (`files`, their numbers), its cards' pages, their masks', its frames' and its
+    pages' texts (one per page): a page missing (its file removed) is never numbered again, so
+    a card that came from it never points at another, and no page is written over. As the
+    phone's Lessons.nextPage (core/shared-cases.json)."""
+    cards = list(cards)
+    used = [
+        *files,
+        *(c.page for c in cards),
+        *(c.mask.page for c in cards if c.mask),
+        *(f.page for f in frames),
+        len(page_texts),
+    ]
+    return max(used, default=0) + 1
 
 
 # lesson.json's format; storage.migrate brings older files up to it
@@ -89,8 +116,9 @@ def _read(path: Path) -> Lesson:
         raise FileNotFoundError(path / "lesson.json")
     data = storage.migrate(raw, "lesson", FORMAT, {0: dict})
     # Its id and photos' count are its folder's (the phone's lesson.json has them too: imported)
-    data = {k: v for k, v in data.items() if k not in ("id", "photo_count")}
-    lesson = Lesson(id=path.name, photo_count=_count_photos(path), **data)
+    data = {k: v for k, v in data.items() if k not in ("id", "photo_count", "pages")}
+    numbers = _page_numbers(path)
+    lesson = Lesson(id=path.name, photo_count=len(numbers), pages=numbers, **data)
     # Cards saved before cards had ids: the same id at every reading, until it's saved
     for n, card in enumerate(lesson.cards):
         if not card.id:
@@ -108,7 +136,8 @@ def with_ids(cards: list[Card]) -> list[Card]:
 
 def _write(path: Path, lesson: Lesson) -> None:
     with_ids(lesson.cards)
-    storage.write_json(path / "lesson.json", {"format": FORMAT, **lesson.model_dump(exclude={"id", "photo_count"})})
+    kept = lesson.model_dump(exclude={"id", "photo_count", "pages"})  # those three its folder's
+    storage.write_json(path / "lesson.json", {"format": FORMAT, **kept})
     _summaries.pop(path, None)  # read again at the next listing, even within the same clock tick
 
 
@@ -408,15 +437,16 @@ def completed(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson | N
     """The lesson's next pages added: their photos after its own, their cards after its
     cards (those untouched: their ids, so their notes in Anki, stay). `g`'s cards (their page,
     their mask) and frames count pages from the first new photo; numbered here from the
-    lesson's own. Only its cards, photos, frames and page texts are taken (the deck, voice…
-    stay the lesson's)."""
+    lesson's next page (next_page: a number never used in it, so never a file written over).
+    Only its cards, photos, frames and page texts are taken (the deck, voice… stay the
+    lesson's)."""
     cards = g.content.cards
     with storage.lock:
         path = folder(id)
         if not path:
             return None
         old = _read(path)
-        before = old.photo_count
+        before = next_page(old.pages, old.cards, old.frames, old.page_texts) - 1
         for n, data in enumerate(g.photos, start=before + 1):
             (path / f"page-{n}.jpg").write_bytes(data)
         for card in cards:
@@ -425,7 +455,7 @@ def completed(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson | N
             if card.page:  # 0: unknown, stays so
                 card.page += before
         texts = old.page_texts
-        if any(g.page_texts):  # one per photo: the earlier pages' ("" without a PDF), then these
+        if any(g.page_texts):  # one per page: the earlier pages' ("" without a PDF), then these
             texts = [*old.page_texts, *[""] * (before - len(old.page_texts)), *g.page_texts]
         lesson = old.model_copy(
             update={

@@ -77,7 +77,13 @@ internal fun Route.pictureRoutes(server: LocalServer) {
                 var photo: ByteArray? = null
                 var decided: String? = null
                 eachPart { part ->
-                    if (part is PartData.FileItem && part.name == "photo") photo = LocalServer.readPhoto(part.provider())
+                    if (part is PartData.FileItem && part.name == "photo") {
+                        // Of a kind a card shows, as the computer's (IMAGE_TYPES): checked before it is read, then its bytes
+                        val type = part.contentType?.withoutParameters()?.toString()
+                        val refused = BadRequest("extract.bad_format", buildJsonObject { put("format", type) })
+                        if (type !in LocalServer.IMAGE_TYPES) throw refused
+                        photo = LocalServer.readPhoto(part.provider()).also { if (!LocalServer.isImage(it)) throw refused }
+                    }
                     if (part is PartData.FormItem && part.name == "decided") decided = part.value
                 }
                 val chosen = decided?.let(::decidedField) // once the whole request is read
@@ -97,7 +103,8 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             suspend fun search(onFound: suspend (JsonArray) -> Unit): JsonObject {
                 switches.check("pictures.search")
                 if (subject.isEmpty()) throw BadRequest("picture.no_subject")
-                return relay().searchPictures(subject, req.string("context"), req.string("words"), onFound)
+                // A card has no length limit: a longer one cut to what a card is sent as (Pictures.cut), never refused
+                return relay().searchPictures(subject, Pictures.cut(req.string("context")), req.string("words"), onFound)
             }
             if (call.request.headers[HttpHeaders.Accept]?.contains(Relay.STREAM_TYPE) != true) {
                 val (status, answer) = try {

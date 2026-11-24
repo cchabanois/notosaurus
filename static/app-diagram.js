@@ -3,8 +3,12 @@
 // Methods of the page's Alpine component (app.js), as `this`.
 
 const diagramPart = {
+  // The photo of the mask's page, by its number (`n`: a lesson's page missing leaves a gap);
+  // photos without numbers yet (not saved): by their place
   photoFor(card) {
-    return this.photos[card.mask.page - 1]?.url ?? null;
+    const page = card.mask.page;
+    const numbered = this.photos.some((p) => p.n);
+    return (numbered ? this.photos.find((p) => p.n === page) : this.photos[page - 1])?.url ?? null;
   },
 
   hasMasks() {

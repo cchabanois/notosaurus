@@ -18,7 +18,7 @@ from typing import Any, NamedTuple
 
 from . import config, figures, files, images, llm, recommended, stock
 from .calls import MAX_IMAGES
-from .cards import cloze_question, is_cloze
+from .cards import cloze_question, is_cloze, page_numbers
 from .config import AIConfig
 from .errors import AppError, loggable
 from .models import Card, PictureSource, SourceFile
@@ -572,19 +572,23 @@ class DrawingCall(NamedTuple):
     cards: list[int]  # the cards asked (their indexes), but those an earlier call found
 
 
-def drawing_calls(pages: Sequence[int], photos: int, per_call: int = MAX_IMAGES) -> list[DrawingCall]:
+def drawing_calls(pages: Sequence[int], photos: int | Sequence[int], per_call: int = MAX_IMAGES) -> list[DrawingCall]:
     """The calls looking for the lesson's own drawings of cards whose pages are `pages` (each
-    card's, from 1; 0 unknown) among the lesson's `photos`. A card's drawing is looked for on
-    its own page and its neighbours (the page before, the page after, within the lesson): the
-    cards taken by their page, each call sends the pages around as many as fit in `per_call`
-    photos. The cards whose page is unknown (0, or not one of the lesson's): every page, at
-    most `per_call` at a time, one call after another, each asked only for those still without
-    a drawing. The same rule on the phone (Pictures.drawingCalls: core/shared-cases.json)."""
+    card's, from 1; 0 unknown) among the lesson's `photos` (the numbers of its pages there,
+    cards.page_numbers: a count, 1 to n). A card's drawing is looked for on its own page and its
+    neighbours (the page before, the page after, those the lesson has): the cards taken by their
+    page, each call sends the pages around as many as fit in `per_call` photos. The cards whose
+    page is unknown (0, or not one of the lesson's: a page missing is never replaced by
+    another): every page, at most `per_call` at a time, one call after another, each asked only
+    for those still without a drawing. The same rule on the phone (Pictures.drawingCalls:
+    core/shared-cases.json)."""
+    present = page_numbers(photos)
+    there = set(present)
     calls: list[DrawingCall] = []
     sent: set[int] = set()
     asked: list[int] = []
-    for page, i in sorted((page, i) for i, page in enumerate(pages) if 1 <= page <= photos):
-        near = set(range(max(1, page - 1), min(photos, page + 1) + 1))
+    for page, i in sorted((page, i) for i, page in enumerate(pages) if page in there):
+        near = {page - 1, page, page + 1} & there
         if asked and len(sent | near) > per_call:
             calls.append(DrawingCall(sorted(sent), sorted(asked)))
             sent, asked = set(), []
@@ -592,10 +596,10 @@ def drawing_calls(pages: Sequence[int], photos: int, per_call: int = MAX_IMAGES)
         asked.append(i)
     if asked:
         calls.append(DrawingCall(sorted(sent), sorted(asked)))
-    unknown = [i for i, page in enumerate(pages) if not 1 <= page <= photos]
+    unknown = [i for i, page in enumerate(pages) if page not in there]
     if unknown:
-        for first in range(1, photos + 1, per_call):
-            calls.append(DrawingCall(list(range(first, min(photos, first + per_call - 1) + 1)), unknown))
+        for first in range(0, len(present), per_call):
+            calls.append(DrawingCall(present[first : first + per_call], unknown))
     return calls
 
 
@@ -633,7 +637,7 @@ async def draw_all(
     cards: list[Card],
     draw: bool = False,
     step: Step | None = None,
-    photos: list[llm.Image] | None = None,
+    photos: Mapping[int, llm.Image] | Sequence[llm.Image] | None = None,
     not_from_lesson: Sequence[str] = (),
     previous: Mapping[str, tuple[PictureSource, str]] | None = None,
 ) -> Drawn:
@@ -642,7 +646,8 @@ async def draw_all(
     model only if `draw` (it costs: the user said yes), else its card in to_draw. A card
     without its picture is still a card. `step`: told each card's steps as they begin,
     {"card": its id, …relay_api.PictureStep's fields}, then {"card", "step": "ready", its
-    picture's fields (READY)} as soon as it has it. `photos`: the lesson's, its own drawings
+    picture's fields (READY)} as soon as it has it. `photos`: the lesson's by their page
+    number (a list: its pages 1 to n), its own drawings
     taken first for the cards whose thing they show (lesson_drawings: each card's on its page
     and its neighbours, drawing_calls; no search, the pupil's own pictures; {"card", "step":
     "lesson"} while they are looked at), but for the cards in `not_from_lesson` (their ids): a
@@ -653,7 +658,8 @@ async def draw_all(
     # A sentence with gaps' too: its note type shows it (cloze v3), on its question or its answer
     todo = [c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture]
     if photos:
-        await _from_the_lesson(s, folder, [c for c in todo if c.id not in not_from_lesson], photos, step)
+        by_page = photos if isinstance(photos, Mapping) else dict(enumerate(photos, 1))
+        await _from_the_lesson(s, folder, [c for c in todo if c.id not in not_from_lesson], by_page, step)
         todo = [c for c in todo if not c.picture]
     sem = asyncio.Semaphore(CONCURRENCY)
     failures: list[dict] = []
@@ -695,11 +701,12 @@ async def draw_all(
 
 
 async def _from_the_lesson(
-    s: AIConfig, folder: Path, cards: list[Card], photos: list[llm.Image], step: Step | None
+    s: AIConfig, folder: Path, cards: list[Card], photos: Mapping[int, llm.Image], step: Step | None
 ) -> None:
     """The pictures (not the figures: those are drawn exact) the lesson's own drawings
     give, saved and told at once (draw_all). Each card's looked for on its page and its
-    neighbours, a page unknown on all of them (drawing_calls), one call after another."""
+    neighbours, a page unknown on all of them (drawing_calls), one call after another.
+    `photos`: by their page number (a page missing: none at its number)."""
     wanted = [c for c in cards if c.picture_prompt.strip() and not c.figure.strip()]
     if not wanted:
         return
@@ -707,11 +714,11 @@ async def _from_the_lesson(
         if step:
             step({"card": card.id, "step": "lesson"})
     found: set[int] = set()
-    for call in drawing_calls([c.page for c in wanted], len(photos)):
+    for call in drawing_calls([c.page for c in wanted], list(photos)):
         asked = [i for i in call.cards if i not in found]  # the drawings' indexes: into these
         if not asked:
             continue
-        sent = [photos[page - 1] for page in call.pages]  # a drawing cut out of its own photo
+        sent = [photos[page] for page in call.pages]  # a drawing cut out of its own photo
         for j, jpeg in (await lesson_drawings(s, sent, [wanted[i] for i in asked])).items():
             found.add(asked[j])
             _from_its_page(folder, wanted[asked[j]], jpeg, step)

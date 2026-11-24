@@ -51,13 +51,62 @@ class LessonsTest {
         assertEquals("${LocalDate.now()}-espagnol-lecon-5-la-famille", lesson.string("id"))
         assertEquals(2, lesson["photo_count"]!!.jsonPrimitive.int)
         assertArrayEquals(byteArrayOf(3), lessons.photo(lesson.string("id"), 2)!!.readBytes())
-        assertEquals(listOf(byteArrayOf(1, 2), byteArrayOf(3)).map { it.toList() }, lessons.photos(lesson.string("id")).map { it.toList() })
+        assertEquals(listOf(byteArrayOf(1, 2), byteArrayOf(3)).map { it.toList() }, lessons.photos(lesson.string("id")).values.map { it.toList() })
         val ids = lesson["cards"]!!.jsonArray.map { it.jsonObject.string("id") }
         assertTrue(ids.all { it.length == 12 } && ids.distinct().size == 2)
         // The page's defaults, as the computer writes them
         assertEquals(JsonPrimitive(false), lesson["typing"])
         assertEquals(JsonNull, lesson["exported_at"])
         assertEquals(lesson, lessons.get(lesson.string("id"))) // as read back
+    }
+
+    /** A lesson of 5 pages (page n holding n), cards from pages 3 and 5, its page `missing` then removed. */
+    private fun lessonWithout(lessons: Lessons, missing: Int): String {
+        val cards = buildJsonArray {
+            for (page in listOf(3, 5)) add(buildJsonObject { put("front", "p$page"); put("back", "b"); put("page", page) })
+        }
+        val id = lessons.create(mapOf("deck" to JsonPrimitive("D"), "cards" to cards), (1..5).map { byteArrayOf(it.toByte()) }).string("id")
+        assertTrue(folder.root.resolve("$id/page-$missing.jpg").delete())
+        return id
+    }
+
+    private fun pages(lesson: JsonObject) = lesson["pages"]!!.jsonArray.map { it.jsonPrimitive.int }
+
+    @Test
+    fun aLessonsPagesByTheirNumbers() {
+        // Page 3 removed: the others keep their number (page 4 is page-4.jpg, not the 4th there)
+        val lessons = lessons()
+        val id = lessonWithout(lessons, 3)
+        val lesson = lessons.get(id)!!
+        assertEquals(4, lesson["photo_count"]!!.jsonPrimitive.int)
+        assertEquals(listOf(1, 2, 4, 5), pages(lesson))
+        assertEquals(mapOf(1 to 1, 2 to 2, 4 to 4, 5 to 5), lessons.photos(id).mapValues { it.value.single().toInt() })
+        assertFalse(folder.root.resolve("$id/lesson.json").readText().contains("\"pages\"")) // its folder's, not kept
+    }
+
+    @Test
+    fun aPageAddedNeverTakesANumberUsedNorWritesOverOne() {
+        val lessons = lessons()
+        fun completed(id: String) = lessons.completed(
+            id,
+            mapOf("cards" to buildJsonArray { add(buildJsonObject { put("front", "new"); put("back", "b"); put("page", 1) }) },
+                "page_texts" to buildJsonArray { add(JsonPrimitive("its text")) }),
+            listOf(byteArrayOf(9)),
+        )!!
+        // Page 3 missing: page 5 untouched, the new page 6
+        val middle = lessonWithout(lessons, 3)
+        val done = completed(middle)
+        assertArrayEquals(byteArrayOf(5), lessons.photo(middle, 5)!!.readBytes())
+        assertArrayEquals(byteArrayOf(9), lessons.photo(middle, 6)!!.readBytes())
+        assertEquals(listOf(1, 2, 4, 5, 6), pages(done))
+        assertEquals(5, done["photo_count"]!!.jsonPrimitive.int)
+        assertEquals(listOf(3, 5, 6), done.cards().map { it["page"]!!.jsonPrimitive.int })
+        assertEquals(listOf("", "", "", "", "", "its text"), done["page_texts"]!!.jsonArray.map { it.jsonPrimitive.content })
+        // The last page (5) missing, a card still from it: the new page 6, never 5 again
+        val last = lessonWithout(lessons, 5)
+        assertEquals(listOf(1, 2, 3, 4, 6), pages(completed(last)))
+        assertArrayEquals(byteArrayOf(9), lessons.photo(last, 6)!!.readBytes())
+        assertNull(lessons.photo(last, 5))
     }
 
     @Test

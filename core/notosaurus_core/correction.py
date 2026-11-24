@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from . import ai, diagrams, figures
 from .calls import MAX_IMAGES, ExtractionError, Image
-from .cards import matching, pages_within, plain_cards
+from .cards import as_pages, matching, page_numbers, pages_within, plain_cards
 from .cards import plain as plain_text
 from .config import AIConfig
 from .models import Card, CardFix, Deck, FixedCard, PhotosSent, Revision
@@ -15,28 +15,32 @@ from .prompts import _fix_text, _revision_text
 from .providers import demo as demo_ai
 
 
-def fix_photos(page: int, photos: int) -> tuple[list[int], PhotosSent]:
+def fix_photos(page: int, photos: int | Sequence[int]) -> tuple[list[int], PhotosSent]:
     """The lesson's photos sent to correct one card (their numbers, from 1), and what they
     are: the card's own when its page is one of the lesson's `photos` ("card"); else every
     one, when a call takes them all ("all"); else none ("none": a card made before cards knew
-    their page, in a lesson longer than a call takes). The same rule on the phone
-    (Generation.fixPhotos: core/shared-cases.json)."""
-    if 1 <= page <= photos:
+    their page, in a lesson longer than a call takes). `photos`: the numbers of the lesson's
+    pages there (cards.page_numbers: a count, 1 to n): a page missing is never replaced by
+    another, its card's page then unknown. The same rule on the phone (Generation.fixPhotos:
+    core/shared-cases.json)."""
+    present = page_numbers(photos)
+    if page in present:
         return [page], "card"
-    if photos <= MAX_IMAGES:
-        return list(range(1, photos + 1)), "all"
+    if len(present) <= MAX_IMAGES:
+        return present, "all"
     return [], "none"
 
 
-def revise_photos(photos: int) -> tuple[list[int], PhotosSent]:
+def revise_photos(photos: int | Sequence[int]) -> tuple[list[int], PhotosSent]:
     """The lesson's photos sent to correct the whole lesson (their numbers, from 1), and what
     they are: every one, when a call takes them all ("all"); else none ("none": the lesson
     corrected from its cards, the AI told its pages aren't shown). More than a call takes
     would be heavy for the AI, slow and costly, and the relay refuses them; one card's page
-    is sent when that card alone is corrected (fix_photos). The same rule on the phone
-    (Generation.revisePhotos: core/shared-cases.json)."""
-    if photos <= MAX_IMAGES:
-        return list(range(1, photos + 1)), "all"
+    is sent when that card alone is corrected (fix_photos). `photos`: as fix_photos'. The
+    same rule on the phone (Generation.revisePhotos: core/shared-cases.json)."""
+    present = page_numbers(photos)
+    if len(present) <= MAX_IMAGES:
+        return present, "all"
     return [], "none"
 
 
@@ -51,6 +55,7 @@ async def revise_cards(
     demo: dict[str, str] | None = None,
     quick: bool = False,
     photos_sent: PhotosSent = "all",
+    pages: Sequence[int] = (),
 ) -> Revision:
     """Apply a natural-language correction ("remove…", "you forgot…") to the cards.
 
@@ -61,22 +66,31 @@ async def revise_cards(
     about 30 % faster). `photos_sent`: what `images` are of the lesson's photos
     (revise_photos): all of them, or "none" of a lesson that has some (corrected from its
     cards: the AI says what it couldn't do without the pages). Without a photo the AI writes
-    no card's page (a new card's is 0) and no new mask; the cards keep theirs."""
+    no card's page (a new card's is 0) and no new mask; the cards keep theirs. `pages`: the
+    lesson's page numbers of `images`, in their order (revise_photos; none given: 1 to n). The AI
+    numbers the photos it is given from 1: the cards' pages and masks are shown it so, and what
+    it answers is turned back into the lesson's page numbers (a page missing from the lesson
+    leaves a gap: photo 3 may be its page 4)."""
     # The existing masks stay out of the conversation (their boxes are in our own
     # format): the revised cards get back the mask of the card they were. New cards
     # about a diagram label come with a mask in the model's format.
     fmt = ai._box_format(s)
     images, sizes = ai._prepare(images)
+    numbers = list(pages) if len(pages) == len(images) else list(range(1, len(images) + 1))
+    photo = {page: n for n, page in enumerate(numbers, 1)}  # a page's number → its photo's, as the AI counts
     labels: dict[int, list[int]] = {}
     for card in deck.cards:
-        if card.mask:
-            labels.setdefault(card.mask.page, []).append(card.mask.n)
+        if card.mask and card.mask.page in photo:
+            labels.setdefault(photo[card.mask.page], []).append(card.mask.n)
     plain = Deck(
         deck=deck.deck,
-        cards=[c.model_copy(update={"mask": None, "picture": "", "id": "", "voice": ""}) for c in deck.cards],
+        cards=[
+            c.model_copy(update={"mask": None, "picture": "", "id": "", "voice": "", "page": photo.get(c.page, 0)})
+            for c in deck.cards
+        ],
     )
     text = instructions + _revision_text(
-        prompt, plain, instruction, language, len(images), sizes, fmt, labels, photos_sent
+        prompt, plain, instruction, language, len(images), sizes, fmt, labels, photos_sent, numbers
     )
     # The fun facts and helps already there are kept: the AI sees them
     texts = {**demo_ai.DEMO, **(demo or {})}
@@ -87,13 +101,14 @@ async def revise_cards(
         # No photo seen: no page to write (numbered among the photos it is given)
         ai.ai_schema(Revision, fun_facts=True, helps=True, claude=ai.for_claude(s), page=bool(images)),
         quick=quick,
-        demo=lambda: demo_ai.revision(deck, instruction, texts),
+        demo=lambda: demo_ai.revision(plain, instruction, texts),  # as the AI would: from what it is shown
     )
     revision = Revision.model_validate(ai._accepted(answer).model_dump())
     plain_cards(revision.cards)
-    pages_within(revision.cards, len(images))  # the lesson's photos, all of them: its own numbers
+    pages_within(revision.cards, len(images))  # numbered among the photos given…
+    as_pages(revision.cards, numbers)  # …turned into the lesson's page numbers
     revision.summary = plain_text(revision.summary)
-    _keep_masks(revision.cards, deck.cards, sizes, fmt, added=bool(images))
+    _keep_masks(revision.cards, deck.cards, sizes, fmt, added=bool(images), pages=numbers)
     return revision
 
 
@@ -194,11 +209,13 @@ def _keep_masks(
     sizes: Sequence[tuple[int, int] | None] = (),
     fmt: str = "pixels",
     added: bool = True,
+    pages: Sequence[int] = (),
 ) -> None:
     """Give each revised card the mask of the card it was (cards.matching, as its id: a
     changed answer keeps its place on the diagram). Other cards keep the mask the model gave
     (a label added by the correction), placed like at extraction, with a number not used yet
-    on its photo; none when `added` is False (the AI saw no photo: a box it gives is on none)."""
+    on its photo; none when `added` is False (the AI saw no photo: a box it gives is on none).
+    `pages`: the lesson's page numbers of the photos the AI numbered from 1 (none: 1 to n)."""
     new = []
     for card, match in zip(revised, matching(revised, before, any_part=True), strict=True):
         if match and match.mask:
@@ -209,6 +226,9 @@ def _keep_masks(
             card.mask = None
     _keep_ids(revised, before)
     diagrams.normalize(new, sizes, fmt)
+    for card in new:  # placed on its photo: on the lesson's page that photo is
+        if card.mask and 1 <= card.mask.page <= len(pages):
+            card.mask.page = pages[card.mask.page - 1]
     used = {(c.mask.page, c.mask.n) for c in revised if c.mask and c not in new}
     for card in (c for c in new if c.mask):
         if (card.mask.page, card.mask.n) in used:

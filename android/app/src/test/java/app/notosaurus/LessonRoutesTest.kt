@@ -391,7 +391,7 @@ class LessonRoutesTest : LocalServerTestBase() {
         val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
         val (id, card) = lesson.string("id") to lesson["cards"]!!.jsonArray.single().jsonObject.string("id")
         client.submitFormWithBinaryData("/api/lessons/$id/cards/$card/picture", formData {
-            append("photo", "a table football".toByteArray(), Headers.build {
+            append("photo", jpeg("a table football"), Headers.build {
                 append(HttpHeaders.ContentType, "image/jpeg")
                 append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
             })
@@ -409,7 +409,7 @@ class LessonRoutesTest : LocalServerTestBase() {
         val (path, sent) = asked.single()
         assertEquals("/v1/check-picture" to "La séparation de 1054 ? → Le schisme", path to sent.string("card"))
         assertEquals("Église → catholique et orthodoxe" to "image/jpeg", sent.string("meant") to sent.string("media_type"))
-        assertEquals("a table football", String(Base64.getDecoder().decode(sent.string("image"))))
+        assertArrayEquals(jpeg("a table football"), Base64.getDecoder().decode(sent.string("image")))
     }
 
     @Test
@@ -520,12 +520,12 @@ class LessonRoutesTest : LocalServerTestBase() {
 
         // The user's own photo, then no picture at all
         val own = client.submitFormWithBinaryData("/api/lessons/$id/cards/$apple/picture", formData {
-            append("photo", "my photo".toByteArray(), Headers.build {
+            append("photo", jpeg("my photo"), Headers.build {
                 append(HttpHeaders.ContentType, "image/jpeg")
                 append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
             })
         }) { page() }.json().jsonObject["card"]!!.jsonObject
-        assertEquals("my photo", client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.bodyAsText())
+        assertArrayEquals(jpeg("my photo"), client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.bodyAsBytes())
         val none = client.delete("/api/lessons/$id/cards/$apple/picture") { page() }.json().jsonObject["card"]!!.jsonObject
         assertEquals(listOf("", "", ""), listOf("picture", "picture_prompt", "figure").map { none.string(it) })
         assertEquals(HttpStatusCode.OK, client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.status)

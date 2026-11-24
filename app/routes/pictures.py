@@ -36,8 +36,8 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
         async def draw(draft: Lesson) -> pictures.Drawn:
             async with usage.metered("picture", id, draft.deck):
                 folder = lessons.existing_folder(id) / "images"
-                # The lesson's own drawings first: its photos (pictures.lesson_drawings)
-                photos = [llm.Image(photo.read_bytes(), "image/jpeg") for photo in lessons.photos(id)]
+                # The lesson's own drawings first: its photos by their page number (pictures.lesson_drawings)
+                photos = {n: llm.Image(photo.read_bytes(), "image/jpeg") for n, photo in lessons.photos(id).items()}
                 return await pictures.draw_all(
                     settings.current(),
                     folder,

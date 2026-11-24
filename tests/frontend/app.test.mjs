@@ -355,6 +355,37 @@ test("masks live on their photo", () => {
   assert.equal(diagram.photoFor({ mask: { page: 3 } }), null);
 });
 
+test("masks live on their page by its number: a page missing leaves a gap", () => {
+  const c = app.component();
+  c.photos = [{ url: "p1", n: 1 }, { url: "p2", n: 2 }, { url: "p4", n: 4 }, { url: "p5", n: 5 }];
+  assert.equal(c.photoFor({ mask: { page: 4 } }), "p4");  // not the 4th photo
+  assert.equal(c.photoFor({ mask: { page: 3 } }), null);  // never another in its place
+});
+
+test("a lesson's photos loaded by their page numbers; one turned by its own", async () => {
+  const asked = [];
+  const page = await loadScripts("app.js", {
+    routes: (url) => {
+      asked.push(url);
+      if (url.endsWith("/rotate")) return new Response({ id: "L1", pages: [1, 2, 4, 5], photo_count: 4, cards: [], frames: [] });
+      return new Response(new Blob([url]));
+    },
+  });
+  const c = page.component();
+  await c.loadPhotos({ id: "L1", pages: [1, 2, 4, 5], photo_count: 4, page_texts: ["a", "b", "c", "d", "e"] });
+  assert.deepEqual(asked, [1, 2, 4, 5].map((n) => `/api/lessons/L1/photos/${n}`));
+  assert.deepEqual(plain(c.photos.map((p) => [p.n, p.text])), [[1, "a"], [2, "b"], [4, "d"], [5, "e"]]);
+  asked.length = 0;
+  c.lessonId = "L1";
+  await c.rotatePhoto(2);
+  assert.equal(asked[0], "/api/lessons/L1/photos/4/rotate");
+
+  // A lesson from a server that doesn't say its pages: 1 to photo_count, as before
+  asked.length = 0;
+  await c.loadPhotos({ id: "L2", photo_count: 2 });
+  assert.deepEqual(asked, ["/api/lessons/L2/photos/1", "/api/lessons/L2/photos/2"]);
+});
+
 // --- Audio, cards ------------------------------------------------------------
 
 test("voices: an edge-tts one is told apart from an Anki locale or \"auto\"", () => {
@@ -548,6 +579,25 @@ test("find a picture: the choices, their sources, the one chosen", async () => {
   Object.assign(card, { picture_prompt: "a stone castle", picture_search: "castle", _subject: "a stone castle" });
   await c.searchPictures(card, "castle");
   assert.deepEqual(plain(JSON.parse(sent[0][1])), { subject: "a stone castle", context: "Un château ? → el castillo", words: "castle" });
+});
+
+test("find a picture for a card longer than the server takes: its context cut, never refused", async () => {
+  const sent = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      sent.push(JSON.parse(options.body));
+      return new Response({ results: [] });
+    },
+  });
+  const c = page.component();
+  c.lessonId = "L1";
+  const card = { id: "c1", front: "q", back: "b".repeat(6000), _subject: "a castle" };
+  await c.searchPictures(card);
+  const { context } = sent[0];
+  assert.equal(context.length, 4000);
+  assert.equal(context, `q → ${"b".repeat(3995)}…`);
+  assert.equal(page.run("cutText('q → bb', 4000)"), "q → bb");  // short enough: as it is
+  assert.equal(page.run("cutText('a\\uD83D\\uDE00b', 3)"), "a…");  // never half a character
 });
 
 test("find a picture: each source's pictures shown as it answers", async () => {

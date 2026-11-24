@@ -49,23 +49,33 @@ class SharedCasesTest {
         assertEquals(c["name"]!!.jsonPrimitive.content, c["out"]!!.jsonArray.map { it.jsonPrimitive.content }, ids)
     }
 
+    /** A case's lesson photos: a number n (its pages 1 to n), or the numbers of its pages there. */
+    private fun photos(element: JsonElement?): List<Int> =
+        (element as? JsonArray)?.map { it.jsonPrimitive.int } ?: (1..element!!.jsonPrimitive.int).toList()
+
     @Test
     fun thePhotosSentToCorrectACard() = cases("fix_photos").forEach { c ->
         val out = c["out"]!!.jsonArray.map { it.jsonPrimitive.int } to c.string("sent")
-        assertEquals(c.string("name"), out, Generation.fixPhotos(c["page"]!!.jsonPrimitive.int, c["photos"]!!.jsonPrimitive.int))
+        assertEquals(c.string("name"), out, Generation.fixPhotos(c["page"]!!.jsonPrimitive.int, photos(c["photos"])))
+        if (c["photos"] !is JsonArray) assertEquals(c.string("name"), out, Generation.fixPhotos(c["page"]!!.jsonPrimitive.int, c["photos"]!!.jsonPrimitive.int))
     }
 
     @Test
     fun theCallsLookingForTheLessonsDrawings() = cases("drawing_calls").forEach { c ->
         fun ints(numbers: JsonArray) = numbers.map { it.jsonPrimitive.int }
         val out = c["out"]!!.jsonArray.map { it.jsonObject }.map { ints(it["pages"]!!.jsonArray) to ints(it["cards"]!!.jsonArray) }
-        assertEquals(c.string("name"), out, Pictures.drawingCalls(ints(c["pages"]!!.jsonArray), c["photos"]!!.jsonPrimitive.int))
+        assertEquals(c.string("name"), out, Pictures.drawingCalls(ints(c["pages"]!!.jsonArray), photos(c["photos"])))
     }
 
     @Test
     fun thePhotosSentToCorrectALesson() = cases("revise_photos").forEach { c ->
         val out = c["out"]!!.jsonArray.map { it.jsonPrimitive.int } to c.string("sent")
-        assertEquals(c.string("name"), out, Generation.revisePhotos(c["photos"]!!.jsonPrimitive.int))
+        assertEquals(c.string("name"), out, Generation.revisePhotos(photos(c["photos"])))
+    }
+
+    @Test
+    fun theNumberOfAPageAddedToALesson() = cases("next_page").forEach { c ->
+        assertEquals(c.string("name"), c["out"]!!.jsonPrimitive.int, Lessons.nextPage(photos(c["files"]), c["lesson"]!!.jsonObject))
     }
 
     @Test

@@ -4423,6 +4423,15 @@
             ],
             "title": "Photos Sent",
             "type": "string"
+          },
+          "pages": {
+            "description": "The lesson's page numbers of the \"images\", in their order (llm.revise_cards' pages): the cards' pages and masks are the lesson's, a page missing from it leaving a gap. Empty, or not one per image: pages 1 to n.",
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 10,
+            "title": "Pages",
+            "type": "array"
           }
         },
         "required": [

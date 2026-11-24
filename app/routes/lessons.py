@@ -132,8 +132,9 @@ async def revise_lesson(
 
 async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
     lesson = await access.editable(id)
-    # Every page when a call takes them all; else none, corrected from its cards (llm.revise_photos)
-    pages, sent = llm.revise_photos(lesson.photo_count)
+    # Every page when a call takes them all; else none, corrected from its cards (llm.revise_photos):
+    # by their numbers, a page missing never replaced by another
+    pages, sent = llm.revise_photos(lesson.pages)
     photos = [Image(lessons.photo(id, n), "image/jpeg") for n in pages]
     every = await asyncio.to_thread(children.list_all)
     child = children.chosen(every, lesson.child, lesson.owner)
@@ -152,6 +153,7 @@ async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
             demo=i18n.get(lang, "demo"),
             quick=req.quick,
             photos_sent=sent,
+            pages=pages,
         )
     revision.deck = "::".join(part for part in (private, revision.deck) if part)
     # Saved once begun, whatever "Cancel" says meanwhile: the page shown the lesson as saved
@@ -187,7 +189,7 @@ async def fix_card(id: str, req: FixCardRequest, lang: str = Depends(page_lang),
 async def _fixed(id: str, req: FixCardRequest, lang: str) -> llm.FixedCard:
     lesson = await access.editable(id)
     # The page the card comes from alone, when known (llm.fix_photos): not the whole lesson
-    pages, sent = llm.fix_photos(req.card.page, lesson.photo_count)
+    pages, sent = llm.fix_photos(req.card.page, lesson.pages)  # its page missing: as unknown
     photos = [Image(lessons.photo(id, n), "image/jpeg") for n in pages]
     every = await asyncio.to_thread(children.list_all)
     child = children.chosen(every, lesson.child, lesson.owner)

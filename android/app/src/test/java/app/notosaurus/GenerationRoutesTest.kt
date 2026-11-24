@@ -397,6 +397,55 @@ class GenerationRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aLessonsPagesByTheirNumbersWithOneMissing() = app { client ->
+        // Pages 1 to 5, page-3.jpg then removed: each page opened by its number (never the one at
+        // its place among those there), a card from the missing page as one whose page is unknown
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le chat", "back": "the cat", "page": 5, "picture_prompt": "a cat"},
+            {"front": "le chien", "back": "the dog", "page": 3}]}, "turns": [0], "usage": {"credits": 1, "credits_left": 99}}""")
+        val made = client.submitFormWithBinaryData("/api/extract", pageForm(1..5)) { page() }.json().jsonObject
+        val id = made.string("id")
+        assertTrue(folder.root.resolve("lessons/$id/page-3.jpg").delete())
+        val lesson = client.get("/api/lessons/$id") { page() }.json().jsonObject
+        assertEquals(4, lesson["photo_count"]!!.jsonPrimitive.int)
+        assertEquals(listOf(1, 2, 4, 5), lesson["pages"]!!.jsonArray.map { it.jsonPrimitive.int })
+        val (cat, dog) = lesson.cards()
+
+        val sent = mutableListOf<Pair<String, List<Int>>>()
+        val requests = mutableListOf<JsonObject>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val body = request.body!!.utf8()
+                val path = request.url.encodedPath.removePrefix("/v1/")
+                if (path !in setOf("fix-card", "revise", "lesson-drawings")) return MockResponse.Builder().code(404).build()
+                sent += path to (1..5).filter { body.contains("page #$it;") }
+                val asked = request.multipartRequest().also { requests += it }
+                return when (path) {
+                    "fix-card" -> MockResponse.Builder().body("""{"card": ${asked["card"]}, "summary": "ok", "usage": {"credits": 1, "credits_left": 90}}""").build()
+                    "revise" -> MockResponse.Builder().body(
+                        """{"deck": "Anglais", "cards": ${asked["deck"]!!.jsonObject["cards"]}, "summary": "ok", "usage": {"credits": 1, "credits_left": 90}}""",
+                    ).build()
+                    "lesson-drawings" -> MockResponse.Builder().body("""{"drawings": [], "usage": {"credits": 1, "credits_left": 90}}""").build()
+                    else -> MockResponse.Builder().code(404).build()
+                }
+            }
+        }
+        suspend fun post(path: String, body: String) = client.post("/api/lessons/$id/$path") {
+            page(); contentType(ContentType.Application.Json); setBody(body)
+        }.also { assertEquals(path, HttpStatusCode.OK, it.status) }
+        post("pictures", """{"draw": false}""")
+        // Page 5 and its neighbour there (not a page unknown, past the 4 pages there: all of them)
+        assertEquals("lesson-drawings" to listOf(4, 5), sent.single { it.first == "lesson-drawings" })
+        post("fix-card", """{"card": $cat, "instruction": "x", "others": []}""")
+        assertEquals("fix-card" to listOf(5), sent.last()) // page 5's own
+        post("fix-card", """{"card": $dog, "instruction": "x", "others": []}""")
+        assertEquals("fix-card" to listOf(1, 2, 4, 5), sent.last()) // its page missing: as unknown
+        assertEquals("all", requests.last().string("photos_sent"))
+        post("revise", """{"deck": "Anglais", "cards": ${lesson["cards"]}, "instruction": "x"}""")
+        assertEquals("revise" to listOf(1, 2, 4, 5), sent.last())
+        assertEquals(listOf(1, 2, 4, 5), requests.last()["pages"]!!.jsonArray.map { it.jsonPrimitive.int }) // the photos' page numbers
+    }
+
+    @Test
     fun aLongLessonCorrectedFromItsCards() = app { client ->
         // A lesson of 12 pages (more than the relay takes at once): corrected as a whole, it sends
         // none of them, "photos_sent" "none" (the AI told its pages aren't shown), rather than all

@@ -251,6 +251,9 @@ abstract class LocalServerTestBase {
 
     protected suspend fun HttpResponse.json() = json.parseToJsonElement(bodyAsText())
 
+    /** A "JPEG" as a card's own photo must begin (LocalServer.isImage), then `text`. */
+    protected fun jpeg(text: String) = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte()) + text.toByteArray()
+
     protected fun relayAnswers(body: String, code: Int = 200) =
         relay.enqueue(MockResponse.Builder().code(code).body(body).build())
 

@@ -71,7 +71,9 @@ class Lesson(LessonOptions):
     id: str  # folder name, e.g. "2026-09-28-spanish-lesson-5"
     owner: str = ""  # Anki profile open when the lesson was created ("" = none: shared)
     child: str = ""  # the child it is for (children.Child.id; "" none said)
-    photo_count: int
+    photo_count: int  # its pages there (page-N.jpg), counted from its folder, not kept in lesson.json
+    # Their numbers, in order (a page missing leaves a gap: [1, 2, 4]); from its folder too
+    pages: list[int] = []
     ai_calls: list[AiCall] = []  # generation, then corrections
     # One per photo: the text of a PDF page, as the PDF holds it ("" for a photo). Sent
     # to the AI with the pages; not in the lists (LessonSummary)
@@ -212,6 +214,15 @@ class PictureSearch(BaseModel):
     subject: str = Field(min_length=1, max_length=200)
     context: str = Field(default="", max_length=MAX_CARD)  # the card, "front → back"
     words: str = Field(default="", max_length=200)  # its English search words when known (Card.picture_search)
+
+    @field_validator("context", mode="before")
+    @classmethod
+    def cut(cls, context: object) -> object:
+        """A card has no length limit of its own: a longer one cut to MAX_CARD, "…" last, rather
+        than the search refused (as the phone's Pictures.cut and the page's cutText)."""
+        if isinstance(context, str) and len(context) > MAX_CARD:
+            return context[: MAX_CARD - 1] + "…"
+        return context
 
 
 class DecidedPicture(BaseModel):

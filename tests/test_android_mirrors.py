@@ -1,6 +1,6 @@
 """What the Android app and the page keep of the computer's and core's own (Kotlin and
 JavaScript can't import Python): the same limits, the same picture fields, the same formula
-commands kept out of Anki, read from their sources."""
+commands kept out of Anki, the same kinds of photo, read from their sources."""
 
 import re
 from pathlib import Path
@@ -9,10 +9,10 @@ import pytest
 
 from app import draft
 from app.note_types import formulas
-from app.routes.common import MAX_PAGES
+from app.routes.common import IMAGE_TYPES, MAX_PAGES
 from notosaurus_core import pictures
 from notosaurus_core.calls import MAX_IMAGES
-from notosaurus_core.relay_api import MAX_IMAGE_BYTES
+from notosaurus_core.relay_api import MAX_CARD, MAX_IMAGE_BYTES
 
 ROOT = Path(__file__).parent.parent
 KOTLIN = ROOT / "android/app/src/main/java/app/notosaurus"
@@ -43,6 +43,7 @@ def kotlin_list(file: str, name: str) -> list[str]:
         ("LocalServer.kt", "MAX_IMAGE_BYTES", MAX_IMAGE_BYTES),
         ("Draft.kt", "MAX_TEXT", draft.MAX_TEXT),
         ("Draft.kt", "MAX_PHOTO_BYTES", draft.MAX_PHOTO_BYTES),
+        ("Pictures.kt", "MAX_CARD", MAX_CARD),
     ],
 )
 def test_the_apps_limits_are_the_computers(file, name, value):
@@ -64,3 +65,15 @@ def test_the_pages_picture_fields_are_cores():
     declared = re.search(r"const PICTURE_FIELDS = \[([^\]]*)\]", page)
     assert declared
     assert set(re.findall(r'"([^"]*)"', declared[1])) == pictures.READY
+
+
+def test_the_apps_photo_kinds_are_the_computers():
+    """A card's own photo: the kinds the computer takes (common.IMAGE_TYPES), the phone too."""
+    assert set(kotlin_list("LocalServer.kt", "IMAGE_TYPES")) == IMAGE_TYPES
+
+
+def test_the_pages_card_length_is_the_relays():
+    """What the page cuts a card's text to before a picture search (cutText): relay_api.MAX_CARD."""
+    page = (ROOT / "static/app-pictures.js").read_text(encoding="utf-8")
+    declared = re.search(r"const MAX_CARD = (\d+);", page)
+    assert declared and int(declared[1]) == MAX_CARD

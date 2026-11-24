@@ -30,16 +30,26 @@ class Lessons(private val root: File) {
         .mapNotNull { get(it.name) }
         .sortedByDescending { it.string("updated_at") }
 
-    fun get(id: String): JsonObject? =
-        folder(id)?.resolve("lesson.json")?.takeIf { it.isFile }?.let { json.parseToJsonElement(it.readText()).jsonObject }
+    /** The lesson, with its pages as its folder has them: their count ("photo_count") and their
+     * numbers ("pages", in order: a page missing leaves a gap), as the computer's lessons._read. */
+    fun get(id: String): JsonObject? {
+        val dir = folder(id) ?: return null
+        val lesson = dir.resolve("lesson.json").takeIf { it.isFile }?.let { json.parseToJsonElement(it.readText()).jsonObject } ?: return null
+        val pages = pageNumbers(dir)
+        return JsonObject(lesson + mapOf("photo_count" to JsonPrimitive(pages.size), "pages" to JsonArray(pages.map(::JsonPrimitive))))
+    }
 
     /** The lesson's pictures (drawn, or the user's photos), as the computer: images/. */
     fun images(id: String): File? = folder(id)?.resolve("images")
 
     fun photo(id: String, n: Int): File? = folder(id)?.resolve("page-$n.jpg")?.takeIf { it.isFile }
 
-    fun photos(id: String): List<ByteArray> = (1..(get(id)?.get("photo_count")?.jsonPrimitive?.int ?: 0))
-        .mapNotNull { photo(id, it)?.readBytes() }
+    /** The numbers of the lesson's pages there (page-N.jpg), in order: page 3 missing, [1, 2, 4…]. */
+    fun pages(id: String): List<Int> = folder(id)?.let(::pageNumbers).orEmpty()
+
+    /** The lesson's photos by their page number, in order; a page missing is not there (never
+     * another in its place: a card's page is its number). */
+    fun photos(id: String): Map<Int, ByteArray> = pages(id).mapNotNull { n -> photo(id, n)?.let { n to it.readBytes() } }.toMap()
 
     /** A new lesson from what the AI made: its own folder, named after the date and deck. */
     fun create(content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject {
@@ -57,7 +67,7 @@ class Lessons(private val root: File) {
             ),
         )
         write(lesson)
-        return lesson
+        return get(id) ?: lesson // its pages, as read back
     }
 
     /** A copy for another child (its `deck`): photos, cards, pictures; new card ids (other
@@ -94,7 +104,7 @@ class Lessons(private val root: File) {
             ),
         )
         write(copy)
-        return copy
+        return get(copyId) ?: copy
     }
 
     /** A new lesson's folder name: the date and its deck, another if taken. */
@@ -126,16 +136,17 @@ class Lessons(private val root: File) {
             ),
         )
         write(updated)
-        return updated
+        return get(id) // its new pages, as read back
     }
 
     /** Its next pages added (/complete): their photos after its own, their cards after its
      * cards (untouched: their ids, so their notes in AnkiDroid, stay), as app/lessons.py's
-     * completed. `content`'s masks and frames count pages from the first new photo. */
+     * completed. `content`'s masks and frames count pages from the first new photo; numbered here
+     * from the lesson's next page (nextPage: a number never used in it, so no file written over). */
     fun completed(id: String, content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject? {
         val lesson = get(id) ?: return null
         val dir = folder(id) ?: return null
-        val before = lesson["photo_count"]?.jsonPrimitive?.intOrNull ?: 0
+        val before = nextPage(pageNumbers(dir), lesson) - 1
         photos.forEachIndexed { i, data -> dir.resolve("page-${before + i + 1}.jpg").writeBytes(data) }
         fun shifted(item: JsonObject, key: String): JsonObject {
             val mask = item[key] as? JsonObject ?: return item
@@ -161,12 +172,12 @@ class Lessons(private val root: File) {
                 "cards" to withIds(JsonArray(lesson["cards"]?.jsonArray.orEmpty() + cards)),
                 "frames" to JsonArray((lesson["frames"] as? JsonArray).orEmpty() + frames),
                 "page_texts" to JsonArray(pageTexts),
-                "photo_count" to JsonPrimitive(before + photos.size),
+                "photo_count" to JsonPrimitive(pageNumbers(dir).size),
                 "updated_at" to JsonPrimitive(changedAt(lesson)),
             ),
         )
         write(updated)
-        return updated
+        return get(id) // its new pages, as read back
     }
 
     /** Its notes in AnkiDroid after a send, by card id (not a content change). */
@@ -207,7 +218,7 @@ class Lessons(private val root: File) {
     private fun write(lesson: JsonObject) {
         val dir = root.resolve(lesson.string("id"))
         val tmp = dir.resolve("lesson.json.tmp")
-        tmp.writeText(lesson.toString())
+        tmp.writeText(JsonObject(lesson - "pages").toString()) // its folder's (get), not kept
         moved(tmp, dir.resolve("lesson.json")) // never half a file
     }
 
@@ -219,6 +230,25 @@ class Lessons(private val root: File) {
     companion object {
         private val NAME = Regex("^[a-z0-9][a-z0-9-]*$") // our folder names only: no "../"
         private val PHOTO = Regex("^page-\\d+\\.jpg$")
+        private val PAGE = Regex("^page-([1-9][0-9]*)\\.jpg$")
+
+        /** The numbers of the pages in a lesson's folder (page-N.jpg), in order. */
+        private fun pageNumbers(dir: File): List<Int> =
+            dir.list().orEmpty().mapNotNull { PAGE.matchEntire(it)?.groupValues?.get(1)?.toIntOrNull() }.sorted()
+
+        /** The number of a page added to a lesson: after the highest one used anywhere in it, its
+         * pages' files (`files`, their numbers), its cards' pages, their masks', its frames' and its
+         * pages' texts (one per page): a page missing (its file removed) is never numbered again, so
+         * a card that came from it never points at another, and no page is written over. As the
+         * computer's lessons.next_page (core/shared-cases.json). */
+        fun nextPage(files: List<Int>, lesson: JsonObject): Int {
+            fun page(item: JsonObject?) = (item?.get("page") as? JsonPrimitive)?.intOrNull ?: 0
+            val cards = (lesson["cards"] as? JsonArray).orEmpty().mapNotNull { it as? JsonObject }
+            val used = files + cards.map(::page) + cards.map { page(it["mask"] as? JsonObject) } +
+                (lesson["frames"] as? JsonArray).orEmpty().map { page(it as? JsonObject) } +
+                (lesson["page_texts"] as? JsonArray).orEmpty().size
+            return (used.maxOrNull() ?: 0) + 1
+        }
         private val PICTURE = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // Pictures.NAME
         private val EDITABLE = setOf(
             "deck", "cards", "voice", "rate", "reverse", "typing", "dictation", "dictation_only", "shared", "frames", "prompt", "choice",

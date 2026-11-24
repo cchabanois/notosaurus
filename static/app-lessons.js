@@ -329,10 +329,13 @@ const lessonsPart = {
           dictation_only: lesson.dictation_only ?? false };
   },
 
-  // The lesson's photos from the server, as blobs, so a generation can be run again.
+  // The lesson's photos from the server, as blobs, so a generation can be run again. By their
+  // page number (`pages`; a server without it: 1 to photo_count): a page missing is not shown,
+  // the others keep their number.
   async loadPhotos(lesson) {
     const photos = [];
-    for (let n = 1; n <= lesson.photo_count; n++) {
+    const pages = lesson.pages ?? Array.from({ length: lesson.photo_count ?? 0 }, (_, i) => i + 1);
+    for (const n of pages) {
       const blob = await (await api(`/api/lessons/${lesson.id}/photos/${n}`)).blob();
       // `n`: its number in the lesson, a card's page (removed from the strip, the others keep theirs)
       photos.push({ blob, url: URL.createObjectURL(blob), text: lesson.page_texts?.[n - 1] ?? "", sent: true, n });
