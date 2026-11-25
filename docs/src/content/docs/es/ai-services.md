@@ -130,6 +130,6 @@ exacto). Con una clave gratuita de Gemini, en realidad no se cobra nada. Como ej
 de vocabulario de estas capturas costó unos 2 céntimos de dólar al generarla con Claude Sonnet, y
 otro tanto su corrección. Las imágenes cuestan de menos de un céntimo a unos céntimos cada una; las
 figuras, menos de un céntimo (dibujadas rápido, unos segundos cada una, mientras revisas las
-tarjetas). ¿Dudas de una figura? «🔍», debajo, hace que la IA la mire; si encuentra algo mal,
+tarjetas). ¿Dudas de una figura? **🔍 Comprobar la figura**, debajo, hace que la IA la mire; si encuentra algo mal,
 eliges si se vuelve a dibujar, indicándole el error: rápido (unos segundos) y luego, si sigue mal,
 con cuidado, con el razonamiento del modelo (hasta un minuto).

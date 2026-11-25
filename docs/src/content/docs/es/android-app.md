@@ -49,8 +49,10 @@ te pide que aceptes su [política de privacidad](../app-privacy/):
    vez de escribirlas.
 4. Toca **✨ Generar las tarjetas**. La primera lección inicia la prueba gratuita.
 5. Revisa las tarjetas, corrígelas o pídeselo a la IA con tus palabras: consulta
-   [Revisar las tarjetas](../review/). Una tarjeta que no está bien: **⋯ → ⚑ Reportar** en ella,
-   leemos cada aviso.
+   [Revisar las tarjetas](../review/). Toca una tarjeta, o **▶ Revisar tarjeta por tarjeta**: se
+   abre a pantalla completa, anverso y reverso como en AnkiDroid; desliza el dedo para pasar a la
+   siguiente, y di qué está mal en **✨ Corregir con la IA**, abajo, escribiéndolo o con 🎤. Una
+   tarjeta que no está bien: **⋯ → ⚑ Reportar** en ella, leemos cada aviso.
 6. Toca **📥 Añadir a Anki**: las tarjetas van a AnkiDroid. La primera vez, AnkiDroid pregunta si
    Notosaurus puede añadirle tarjetas.
 
@@ -60,6 +62,8 @@ y enviarla otra vez. Sus tarjetas se actualizan en AnkiDroid, no se duplican.
 ![La página principal de la aplicación: las fotos de la lección, las instrucciones con 🎤, el hijo elegido arriba](../../../assets/screenshots/en/app-home.png)
 
 ![Las tarjetas de una lección en la aplicación, con el campo de corrección y su 🎤](../../../assets/screenshots/en/app-review.png)
+
+![Una tarjeta abierta en la aplicación: su mazo, el anverso, el reverso y su 🔊, el campo de corrección y su 🎤 abajo](../../../assets/screenshots/en/app-card-open.png)
 
 ## Dónde funciona
 
@@ -75,9 +79,11 @@ En los ajustes, **📍 ¿Dónde trabaja Notosaurus?** elige **📱 En este telé
 
 Casi todo Notosaurus es igual que en el ordenador. Lo que solo tiene la aplicación, o no tiene:
 
-- **🎤 Dictar**: decir una instrucción o una corrección en vez de escribirla. Tus palabras aparecen
-  mientras hablas, escritas por el reconocimiento de voz del móvil; **✨ Poner en limpio** limpia
-  después unas instrucciones. La aplicación pide el micrófono la primera vez.
+- **🎤 Dictar**: decir una instrucción, una corrección o lo que debe preguntar una tarjeta nueva
+  en vez de escribirlo. Tus palabras aparecen mientras hablas, escritas por el reconocimiento de
+  voz del móvil. Toca ■ para parar, o directamente **Corregir**, **Escribir** o **✨ Generar las
+  tarjetas**: lo que has dicho se escribe y luego se envía. **✨ Poner en limpio** limpia después
+  unas instrucciones. La aplicación pide el micrófono la primera vez.
 - **⚑ Reportar**, en una tarjeta, le dice a Notosaurus qué ha fallado: una palabra mal leída,
   una respuesta incorrecta, una figura torcida, una imagen inadecuada. Leemos cada aviso, y ayuda
   a corregir Notosaurus (consulta [Señalar un problema](../review/#señalar-un-problema)).
