@@ -66,7 +66,9 @@ class SharedCasesTest {
     fun theCallsLookingForTheLessonsDrawings() = cases("drawing_calls").forEach { c ->
         fun ints(numbers: JsonArray) = numbers.map { it.jsonPrimitive.int }
         val out = c["out"]!!.jsonArray.map { it.jsonObject }.map { ints(it["pages"]!!.jsonArray) to ints(it["cards"]!!.jsonArray) }
-        assertEquals(c.string("name"), out, Pictures.drawingCalls(ints(c["pages"]!!.jsonArray), photos(c["photos"])))
+        val calls = Pictures.drawingCalls(ints(c["pages"]!!.jsonArray), photos(c["photos"]))
+        assertEquals(c.string("name"), out, calls)
+        c["sent"]?.let { assertEquals(c.string("name"), it.jsonPrimitive.int, calls.sumOf { (pages, _) -> pages.size }) }
     }
 
     @Test

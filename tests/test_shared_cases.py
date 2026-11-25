@@ -67,9 +67,12 @@ def test_the_photos_sent_to_correct_a_card(case):
 @pytest.mark.parametrize("case", CASES["drawing_calls"], ids=lambda c: c["name"])
 def test_the_calls_looking_for_the_lessons_drawings(case):
     """Each card's drawing looked for on its page and its neighbours, an unknown page's on
-    every page ten at a time: the phone's Pictures.drawingCalls the same."""
+    every page ten at a time, never one sent twice for it: the phone's Pictures.drawingCalls
+    the same."""
     calls = [{"pages": call.pages, "cards": call.cards} for call in drawing_calls(case["pages"], case["photos"])]
     assert calls == case["out"]
+    if "sent" in case:
+        assert sum(len(call["pages"]) for call in calls) == case["sent"]
 
 
 @pytest.mark.parametrize("case", CASES["needs_picture"], ids=lambda c: c["name"])

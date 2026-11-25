@@ -185,6 +185,22 @@ def test_a_route_not_reached_the_next_tried_and_counted(monkeypatch):
     assert len(gemini._HEALTH["key"].stalled) == 1
 
 
+def test_a_connection_lost_mid_answer_no_other_route_tried(monkeypatch):
+    """A route's connection lost once the photos were sent: not asked again on another route
+    (paid twice), nor counted toward the route's rest."""
+    import httpx
+
+    clients = _routed(monkeypatch, eu=Scripted(a=httpx.RemoteProtocolError("incomplete body")))
+    try:
+        _ask()
+    except llm.ExtractionError as e:
+        assert e.code == "llm.interrupted"
+    else:
+        raise AssertionError("an error was expected")
+    assert _asked(clients) == [("eu", "a")]
+    assert not gemini._HEALTH["eu"].stalled
+
+
 def test_every_gemini_error_on_one_side():
     """Each code Gemini's call may fail with is the route's or the answer's, never both."""
     raised = set(re.findall(r'ExtractionError\("(llm\.[a-z_]+)"', inspect.getsource(gemini)))

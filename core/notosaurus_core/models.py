@@ -48,7 +48,7 @@ class PictureSource(BaseModel):
 
     source: Literal["commons", "openverse", "pixabay", "drawn", "photo", "lesson"]  # lesson: its own pages' drawing
     licence: str = ""  # a free picture's: "Public domain", "CC0", "Pixabay"
-    page: str = ""  # its page at its source: an https: address, else none
+    page: str = ""  # its page at its source: an http: or https: address, else none
     title: str = ""
     model: str = ""  # a drawing's: the model that drew it
     # A figure's: drawn in Typst or as SVG; Typst's and its packages' names and versions
@@ -62,10 +62,12 @@ class PictureSource(BaseModel):
 
     @field_validator("page", mode="before")
     @classmethod
-    def https_only(cls, page: object) -> object:
+    def web_only(cls, page: object) -> object:
         """A link in the page and in the Anki note: an imported or shared lesson could hold
-        anything there (javascript:…). Dropped, not refused: the lesson still loads."""
-        if isinstance(page, str) and not page.strip().lower().startswith("https://"):
+        anything there (javascript:, data:…). Dropped, not refused: the lesson still loads. An
+        http: address kept: a free picture's page may have one (Openverse's, Commons'), its
+        licence's credit links to it."""
+        if isinstance(page, str) and not page.strip().lower().startswith(("http://", "https://")):
             return ""
         return page.strip() if isinstance(page, str) else page
 

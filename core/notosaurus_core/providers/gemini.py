@@ -89,28 +89,52 @@ LIGHT_ANSWER_S = 30
 # What makes the next model tried, unless it was the last: overloaded (a 5xx still there
 # after the SDK's retries), no quota (a free key has none for the latest models, and a
 # quota of its own for each model: the next one may still answer), stopped answering, not
-# reached (a connection refused or dropped, still so after the SDK's retries: another route
-# may be reachable, and a try that reached nothing costs nothing).
-# Anything else (a wrong key, a request refused) stops at once.
+# reached (no connection made, still none after the SDK's retries: another route may be
+# reachable, and a try that reached nothing costs nothing).
+# Anything else (a wrong key, a request refused, a connection dropped once made:
+# llm.interrupted) stops at once.
 _NEXT_MODEL = {"llm.overloaded", "llm.gemini_quota", "llm.timeout", "llm.unreachable"}
 
 # Each error is the route's or the answer's; a new code goes on one side
 # (test_every_gemini_error_on_one_side). The route's own (its key, its quota or credits, a
 # 4xx of its own such as a model it lacks, overloaded, stalled): on another route than the
 # config's own, the next try, and counted toward its rest. The answer's (refused, empty,
-# cut short, not the JSON asked for): the same anywhere, raised at once on any route,
-# the route not counted.
+# cut short, not the JSON asked for, its connection dropped once made: the photos sent, the
+# answer maybe begun and billed, asking again would pay for them again): the same anywhere,
+# raised at once on any route, the route not counted.
 _ROUTE_ERRORS = _NEXT_MODEL | {"llm.invalid_key", "llm.missing_key", "llm.api_error"}
-_ANSWER_ERRORS = {"llm.refused", "llm.empty_answer", "llm.truncated", "llm.invalid_answer"}
+_ANSWER_ERRORS = {"llm.refused", "llm.empty_answer", "llm.truncated", "llm.invalid_answer", "llm.interrupted"}
 
 
-def _network_errors() -> tuple[type[Exception], ...]:
-    """What the SDK lets through when Gemini is not reached (its HTTP client's: httpx or
-    httpx2, aiohttp with mTLS; Vertex AI's credentials not refreshed): no errors.APIError."""
+def _unreached_errors() -> tuple[type[Exception], ...]:
+    """What the SDK lets through when Gemini was never reached, nothing sent (its HTTP
+    client's: httpx or httpx2, aiohttp with mTLS; Vertex AI's credentials not refreshed): no
+    connection made (refused, its name not found, too slow to connect, through a proxy, no
+    free one in the pool). Nothing was asked, nothing is billed: another try may."""
     import httpx
     from google.auth.exceptions import TransportError
 
-    found: list[type[Exception]] = [httpx.TransportError, TransportError]
+    found: list[type[Exception]] = [TransportError]
+    found += [httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout, httpx.ProxyError]
+    with suppress(ImportError):
+        import httpx2
+
+        found += [httpx2.ConnectError, httpx2.ConnectTimeout, httpx2.PoolTimeout, httpx2.ProxyError]
+    with suppress(ImportError):
+        import aiohttp
+
+        found += [aiohttp.ClientConnectorError, aiohttp.ConnectionTimeoutError]
+    return tuple(found)
+
+
+def _network_errors() -> tuple[type[Exception], ...]:
+    """Every network error the SDK lets through (no errors.APIError): those that never
+    reached Gemini (_unreached_errors), and those of a connection made then lost (a read or a
+    write failing or too slow, the answer's body cut, the server gone): the photos may have
+    been taken and the answer begun, billed."""
+    import httpx
+
+    found: list[type[Exception]] = [*_unreached_errors(), httpx.TransportError]
     with suppress(ImportError):
         import httpx2
 
@@ -338,9 +362,12 @@ async def _call_one_model(request: _Request, model: str):
             response = await _generate(request, model)
     except errors.APIError as e:
         raise _api_error(model, e) from e
-    except _network_errors() as e:
+    except _unreached_errors() as e:
         log.warning("Gemini %s not reached: %s", model, type(e).__name__)  # its type, never its message
         raise ExtractionError("llm.unreachable", provider="Gemini") from e
+    except _network_errors() as e:  # reached, then lost: not asked again (paid again)
+        log.warning("Gemini %s: connection lost: %s", model, type(e).__name__)
+        raise ExtractionError("llm.interrupted", provider="Gemini") from e
     except _Stalled:
         log.warning("Gemini %s stopped answering", model)
         raise ExtractionError("llm.timeout", provider="Gemini") from None

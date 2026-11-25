@@ -636,27 +636,34 @@ def drawing_calls(pages: Sequence[int], photos: int | Sequence[int], per_call: i
     neighbours (the page before, the page after, those the lesson has): the cards taken by their
     page, each call sends the pages around as many as fit in `per_call` photos. The cards whose
     page is unknown (0, or not one of the lesson's: a page missing is never replaced by
-    another): every page, at most `per_call` at a time, one call after another, each asked only
-    for those still without a drawing. The same rule on the phone (Pictures.drawingCalls:
-    core/shared-cases.json)."""
+    another) are looked for on every page, and no page is sent twice for them: a lesson that
+    fits in one call, one call of all its pages asking every card; else they are asked in the
+    known pages' calls too (those pages are sent anyway), then on the pages none of those sent,
+    at most `per_call` at a time, each such call asking only those still without a drawing (it
+    waits for those before it: _from_the_lesson). The same rule on the phone
+    (Pictures.drawingCalls: core/shared-cases.json)."""
     present = page_numbers(photos)
     there = set(present)
+    unknown = [i for i, page in enumerate(pages) if page not in there]
+    if unknown and len(present) <= per_call:
+        return [DrawingCall(present, list(range(len(pages))))] if present else []
     calls: list[DrawingCall] = []
     sent: set[int] = set()
     asked: list[int] = []
     for page, i in sorted((page, i) for i, page in enumerate(pages) if page in there):
         near = {page - 1, page, page + 1} & there
         if asked and len(sent | near) > per_call:
-            calls.append(DrawingCall(sorted(sent), sorted(asked)))
+            calls.append(DrawingCall(sorted(sent), sorted(asked + unknown)))
             sent, asked = set(), []
         sent |= near
         asked.append(i)
     if asked:
-        calls.append(DrawingCall(sorted(sent), sorted(asked)))
-    unknown = [i for i, page in enumerate(pages) if page not in there]
+        calls.append(DrawingCall(sorted(sent), sorted(asked + unknown)))
     if unknown:
-        for first in range(0, len(present), per_call):
-            calls.append(DrawingCall(present[first : first + per_call], unknown))
+        covered = {page for call in calls for page in call.pages}
+        rest = [page for page in present if page not in covered]
+        for first in range(0, len(rest), per_call):
+            calls.append(DrawingCall(rest[first : first + per_call], unknown))
     return calls
 
 
@@ -696,6 +703,17 @@ def needs_picture(card: Card) -> bool:
     return bool((card.picture_prompt.strip() or card.figure.strip()) and not card.picture)
 
 
+def superseded(card: Card, now: Card | None) -> bool:
+    """A card read before a drawing whose picture is no longer to be drawn from it, the
+    lesson as saved now (`now`, the same card; None: removed since) saying otherwise: described
+    anew (DESCRIBED: a correction saved meanwhile) or given a picture (the user's own) since. The
+    picture would only be set aside (the app's stale_picture). The same on the phone
+    (Pictures.drawMissing)."""
+    if now is None:
+        return True
+    return now.picture != card.picture or any(getattr(now, field) != getattr(card, field) for field in DESCRIBED)
+
+
 async def draw_all(
     s: AIConfig,
     folder: Path,
@@ -705,6 +723,7 @@ async def draw_all(
     photos: Mapping[int, llm.Image] | Sequence[llm.Image] | None = None,
     not_from_lesson: Sequence[str] = (),
     previous: Mapping[str, tuple[PictureSource, str]] | None = None,
+    saved: Callable[[str], Card | None] | None = None,
 ) -> Drawn:
     """The missing pictures (cards with a picture_prompt or a figure, and no picture), a few
     at a time: figures drawn, free pictures found; a picture none fits drawn by the image
@@ -712,25 +731,30 @@ async def draw_all(
     without its picture is still a card. `step`: told each card's steps as they begin,
     {"card": its id, …relay_api.PictureStep's fields}, then {"card", "step": "ready", its
     picture's fields (READY)} as soon as it has it. `photos`: the lesson's by their page
-    number (a list: its pages 1 to n), its own drawings
-    taken first for the cards whose thing they show (lesson_drawings: each card's on its page
-    and its neighbours, drawing_calls; no search, the pupil's own pictures; {"card", "step":
-    "lesson"} while they are looked at), but for the cards in `not_from_lesson` (their ids): a
+    number (a list: its pages 1 to n), its own drawings taken first for the cards whose
+    thing they show, the others (figures) made meanwhile (lesson_drawings: each card's on its
+    page and its neighbours, drawing_calls; no search, the pupil's own pictures; {"card",
+    "step": "lesson"} while they are looked at), but for the cards in `not_from_lesson` (their ids): a
     correction replaced their picture, the lesson's drawing would only come back; theirs
     looked for as any other. `previous`: by card
     id, the figure a correction replaced, where it came from (its sources, kept_sources) and
-    its family: drawn again from it, what is asked changed and the rest kept."""
+    its family: drawn again from it, what is asked changed and the rest kept. `saved`: a card
+    as the lesson is saved now, by its id (None: no longer in it), read when its turn comes:
+    one corrected since `cards` were read (superseded) is not drawn, nothing paid for a
+    picture that would be set aside (the lesson's stale_picture); the page draws it again
+    from what it says now."""
     todo = [c for c in cards if needs_picture(c)]
-    if photos:
-        by_page = photos if isinstance(photos, Mapping) else dict(enumerate(photos, 1))
-        await _from_the_lesson(s, folder, [c for c in todo if c.id not in not_from_lesson], by_page, step)
-        todo = [c for c in todo if not c.picture]
+    # The cards the lesson's drawings may give wait for them; the others (figures first) are
+    # made meanwhile: they never come from the lesson's pages
+    waiting = [c for c in todo if _from_lesson(c) and c.id not in not_from_lesson] if photos else []
     sem = asyncio.Semaphore(CONCURRENCY)
     failures: list[dict] = []
     to_draw: list[str] = []
 
     async def one(card: Card) -> None:
         async with sem:
+            if saved is not None and superseded(card, saved(card.id)):
+                return
             try:
                 told = None
                 if step is not None:
@@ -758,8 +782,22 @@ async def draw_all(
                 failures.append(PictureError("picture.empty").detail())
                 log.warning("Picture not an image: %s", loggable(e))
 
-    await asyncio.gather(*(one(c) for c in todo))
+    async def after_the_lesson() -> None:
+        if not waiting:
+            return
+        by_page = photos if isinstance(photos, Mapping) else dict(enumerate(photos or (), 1))
+        await _from_the_lesson(s, folder, waiting, by_page, step)
+        await asyncio.gather(*(one(c) for c in waiting if not c.picture))
+
+    later = {id(c) for c in waiting}
+    await asyncio.gather(after_the_lesson(), *(one(c) for c in todo if id(c) not in later))
     return Drawn(len(failures), failures[0] if failures else None, to_draw)
+
+
+def _from_lesson(card: Card) -> bool:
+    """A card whose picture the lesson's own drawings may give: a picture's (a figure is drawn
+    exact, never cut out of a page)."""
+    return bool(card.picture_prompt.strip() and not card.figure.strip())
 
 
 async def _from_the_lesson(
@@ -767,23 +805,35 @@ async def _from_the_lesson(
 ) -> None:
     """The pictures (not the figures: those are drawn exact) the lesson's own drawings
     give, saved and told at once (draw_all). Each card's looked for on its page and its
-    neighbours, a page unknown on all of them (drawing_calls), one call after another.
-    `photos`: by their page number (a page missing: none at its number)."""
-    wanted = [c for c in cards if c.picture_prompt.strip() and not c.figure.strip()]
+    neighbours, a page unknown on every page (drawing_calls): the calls asking a card whose
+    page is known at once, side by side; then those asking only the cards whose page is
+    unknown, one after another, each asking those still without a drawing. `photos`: by their
+    page number (a page missing: none at its number)."""
+    wanted = [c for c in cards if _from_lesson(c)]
     if not wanted:
         return
     for card in wanted:
         if step:
             step({"card": card.id, "step": "lesson"})
     found: set[int] = set()
-    for call in drawing_calls([c.page for c in wanted], list(photos)):
+
+    async def look(call: DrawingCall) -> None:
         asked = [i for i in call.cards if i not in found]  # the drawings' indexes: into these
         if not asked:
-            continue
+            return
         sent = [photos[page] for page in call.pages]  # a drawing cut out of its own photo
         for j, jpeg in (await lesson_drawings(s, sent, [wanted[i] for i in asked])).items():
+            if asked[j] in found:  # found by a call beside this one: its first drawing
+                continue
             found.add(asked[j])
             _from_its_page(folder, wanted[asked[j]], jpeg, step)
+
+    calls = drawing_calls([c.page for c in wanted], list(photos))
+    known = {i for i, c in enumerate(wanted) if c.page in photos}
+    side_by_side = [call for call in calls if known & set(call.cards)]
+    await asyncio.gather(*(look(call) for call in side_by_side))
+    for call in calls[len(side_by_side) :]:  # the unknown pages' rest: what is still to find
+        await look(call)
 
 
 def _from_its_page(folder: Path, card: Card, jpeg: bytes, step: Step | None) -> None:

@@ -582,17 +582,28 @@ def test_where_a_picture_comes_from_kept_hidden(tmp_path):
         assert all("Source" not in t["qfmt"] + t["afmt"] for t in note.nt.templates)  # never shown
 
 
-def test_a_source_page_is_an_https_link_or_none(tmp_path):
+def test_a_source_page_is_a_web_link_or_none(tmp_path):
     """A picture's page is a link in the page and in the Anki note: an imported or shared
-    lesson holding another kind of address (javascript:…) still loads, without it."""
+    lesson holding another kind of address (javascript:…) still loads, without it. An http:
+    one kept (an Openverse picture's: its CC BY credit links to it)."""
     from app.models import ExportRequest, Lesson
     from notosaurus_core.models import PictureSource
 
-    for page in ("javascript:alert(1)", " JavaScript:alert(1)", "data:text/html,x", "http://example.org/a", "/x"):
+    for page in (
+        "javascript:alert(1)",
+        " JavaScript:alert(1)",
+        "data:text/html,x",
+        "file:///etc/x",
+        "ftp://x.org",
+        "/x",
+    ):
         assert PictureSource(source="commons", page=page).page == "", page
-    page = "https://commons.wikimedia.org/wiki/File:A.jpg"
-    assert PictureSource(source="commons", page=page).page == page
-    assert PictureSource(source="commons", page="HTTPS://example.org").page == "HTTPS://example.org"
+    for page in (
+        "https://commons.wikimedia.org/wiki/File:A.jpg",
+        "HTTPS://example.org",
+        "http://www.flickr.com/photos/x/1",
+    ):
+        assert PictureSource(source="commons", page=page).page == page
 
     lesson = Lesson.model_validate(
         {
@@ -612,6 +623,35 @@ def test_a_source_page_is_an_https_link_or_none(tmp_path):
     card = Card(front="f", back="b", picture=name, picture_source={"source": "commons", "page": "javascript:x"})
     (note,) = anki.notes(ExportRequest(deck="D", cards=[card], voice=""), pictures={0: tmp_path / name})
     assert "href" not in note.fields["Source"]
+
+
+def test_an_http_source_page_kept_through_a_load_and_a_save(client, tmp_path):
+    """A lesson saved with an Openverse picture whose page is an http: address (before #764
+    blanked them): read, then saved again by the page, its link still there, and in its note."""
+    import json
+
+    from app import lessons
+    from app.models import ExportRequest
+
+    page = "http://www.flickr.com/photos/someone/123"
+    lesson = client.post("/api/extract", data={"prompt": "10 mots courants, recto : image du mot"}).json()
+    path = lessons.existing_folder(lesson["id"]) / "lesson.json"
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    saved["cards"][0]["picture_source"] = {"source": "openverse", "licence": "CC BY 2.0", "page": page}
+    path.write_text(json.dumps(saved), encoding="utf-8")  # as an older version wrote it
+
+    loaded = client.get(f"/api/lessons/{lesson['id']}").json()
+    assert loaded["cards"][0]["picture_source"]["page"] == page
+    saving = client.put(f"/api/lessons/{lesson['id']}", json={"deck": loaded["deck"], "cards": loaded["cards"]})
+    assert saving.status_code == 200
+    again = json.loads(path.read_text(encoding="utf-8"))
+    assert again["cards"][0]["picture_source"]["page"] == page
+
+    name = "picture-c1-0123abcd.jpg"
+    (tmp_path / name).write_bytes(b"jpeg")
+    card = Card.model_validate({**loaded["cards"][0], "picture": name})
+    (note,) = anki.notes(ExportRequest(deck="D", cards=[card], voice=""), pictures={0: tmp_path / name})
+    assert f'<a href="{page}">' in note.fields["Source"]
 
 
 def test_a_picture_on_a_dictation_keeps_it_a_dictation():

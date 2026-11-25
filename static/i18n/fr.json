@@ -1142,6 +1142,7 @@
       "overloaded": "{provider} est surchargé en ce moment ({status}), réessayez dans une minute.",
       "api_error": "Erreur de l'API {provider} ({status}) : {detail}",
       "unreachable": "Impossible de joindre l'API {provider}.",
+      "interrupted": "La connexion à {provider} a été coupée pendant sa réponse : réessayez.",
       "empty_answer": "{provider} n'a rien renvoyé (images refusées ou illisibles ?).",
       "invalid_answer": "Le modèle n'a pas renvoyé de cartes valides, réessayez.",
       "truncated": "Réponse tronquée : trop de cartes d'un coup, essayez avec moins de pages.",

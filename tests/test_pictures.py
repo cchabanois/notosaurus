@@ -128,6 +128,36 @@ def test_a_picture_drawn_from_what_its_card_no_longer_says_set_aside(client, dra
     assert "a green apple" in drawn and cards[0]["picture"]
 
 
+def test_a_card_corrected_before_its_turn_not_drawn(client, drawn, monkeypatch):
+    """A card corrected (saved by the page) while the batch draws another, its own turn not
+    come yet: not sent to the image model from what it said before, a picture paid for only to
+    be set aside (stale_picture); left for the page's next drawing, from what it says now."""
+    from app.models import LessonIn
+
+    monkeypatch.setattr(pictures, "CONCURRENCY", 1)  # the dog waits for the apple
+    lesson = lesson_with_pictures(client)
+    id = lesson["id"]
+    draw = pictures.draw
+
+    async def meanwhile(s, subject):
+        if subject == "an apple":
+            saved = lessons.get(id)
+            assert saved
+            saved.cards[1].picture_prompt = "a black dog"  # the page's correction, saved
+            lessons.update(id, LessonIn(deck=saved.deck, cards=saved.cards))
+        return await draw(s, subject)
+
+    monkeypatch.setattr(pictures, "draw", meanwhile)
+    res = client.post(f"/api/lessons/{id}/pictures", json={"draw": True}).json()
+    assert "a dog" not in drawn and "a black dog" not in drawn  # nothing paid for it
+    cards = res["lesson"]["cards"]
+    assert (cards[1]["picture_prompt"], cards[1]["picture"]) == ("a black dog", "")
+    assert cards[0]["picture"] and res["failures"] == 1  # the apple's drawn; the umbrella refused
+    drawn.clear()
+    cards = client.post(f"/api/lessons/{id}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    assert "a black dog" in drawn and cards[1]["picture"]
+
+
 def test_a_picture_chosen_while_the_lesson_is_drawn_kept(client, drawn, monkeypatch):
     """A picture the user chooses for a card the lesson's drawing hasn't reached (a found one
     picked, its controls still there): the drawing ending after it doesn't write its own over
@@ -241,7 +271,9 @@ def test_the_cards_a_correction_replaced_passed_on(client, monkeypatch):
 
     told = {}
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None):
+    async def draw_all(
+        s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=(), previous=None, saved=None
+    ):
         told["not_from_lesson"] = list(not_from_lesson)
         return pictures.Drawn(0, None, [])
 

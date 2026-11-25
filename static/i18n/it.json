@@ -1142,6 +1142,7 @@
       "overloaded": "{provider} è sovraccarico in questo momento ({status}), riprova tra un minuto.",
       "api_error": "Errore dell'API {provider} ({status}): {detail}",
       "unreachable": "Impossibile raggiungere l'API {provider}.",
+      "interrupted": "La connessione con {provider} si è interrotta durante la risposta: riprova.",
       "empty_answer": "{provider} non ha restituito nulla (immagini rifiutate o illeggibili?).",
       "invalid_answer": "Il modello non ha restituito carte valide, riprova.",
       "truncated": "Risposta interrotta: troppe carte in una volta, prova con meno pagine.",

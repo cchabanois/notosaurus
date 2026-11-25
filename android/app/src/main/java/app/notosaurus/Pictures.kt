@@ -3,7 +3,9 @@ package app.notosaurus
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
@@ -36,12 +38,13 @@ class Pictures(
      * still a card: counted, not fatal. `step`: each card's steps as they begin, {"card": its
      * id, "step"…} (what the page shows on it meanwhile, as the computer's), then {"card", "step":
      * "ready", its picture's fields (READY)} as soon as it has it. The lesson's own drawings
-     * first (fromTheLesson), for the cards whose thing its photos show, but those in
-     * `notFromLesson` (their ids: a correction replaced their picture, the lesson's drawing
-     * would only come back). Figures turned off (figures.draw): their cards left without, not
-     * counted as failures. `previous`: by card id, the figure a correction replaced, {"source": its
-     * picture_source (its sources), "kind": its family}: drawn again from it, what is asked
-     * changed and the rest kept (as the computer's /pictures). */
+     * first (fromTheLesson), for the cards whose thing its photos show (the others, figures, made
+     * meanwhile), but those in `notFromLesson` (their ids: a correction replaced their picture, the
+     * lesson's drawing would only come back). Figures turned off (figures.draw): their cards left
+     * without, not counted as failures. `previous`: by card id, the figure a correction replaced,
+     * {"source": its picture_source (its sources), "kind": its family}: drawn again from it, what is
+     * asked changed and the rest kept (as the computer's /pictures). A card corrected since the
+     * lesson was read (superseded, read again when its turn comes): not drawn. */
     suspend fun drawMissing(
         lesson: JsonObject,
         draw: Boolean = false,
@@ -59,31 +62,45 @@ class Pictures(
     ): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
-        fromTheLesson(id, cards, step, notFromLesson)
         val failures = mutableListOf<JsonObject>()
         val toDraw = mutableListOf<String>()
         val few = Semaphore(AT_ONCE)
-        coroutineScope {
-            val figuresOff = off("figures.draw")
-            cards.indices.filter { i -> needsPicture(cards[i]) && !(figuresOff && cards[i].string("figure").isNotBlank()) }.map { i ->
-                async {
-                    few.withPermit {
-                        try {
-                            val card = cards[i].string("id")
-                            val redraw = redrawFrom(lessons.images(id), cards[i], replaced = previous[card])
-                            cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = !draw, redraw = redraw) {
-                                step(JsonObject(mapOf("card" to JsonPrimitive(card)) + it))
-                            }
-                            // Shown at once, not when the others are done
-                            val ready = READY.mapNotNull { field -> cards[i][field]?.let { field to it } }
-                            step(JsonObject(mapOf("card" to JsonPrimitive(card), "step" to JsonPrimitive("ready")) + ready))
-                        } catch (e: RelayException) {
-                            if (e.code == NEEDS_DRAWING) toDraw += cards[i].string("id")
-                            else failures += buildJsonObject { put("code", e.code); put("params", e.params) }
-                        }
-                    }
+        val figuresOff = off("figures.draw")
+        val todo = cards.indices.filter { i -> needsPicture(cards[i]) && !(figuresOff && cards[i].string("figure").isNotBlank()) }
+        // The cards the lesson's drawings may give wait for them; the others (figures first) are made
+        // meanwhile: they never come from the lesson's pages
+        val candidates = todo.filter { i -> fromLesson(cards[i]) && cards[i].string("id") !in notFromLesson }
+        val photos = if (candidates.isEmpty()) emptyMap() else lessons.photos(id)
+        val waiting = if (photos.isEmpty()) emptyList() else candidates
+
+        suspend fun one(i: Int) = few.withPermit {
+            val card = cards[i].string("id")
+            // Corrected (saved by the page) since the lesson was read: not drawn, its picture would
+            // only be set aside (stalePicture); the page draws it again from what it says now
+            if (superseded(cards[i], lessons.get(id)?.cards()?.firstOrNull { it.string("id") == card })) return@withPermit
+            try {
+                val redraw = redrawFrom(lessons.images(id), cards[i], replaced = previous[card])
+                cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = !draw, redraw = redraw) {
+                    step(JsonObject(mapOf("card" to JsonPrimitive(card)) + it))
                 }
-            }.awaitAll()
+                // Shown at once, not when the others are done
+                val ready = READY.mapNotNull { field -> cards[i][field]?.let { field to it } }
+                step(JsonObject(mapOf("card" to JsonPrimitive(card), "step" to JsonPrimitive("ready")) + ready))
+            } catch (e: RelayException) {
+                synchronized(failures) {
+                    if (e.code == NEEDS_DRAWING) toDraw += card
+                    else failures += buildJsonObject { put("code", e.code); put("params", e.params) }
+                }
+            }
+        }
+
+        coroutineScope {
+            val afterTheLesson = async {
+                fromTheLesson(id, cards, step, waiting, photos)
+                waiting.filter { needsPicture(cards[it]) }.map { i -> async { one(i) } }.awaitAll()
+            }
+            (todo - waiting.toSet()).map { i -> async { one(i) } }.awaitAll()
+            afterTheLesson.await()
         }
         return buildJsonObject {
             put("lesson", saved(lesson, cards))
@@ -98,38 +115,45 @@ class Pictures(
      * `cards` at once and told ready; none, or the relay failing: the cards as they were (their
      * pictures then looked for, as without). {"card", "step": "lesson"} while looked at. Each
      * card's drawing looked for on its page and its neighbours, a page unknown on every page,
-     * LocalServer.MAX_PER_CALL at a time (drawingCalls: the relay's cap, a lesson holds more),
-     * one call after another, each asked only for the cards still without a drawing; a call
-     * the relay refuses: its pages skipped, the others still looked at. */
-    private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step, notFromLesson: Set<String>) {
-        val wanted = cards.indices.filter { i ->
-            needsPicture(cards[i]) && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank() &&
-                cards[i].string("id") !in notFromLesson
-        }
-        val photos = lessons.photos(lessonId)
+     * LocalServer.MAX_PER_CALL at a time (drawingCalls: the relay's cap, a lesson holds more): the
+     * calls asking a card whose page is known at once, side by side; then those asking only the
+     * cards whose page is unknown, one after another, each asking those still without a drawing;
+     * a call the relay refuses: its pages skipped, the others still looked at. `wanted`: the
+     * cards' indexes (fromLesson). */
+    private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step, wanted: List<Int>, photos: Map<Int, ByteArray>) {
         if (wanted.isEmpty() || photos.isEmpty()) return
         wanted.forEach { i -> step(buildJsonObject { put("card", cards[i].string("id")); put("step", "lesson") }) }
         val left = wanted.toMutableList()
+        val taking = Mutex() // the calls side by side: one answer taken at a time
         val pages = wanted.map { (cards[it]["page"] as? JsonPrimitive)?.intOrNull ?: 0 }
-        for ((numbers, among) in drawingCalls(pages, photos.keys.toList())) { // by their page number: a page missing, none
-            val asked = among.map { wanted[it] }.filter { it in left } // the drawings' "card": an index into these
-            if (asked.isEmpty()) continue
+
+        suspend fun look(numbers: List<Int>, among: List<Int>) {
+            val asked = taking.withLock { among.map { wanted[it] }.filter { it in left } } // the drawings' "card": an index into these
+            if (asked.isEmpty()) return
             val found = try {
                 val sent = numbers.map { photos.getValue(it) } // the relay cuts each drawing out of its own
                 relay().withPhotos("lesson-drawings", buildJsonObject { put("cards", JsonArray(asked.map { cards[it] })) }, sent)
             } catch (e: RelayException) {
-                continue // these pages' cards looked for one by one, as without
+                return // these pages' cards looked for one by one, as without
             }
-            for (drawing in found["drawings"]?.jsonArray.orEmpty().map { it.jsonObject }) {
-                val i = asked.getOrNull(drawing["card"]?.jsonPrimitive?.intOrNull ?: -1) ?: continue
-                if (i !in left) continue // found twice in one answer: its first drawing
-                left.remove(i)
-                val name = save(lessonId, cards[i].string("id"), Base64.getDecoder().decode(drawing.string("data")), "jpg")
-                cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to LESSON)
-                val ready = READY.mapNotNull { field -> cards[i][field]?.let { field to it } }
-                step(JsonObject(mapOf("card" to JsonPrimitive(cards[i].string("id")), "step" to JsonPrimitive("ready")) + ready))
+            taking.withLock {
+                for (drawing in found["drawings"]?.jsonArray.orEmpty().map { it.jsonObject }) {
+                    val i = asked.getOrNull(drawing["card"]?.jsonPrimitive?.intOrNull ?: -1) ?: continue
+                    if (i !in left) continue // found twice (in one answer, or a call beside this one): its first drawing
+                    left.remove(i)
+                    val name = save(lessonId, cards[i].string("id"), Base64.getDecoder().decode(drawing.string("data")), "jpg")
+                    cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to LESSON)
+                    val ready = READY.mapNotNull { field -> cards[i][field]?.let { field to it } }
+                    step(JsonObject(mapOf("card" to JsonPrimitive(cards[i].string("id")), "step" to JsonPrimitive("ready")) + ready))
+                }
             }
         }
+
+        val calls = drawingCalls(pages, photos.keys.toList()) // by their page number: a page missing, none
+        val known = pages.indices.filter { pages[it] in photos }.toSet()
+        val sideBySide = calls.takeWhile { (_, among) -> among.any { it in known } }
+        coroutineScope { sideBySide.map { (numbers, among) -> async { look(numbers, among) } }.awaitAll() }
+        for ((numbers, among) in calls.drop(sideBySide.size)) look(numbers, among) // the unknown pages' rest
     }
 
     /** "✨ Image", its first step (as the computer's /picture/make): from what the user wrote
@@ -399,31 +423,54 @@ class Pictures(
         internal fun needsPicture(card: JsonObject) =
             card.string("picture").isEmpty() && (card.string("picture_prompt").isNotBlank() || card.string("figure").isNotBlank())
 
+        /** A card whose picture the lesson's own drawings may give: a picture's (a figure is drawn
+         * exact, never cut out of a page). As the computer's (pictures._from_lesson). */
+        private fun fromLesson(card: JsonObject) = card.string("picture_prompt").isNotBlank() && card.string("figure").isBlank()
+
+        /** A card read before a drawing (`card`) whose picture is no longer to be drawn from it, the
+         * lesson as saved now (`now`, the same card; null: removed since) saying otherwise: described
+         * anew (DESCRIBED: a correction saved meanwhile) or given a picture (the user's own) since.
+         * The picture would only be set aside (stalePicture). As the computer's (pictures.superseded). */
+        internal fun superseded(card: JsonObject, now: JsonObject?): Boolean {
+            if (now == null) return true
+            return now.string("picture") != card.string("picture") || DESCRIBED.any { now.string(it) != card.string(it) }
+        }
+
         /** The calls looking for the lesson's own drawings of cards whose pages are `pages` (each
          * card's, from 1; 0 unknown) among the lesson's `photos` (the numbers of its pages there): each
          * call's pages sent and the cards it asks (their indexes; a later call asks only those still
          * without a drawing). A card's drawing looked for on its own page and its neighbours (the page
          * before, the page after, those the lesson has): the cards taken by their page, each call
          * sends the pages around as many as fit in `perCall` photos. The cards whose page is unknown
-         * (0, or not one of the lesson's: a page missing is never replaced by another): every page,
-         * `perCall` at a time. As the computer (pictures.drawing_calls, core/shared-cases.json). */
+         * (0, or not one of the lesson's: a page missing is never replaced by another) are looked for
+         * on every page, and no page is sent twice for them: a lesson that fits in one call, one call
+         * of all its pages asking every card; else they are asked in the known pages' calls too (those
+         * pages are sent anyway), then on the pages none of those sent, `perCall` at a time, each such
+         * call asking only those still without a drawing (it waits for those before it: fromTheLesson).
+         * As the computer (pictures.drawing_calls, core/shared-cases.json). */
         internal fun drawingCalls(pages: List<Int>, photos: List<Int>, perCall: Int = LocalServer.MAX_PER_CALL): List<Pair<List<Int>, List<Int>>> {
             val present = photos.toSortedSet()
+            val unknown = pages.indices.filter { pages[it] !in present }
+            if (unknown.isNotEmpty() && present.size <= perCall) {
+                return if (present.isEmpty()) emptyList() else listOf(present.toList() to pages.indices.toList())
+            }
             val calls = mutableListOf<Pair<List<Int>, List<Int>>>()
             val sent = sortedSetOf<Int>()
             val asked = mutableListOf<Int>()
             for (i in pages.indices.filter { pages[it] in present }.sortedWith(compareBy({ pages[it] }, { it }))) {
                 val near = (pages[i] - 1..pages[i] + 1).filter { it in present }.toSet()
                 if (asked.isNotEmpty() && (sent + near).size > perCall) {
-                    calls += sent.toList() to asked.sorted()
+                    calls += sent.toList() to (asked + unknown).sorted()
                     sent.clear(); asked.clear()
                 }
                 sent += near
                 asked += i
             }
-            if (asked.isNotEmpty()) calls += sent.toList() to asked.sorted()
-            val unknown = pages.indices.filter { pages[it] !in present }
-            if (unknown.isNotEmpty()) present.toList().chunked(perCall).forEach { calls += it to unknown }
+            if (asked.isNotEmpty()) calls += sent.toList() to (asked + unknown).sorted()
+            if (unknown.isNotEmpty()) {
+                val covered = calls.flatMap { it.first }.toSet()
+                present.filter { it !in covered }.chunked(perCall).forEach { calls += it to unknown }
+            }
             return calls
         }
 

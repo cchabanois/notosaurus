@@ -3,6 +3,7 @@ sent, the image read from the answer, its cost recorded, the service's errors as
 app's codes. The services are faked (an httpx MockTransport under the OpenAI SDK, a
 fake google-genai client): never the network."""
 
+import asyncio
 import base64
 import json
 import types as py_types
@@ -465,7 +466,8 @@ def test_a_lesson_drawing_cut_out_and_taken_first(monkeypatch, tmp_path):
     photo = llm.Image(_page_with_a_drawing(), "image/jpeg")
     run(pictures.draw_all(s, tmp_path / "images", cards, draw=True, step=told.append, photos=[photo]))
     assert cards[0].picture_source.source == "lesson" and cards[1].picture_source.source == "drawn"
-    assert [(t["card"], t["step"]) for t in told[:3]] == [("c", "lesson"), ("d", "lesson"), ("c", "ready")]
+    lesson = [(t["card"], t["step"]) for t in told if t["card"] != "t"]  # the figure drawn meanwhile
+    assert lesson[:3] == [("c", "lesson"), ("d", "lesson"), ("c", "ready")]
     assert asked.count("Drawings") == 1  # one call for the lesson
     drawing = Picture.open(io.BytesIO((tmp_path / "images" / cards[0].picture).read_bytes())).convert("L")
     assert drawing.size == (216, 216)  # the square and its margin (4 % of its side)
@@ -499,7 +501,8 @@ def test_a_picture_a_correction_replaced_not_cut_out_of_the_lesson_again(monkeyp
 def test_a_cards_lesson_drawing_looked_for_on_its_page_and_its_neighbours(monkeypatch, tmp_path):
     """A 25-page lesson: the cards whose page is known looked for on theirs and the pages
     around (one call while they fit in one), each drawing cut out of its own photo; a card
-    whose page is unknown on every page, ten at a time, until found."""
+    whose page is unknown asked there too, then on the pages not sent yet, ten at a time,
+    until found: no page sent twice."""
     sent = []
     where = {"le chat": 4, "l'oiseau": 21, "le chien": 13}  # the page each drawing is on
 
@@ -526,12 +529,68 @@ def test_a_cards_lesson_drawing_looked_for_on_its_page_and_its_neighbours(monkey
     photos = [llm.Image(f"page #{n}".encode(), "image/jpeg") for n in range(1, 26)]
     run(pictures.draw_all(AIConfig(), tmp_path / "images", cards, photos=photos))
     assert sent == [
-        ([3, 4, 5, 19, 20, 21], ["le chat", "l'oiseau"]),
-        (list(range(1, 11)), ["le chien"]),
-        (list(range(11, 21)), ["le chien"]),  # found: pages 21 to 25 not sent
+        ([3, 4, 5, 19, 20, 21], ["le chat", "le chien", "l'oiseau"]),
+        ([1, 2, *range(6, 14)], ["le chien"]),  # found: pages 14 to 18 and 22 to 25 not sent
     ]
     assert cut == {"c": b"page #4", "d": b"page #13", "b": b"page #21"}
     assert all(c.picture_source and c.picture_source.source == "lesson" for c in cards)
+
+
+def test_a_figure_drawn_without_waiting_for_the_lessons_drawings(monkeypatch, tmp_path):
+    """A figure never comes from the lesson's pages: drawn while its drawings are looked for,
+    not after (the call held until the figure is drawn); the picture's card, not found there,
+    made once they are looked at."""
+    made = []
+
+    async def main():
+        figure_drawn = asyncio.Event()
+
+        async def lesson_drawings(s, photos, cards):
+            await asyncio.wait_for(figure_drawn.wait(), 2)  # held until the figure is drawn
+            made.append("lesson")
+            return {}
+
+        async def figure_or_picture(s, folder, card, **options):
+            made.append(card.id)
+            if card.figure:
+                figure_drawn.set()
+            return f"{card.id}.jpg"
+
+        monkeypatch.setattr(pictures, "lesson_drawings", lesson_drawings)
+        monkeypatch.setattr(pictures, "figure_or_picture", figure_or_picture)
+        cards = [
+            Card(front="le chat", back="the cat", picture_prompt="a cat", id="c"),
+            Card(front="Ce triangle ?", back="rectangle", figure="un triangle", id="t"),
+        ]
+        await pictures.draw_all(AIConfig(), tmp_path / "images", cards, photos=[llm.Image(b"page", "image/jpeg")])
+
+    run(main())
+    assert made == ["t", "lesson", "c"]
+
+
+def test_the_known_pages_calls_side_by_side(monkeypatch, tmp_path):
+    """The calls looking at the known pages' neighbourhoods need no other's answer: made side
+    by side (each held until the other has begun), not one after another."""
+    begun = []
+
+    async def main():
+        both = asyncio.Event()
+
+        async def find_drawings(s, images, cards):
+            begun.append(len(images))
+            if len(begun) == 2:
+                both.set()
+            await asyncio.wait_for(both.wait(), 2)
+            return {}
+
+        monkeypatch.setattr(llm, "find_drawings", find_drawings)
+        monkeypatch.setattr(pictures, "figure_or_picture", lambda *args, **options: asyncio.sleep(0, "p.jpg"))
+        cards = [Card(front=f"{n}", back="b", picture_prompt="a thing", page=n, id=f"c{n}") for n in (2, 5, 8, 11, 14)]
+        photos = [llm.Image(f"page #{n}".encode(), "image/jpeg") for n in range(1, 31)]
+        await pictures.draw_all(AIConfig(), tmp_path / "images", cards, photos=photos)
+
+    run(main())
+    assert begun == [9, 6]  # pages 1 to 9, then 10 to 15 (shared-cases.json's split)
 
 
 def test_no_lesson_drawing_when_the_call_fails(monkeypatch, tmp_path):

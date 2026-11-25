@@ -268,11 +268,12 @@ const picturesPart = {
     return t("app.pictures.sourceFound", { source: SOURCE_NAMES[origin.source] ?? origin.source, licence: origin.licence });
   },
 
-  // The picture's page at its source, as a link: an https: address only (a lesson imported
-  // or shared could hold anything there)
+  // The picture's page at its source, as a link: an http: or https: address only (a lesson
+  // imported or shared could hold anything there: javascript:, data:…); a free picture's page
+  // may be an http: one, its licence's credit links to it
   pictureSourcePage(card) {
     const page = card?.picture_source?.page ?? "";
-    return /^https:\/\//i.test(page) ? page : "";
+    return /^https?:\/\//i.test(page) ? page : "";
   },
 
   // What the figures are drawn with, each with its licence and its page: the relay's on the

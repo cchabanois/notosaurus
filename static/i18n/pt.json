@@ -1142,6 +1142,7 @@
       "overloaded": "{provider} está sobrecarregado agora ({status}), tente de novo daqui a um minuto.",
       "api_error": "Erro da API do {provider} ({status}): {detail}",
       "unreachable": "Não foi possível acessar a API do {provider}.",
+      "interrupted": "A conexão com o {provider} caiu durante a resposta: tente de novo.",
       "empty_answer": "{provider} não retornou nada (imagens recusadas ou ilegíveis?).",
       "invalid_answer": "O modelo não retornou cartões válidos, tente de novo.",
       "truncated": "Resposta cortada: cartões demais de uma vez, tente com menos páginas.",
