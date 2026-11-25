@@ -46,8 +46,10 @@ accettare la sua [informativa sulla privacy](../app-privacy/):
    dirle invece di scriverle.
 4. Tocca **✨ Genera le carte**. La prima lezione avvia la prova gratuita.
 5. Controlla le carte, correggile o chiedi all'IA con parole tue: vedi
-   [Rileggere le carte](../review/). Una carta che non va: **⋯ → ⚑ Segnala** su di essa, ogni
-   segnalazione viene letta.
+   [Rileggere le carte](../review/). Tocca una carta, o **▶ Rivedi carta per carta**: si apre a
+   schermo intero, fronte e retro come in AnkiDroid; scorri con il dito alla successiva, e di' cosa
+   non va in **✨ Correggi con l'IA** in fondo, scrivendolo o con 🎤. Una carta che non va:
+   **⋯ → ⚑ Segnala** su di essa, ogni segnalazione viene letta.
 6. Tocca **📥 Aggiungi ad Anki**: le carte vanno in AnkiDroid. La prima volta, AnkiDroid chiede se
    Notosaurus può aggiungergli carte.
 
@@ -57,6 +59,8 @@ nuovo. Le sue carte vengono aggiornate in AnkiDroid, non duplicate.
 ![La pagina principale dell'app: le foto della lezione, le istruzioni con 🎤, il figlio scelto in alto](../../../assets/screenshots/en/app-home.png)
 
 ![Le carte di una lezione nell'app, con il campo di correzione e il suo 🎤](../../../assets/screenshots/en/app-review.png)
+
+![Una carta aperta nell'app: il suo mazzo, il fronte, il retro e il suo 🔊, il campo di correzione e il suo 🎤 in fondo](../../../assets/screenshots/en/app-card-open.png)
 
 ## Dove lavora
 
@@ -73,9 +77,11 @@ Nelle impostazioni, **📍 Dove lavora Notosaurus?** sceglie **📱 Su questo te
 
 Quasi tutto Notosaurus è uguale al computer. Ciò che solo l'app ha, o non ha:
 
-- **🎤 Detta**: di' un'istruzione o una correzione invece di scriverla. Le tue parole appaiono
-  mentre parli, scritte dal riconoscimento vocale del telefono; **✨ Metti in ordine** ripulisce
-  poi un'istruzione. L'app chiede il microfono la prima volta.
+- **🎤 Detta**: di' un'istruzione, una correzione o cosa deve chiedere una nuova carta invece di
+  scriverla. Le tue parole appaiono mentre parli, scritte dal riconoscimento vocale del telefono.
+  Tocca ■ per fermare, o subito **Correggi**, **Scrivi** o **✨ Genera le carte**: ciò che hai
+  detto viene scritto, poi inviato. **✨ Metti in ordine** ripulisce poi un'istruzione. L'app chiede
+  il microfono la prima volta.
 - **⚑ Segnala**, su una carta, dice a Notosaurus cosa è andato storto: una parola letta male, una
   risposta sbagliata, una figura storta, un'immagine inadatta. Ogni segnalazione viene letta e
   aiuta a migliorare Notosaurus (vedi [Segnalare un problema](../review/#segnalare-un-problema)).

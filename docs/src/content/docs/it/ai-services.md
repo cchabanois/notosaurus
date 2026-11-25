@@ -128,6 +128,6 @@ chiave Gemini gratuita, in realtà non si paga nulla. Per esempio, la lezione di
 queste schermate è costata circa 2 centesimi di dollaro da generare con Claude Sonnet, e altrettanto
 per la sua correzione. Le immagini costano da meno di un centesimo a qualche centesimo ciascuna; le
 figure, meno di un centesimo (disegnate in fretta, qualche secondo ciascuna, mentre rileggi le
-carte). Una figura che ti lascia un dubbio: "🔍", sotto, la fa guardare all'IA; se trova qualcosa
+carte). Una figura che ti lascia un dubbio: **🔍 Verifica la figura**, sotto, la fa guardare all'IA; se trova qualcosa
 di sbagliato, scegli se farla ridisegnare, indicandole l'errore: in fretta (qualche secondo), poi,
 se è ancora sbagliata, con cura, con il ragionamento del modello (fino a un minuto).
