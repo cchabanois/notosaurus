@@ -22,22 +22,64 @@ Consulta [Señalar un problema](#señalar-un-problema).
   encontrada entonces para su idioma, o ninguna pedida) recibe una aquí: elige su idioma y toma la
   voz elegida para ese idioma en los ajustes. **Sin voz**: no se lee nada. Tarjetas que leer en una
   lección sin voz: se indica en rojo.
-- Cada tarjeta tiene un **anverso** (la pregunta) y un **reverso** (la respuesta). La lista es
-  compacta (anverso, reverso, una imagen pequeña): toca una tarjeta para abrirla a pantalla completa
-  (una ventana en el ordenador), como en Anki, con las fórmulas y las figuras dibujadas y el campo
-  **✨ Corregir con la IA** abajo. **▶ Revisar tarjeta por tarjeta** abre la primera. Desliza el
-  dedo, o **‹ ›**, para pasar a la anterior o la siguiente; tras la última, el fin de la lección.
-  Toca un texto para editarlo; **＋** añade una tarjeta después (si se deja vacía, desaparece).
-  **✕**, Escape o el botón atrás del móvil la cierran, guardada. Toca su imagen
-  para cambiarla (una tarjeta sin imagen: ⋯ → **🖼️ Añadir una imagen**).
+- Cada tarjeta tiene un **anverso** (la pregunta) y un **reverso** (la respuesta).
+
+### La lista
+
+La lista es compacta, como una vista previa: el anverso, el reverso bajo una línea de puntos,
+una imagen pequeña encima de la pregunta o después de la respuesta, como en Anki, y solo
+**🔊** para oír la tarjeta. **Toca una tarjeta para abrirla**; **▶ Revisar tarjeta por
+tarjeta** abre la primera.
+
+### Una tarjeta abierta
+
+La tarjeta se abre a pantalla completa (una ventana en el ordenador), con las fórmulas y las
+figuras dibujadas, tal como la mostrará Anki:
+
+- arriba, en pequeño, **su mazo** en Anki («Paul › 1.º ESO › Inglés › … › Ejercicios») y sus
+  botones: **📄 p. 3**, la página de la lección de la que viene la tarjeta (al tocarlo, las
+  páginas de la lección se abren en grande en esa, ‹ › para las demás; no aparece en una tarjeta
+  cuya página no se conoce), **💬 Explicar esta tarjeta** y **Más acciones** (⋯);
+- **ANVERSO**: la pregunta, con su imagen cuando va en el anverso; una línea y luego
+  **REVERSO**: la respuesta y su **🔊**, la imagen cuando va en el reverso, y después la info y
+  las ayudas;
+- abajo del todo, el campo **✨ Corregir con la IA**, con **Corregir** al lado (consulta
+  [Corregir con la IA](#corregir-con-la-ia)).
+
+![Una tarjeta abierta: su mazo arriba, el anverso con su figura, el reverso y el campo de corrección abajo](../../../assets/screenshots/en/card-open.png)
+
+Toca un texto para editarlo. **Desliza el dedo** en cualquier parte de la tarjeta, o toca
+**‹ ›**, para pasar a la tarjeta anterior o a la siguiente. Después de la última llega el **fin
+de la lección**: cuántas tarjetas se han revisado («✓ 12 tarjetas revisadas»), **＋ Añadir una
+tarjeta** y el botón para enviar la lección a Anki. **✕**, Escape o el botón atrás del móvil
+cierran la tarjeta, guardada.
+
+![El fin de la lección: cuántas tarjetas se han revisado, una tarjeta que añadir, el envío a Anki](../../../assets/screenshots/en/lesson-end.png)
+
+Toca la imagen de una tarjeta para cambiarla: su página se abre a pantalla completa (consulta
+[Imágenes](../card-types/#imágenes)). Una tarjeta sin imagen: ⋯ → **🖼️ Añadir una imagen**.
+
 - **+ info** añade una nota mostrada bajo la respuesta: el género, el plural, un ejemplo…
-- **submazo** pone la tarjeta en un submazo de la lección («Vocabulario», «Verbos»).
-- **🔊**, junto al anverso o al reverso, lo reproduce con la voz de la lección. Cada tarjeta dice qué
-  caras se leen: la respuesta de una tarjeta de vocabulario, un texto con huecos por las dos caras, entero (el anverso
-  como un dictado: se escriben en los huecos las palabras oídas). El menú ⋯ de la tarjeta: **Leer el anverso en voz alta**, **Dejar de
-  leer el reverso**…
-- **Más acciones** (⋯), arriba a la derecha de la tarjeta, la elimina; **＋ Añadir una tarjeta**,
-  abajo, añade una.
+- **+ submazo** pone la tarjeta en un submazo de la lección («Vocabulario», «Verbos»); una
+  tarjeta puesta en uno muestra el nombre de su submazo. Al tocarlo, se abre una lista:
+  **Ninguno: en el mazo de la lección**, los submazos de la lección con su número de tarjetas,
+  o **Nuevo submazo…**.
+- **🔊**, junto a la respuesta, la reproduce con la voz de la lección. Cada tarjeta dice qué
+  caras se leen: la respuesta de una tarjeta de vocabulario, un texto con huecos por las dos
+  caras, entero (el anverso como un dictado: se escriben en los huecos las palabras oídas). El
+  menú ⋯ de la tarjeta: **Leer el anverso en voz alta**, **Dejar de leer el reverso**…
+- **Más acciones** (⋯) también elimina la tarjeta.
+
+### Añadir una tarjeta
+
+**＋** arriba de una tarjeta abierta añade una justo después; **＋ Añadir una tarjeta**, bajo la
+lista o en el fin de la lección, añade una al final. La nueva tarjeta se abre, vacía; si se deja
+vacía, desaparece al cerrarla.
+
+Lo más sencillo suele ser que **la IA la escriba**: en **¿Qué debe preguntar esta tarjeta?**,
+abajo, di qué debe preguntar («el pretérito de ir», «la fecha de la toma de la Bastilla») y
+toca **Escribir**. En un móvil no se abre ningún teclado: toca **🎤** para dictarlo, o el campo
+para escribirlo. También puedes rellenar tú mismo el anverso y el reverso.
 
 **📝 Instrucciones usadas para esta lección**, encima de las tarjetas, recuerda lo que se le pidió
 a la IA.
@@ -81,9 +123,22 @@ tarjetas:
 Toca **Corregir**. La IA vuelve a ver las fotos (con más de 10 páginas, solo las tarjetas: dice entonces
 lo que no ha podido hacer sin las páginas) y solo cambia lo que has pedido: las tarjetas
 cambiadas se marcan como **cambiada**, las nuevas como **nueva**, y una frase resume lo que ha
-hecho. **↩ Deshacer** deja las tarjetas como estaban,
-mientras no empieces a editar una tarjeta. Una tarjeta corregida sola (**✨ Corregir esta tarjeta**) se
-deshace igual mientras siga abierta; una vez cerrada, la corrección se queda.
+hecho, con cuántas tarjetas se han añadido, cambiado y quitado. Debajo:
+
+- **↩ Deshacer** deja las tarjetas como estaban;
+- **🎯 Rehacer con cuidado**, tras una corrección rápida, la vuelve a hacer con la reflexión
+  del modelo;
+- **✓ Conservar** la conserva: ya no se puede deshacer.
+
+La corrección se puede deshacer mientras no la conserves ni empieces a editar una tarjeta.
+
+**Una sola tarjeta** se corrige desde la tarjeta abierta, en el campo **✨ Corregir con la IA**
+de abajo («la respuesta es 1789», «más corto»), y luego **Corregir**. Aparecen los mismos
+**↩ Deshacer**, **🎯 Rehacer con cuidado** y **✓ Conservar**; cerrar la tarjeta, o pasar a la
+siguiente, también conserva la corrección.
+
+En la aplicación, **🎤** junto al campo dicta la corrección. No hace falta parar el dictado
+antes: toca **Corregir** enseguida, y lo que has dicho se escribe y se envía.
 
 ¿Cambias de opinión mientras la IA corrige (la lección o una sola tarjeta)? **Cancelar** la
 detiene de inmediato: las tarjetas se quedan como estaban.
