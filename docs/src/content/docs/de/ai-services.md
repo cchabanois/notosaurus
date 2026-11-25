@@ -132,7 +132,7 @@ genauen Kosten). Mit einem kostenlosen Gemini-Schlüssel wird tatsächlich nicht
 Beispiel kostete die Vokabellektion dieser Screenshots mit Claude Sonnet etwa 2 US-Cent für die
 Erzeugung, und ebenso viel für ihre Korrektur. Bilder kosten weniger als einen Cent bis ein paar
 Cent pro Stück; Figuren unter einem Cent (schnell gezeichnet, ein paar Sekunden pro Stück, während
-du die Karten durchsiehst). Eine Figur, bei der du Zweifel hast: „🔍“ darunter lässt die KI sie
+du die Karten durchsiehst). Eine Figur, bei der du Zweifel hast: **🔍 Figur prüfen** darunter lässt die KI sie
 ansehen; findet sie etwas Falsches, wählst du, ob sie neu gezeichnet wird, mit dem Hinweis auf den
 Fehler: schnell (ein paar Sekunden), dann, wenn sie immer noch falsch ist, sorgfältig, mit dem
 Nachdenken des Modells (bis zu einer Minute).

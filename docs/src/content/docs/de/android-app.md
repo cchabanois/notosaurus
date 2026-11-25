@@ -50,7 +50,9 @@ bittet dich dann, ihre [Datenschutzerklärung](../app-privacy/) zu akzeptieren:
    neben dem Feld kannst du sie sprechen statt tippen.
 4. Tippe auf **✨ Karten erzeugen**. Die erste Lektion startet die kostenlose Testphase.
 5. Prüfe die Karten, korrigiere sie oder bitte die KI in eigenen Worten: siehe
-   [Die Karten durchsehen](../review/). Eine Karte, die nicht stimmt: **⋯ → ⚑ Melden** auf ihr,
+   [Die Karten durchsehen](../review/). Tippe auf eine Karte, oder auf **▶ Karte für Karte durchgehen**:
+   Sie öffnet sich im Vollbild, Vorder- und Rückseite wie in AnkiDroid; wische zur nächsten, und sag
+   in **✨ Mit KI korrigieren**, ganz unten, was nicht stimmt, getippt oder mit 🎤. Eine Karte, die nicht stimmt: **⋯ → ⚑ Melden** auf ihr,
    jede Meldung wird gelesen.
 6. Tippe auf **📥 Zu Anki hinzufügen**: Die Karten kommen in AnkiDroid. Beim ersten Mal fragt
    AnkiDroid, ob Notosaurus Karten hinzufügen darf.
@@ -62,6 +64,8 @@ verdoppelt.
 ![Die Hauptseite der App: die Fotos der Lektion, die Anweisungen mit 🎤, das gewählte Kind oben](../../../assets/screenshots/en/app-home.png)
 
 ![Die Karten einer Lektion in der App, mit dem Korrekturfeld und seinem 🎤](../../../assets/screenshots/en/app-review.png)
+
+![Eine geöffnete Karte in der App: ihr Stapel, die Vorderseite, die Rückseite und ihr 🔊, unten das Korrekturfeld und sein 🎤](../../../assets/screenshots/en/app-card-open.png)
 
 ## Wo sie arbeitet
 
@@ -78,8 +82,11 @@ In den Einstellungen wählt **📍 Wo arbeitet Notosaurus?** zwischen **📱 Auf
 
 Fast alles in Notosaurus ist wie am Computer. Was nur die App hat, oder nicht hat:
 
-- **🎤 Diktieren**: eine Anweisung oder eine Korrektur sprechen statt tippen. Deine Worte erscheinen
-  beim Sprechen, geschrieben von der Spracherkennung des Handys; **✨ Aufräumen** bereinigt danach eine Anweisung.
+- **🎤 Diktieren**: eine Anweisung, eine Korrektur oder das, was eine neue Karte abfragen soll,
+  sprechen statt tippen. Deine Worte erscheinen beim Sprechen, geschrieben von der Spracherkennung
+  des Handys. Tippe auf ■, um aufzuhören, oder gleich auf **Korrigieren**, **Schreiben** oder
+  **✨ Karten erzeugen**: Was du gesagt hast, wird geschrieben und dann gesendet. **✨ Aufräumen**
+  bereinigt danach eine Anweisung.
   Die App fragt beim ersten Mal nach dem Mikrofon.
 - **⚑ Melden**, auf einer Karte, sagt Notosaurus, was schiefging: ein falsch gelesenes Wort, eine
   falsche Antwort, eine schiefe Figur, ein unpassendes Bild. Jede Meldung wird gelesen und hilft,
