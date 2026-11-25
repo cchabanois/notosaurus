@@ -22,22 +22,62 @@ segnalazione viene letta, ed è il modo migliore per far correggere Notosaurus. 
   (nessuna trovata allora per la sua lingua, o nessuna richiesta) ne riceve una qui: scegli la sua
   lingua e prende la voce scelta per quella lingua nelle impostazioni. **Nessuna voce**: non viene
   letto nulla. Carte da leggere in una lezione senza voce: indicato in rosso.
-- Ogni carta ha un **fronte** (la domanda) e un **retro** (la risposta). L'elenco è compatto (fronte,
-  retro, una piccola immagine): tocca una carta per aprirla a schermo intero (una finestra sul
-  computer), come in Anki, con formule e figure disegnate e il campo **✨ Correggi con l'IA** in
-  basso. **▶ Rivedi carta per carta** apre la prima. Scorri con il dito, o **‹ ›**, per passare alla
-  precedente o alla successiva; dopo l'ultima, la fine della lezione. Tocca un testo per
-  modificarlo; **＋** aggiunge una carta dopo questa (lasciata vuota, sparisce). **✕**, Esc o il
-  tasto indietro del telefono la chiudono, salvata. Tocca la sua
-  immagine per cambiarla (una carta senza immagine: ⋯ → **🖼️ Aggiungi un'immagine**).
+- Ogni carta ha un **fronte** (la domanda) e un **retro** (la risposta).
+
+### L'elenco
+
+L'elenco è compatto, come un'anteprima: il fronte, il retro sotto una linea tratteggiata, una
+piccola immagine sopra la domanda o dopo la risposta, come in Anki, e solo **🔊** per ascoltare la
+carta. **Tocca una carta per aprirla**; **▶ Rivedi carta per carta** apre la prima.
+
+### Una carta aperta
+
+La carta si apre a schermo intero (una finestra sul computer), con formule e figure disegnate,
+come Anki la mostrerà:
+
+- in alto, in piccolo, **il suo mazzo** in Anki ("Paul › Prima media › Inglese › … › Esercizi") e
+  i suoi pulsanti: **📄 p. 3**, la pagina della lezione da cui viene la carta (toccata, le pagine
+  della lezione si aprono in grande su quella, ‹ › per le altre; assente per una carta di cui non
+  si conosce la pagina), **💬 Spiega questa carta** e **Altre azioni** (⋯);
+- **FRONTE**: la domanda, con la sua immagine quando va sul fronte; una linea, poi **RETRO**: la
+  risposta e il suo **🔊**, l'immagine quando va sul retro, poi le info e gli aiuti;
+- in fondo, il campo **✨ Correggi con l'IA**, con **Correggi** accanto (vedi
+  [Correggere con l'IA](#correggere-con-lia)).
+
+![Una carta aperta: il suo mazzo in alto, il fronte con la sua figura, il retro e il campo di correzione in fondo](../../../assets/screenshots/en/card-open.png)
+
+Tocca un testo per modificarlo. **Scorri con il dito** in qualsiasi punto della carta, o tocca
+**‹ ›**, per passare alla carta precedente o alla successiva. Dopo l'ultima arriva la **fine della
+lezione**: quante carte sono state riviste ("✓ 12 carte riviste"), **＋ Aggiungi una carta** e il
+pulsante per inviare la lezione ad Anki. **✕**, Esc o il tasto indietro del telefono chiudono la
+carta, salvata.
+
+![La fine della lezione: quante carte sono state riviste, una carta da aggiungere, l'invio ad Anki](../../../assets/screenshots/en/lesson-end.png)
+
+Tocca l'immagine di una carta per cambiarla: la sua pagina si apre a schermo intero (vedi
+[Immagini](../card-types/#immagini)). Una carta senza immagine: ⋯ → **🖼️ Aggiungi un'immagine**.
+
 - **+ info** aggiunge una nota mostrata sotto la risposta: genere, plurale, un esempio…
-- **sotto-mazzo** mette la carta in un sotto-mazzo della lezione ("Vocabolario", "Verbi").
-- **🔊**, accanto al fronte o al retro, lo riproduce con la voce della lezione. Ogni carta dice quali
-  facce sono lette: la risposta di una carta di vocabolario, un testo con lacune su entrambe le facce, intero (il
-  fronte come un dettato: si scrivono nelle lacune le parole ascoltate). Il menu ⋯ della carta: **Leggi il fronte ad alta voce**,
-  **Non leggere più il retro**…
-- **Altre azioni** (⋯), in alto a destra della carta, la elimina; **＋ Aggiungi una carta**, in
-  fondo, ne aggiunge una.
+- **+ sotto-mazzo** mette la carta in un sotto-mazzo della lezione ("Vocabolario", "Verbi"); una
+  carta messa in uno mostra il nome del suo sotto-mazzo. Toccato, apre un elenco: **Nessuno: nel
+  mazzo della lezione**, i sotto-mazzi della lezione con il loro numero di carte, o **Nuovo
+  sotto-mazzo…**.
+- **🔊**, accanto alla risposta, la riproduce con la voce della lezione. Ogni carta dice quali
+  facce sono lette: la risposta di una carta di vocabolario, un testo con lacune su entrambe le
+  facce, intero (il fronte come un dettato: si scrivono nelle lacune le parole ascoltate). Il menu
+  ⋯ della carta: **Leggi il fronte ad alta voce**, **Non leggere più il retro**…
+- **Altre azioni** (⋯) elimina anche la carta.
+
+### Aggiungere una carta
+
+**＋** in alto in una carta aperta ne aggiunge una subito dopo; **＋ Aggiungi una carta**, sotto
+l'elenco o alla fine della lezione, ne aggiunge una in fondo. La nuova carta si apre, vuota;
+lasciata vuota, sparisce quando viene chiusa.
+
+Spesso la cosa più semplice è **farla scrivere all'IA**: in **Cosa deve chiedere questa carta?**,
+in fondo, di' cosa deve chiedere ("il passato di go", "la data della presa della Bastiglia"), poi
+tocca **Scrivi**. Su un telefono non si apre nessuna tastiera: tocca **🎤** per dettarlo, o il
+campo per scriverlo. Puoi anche compilare tu il fronte e il retro.
 
 **📝 Istruzioni usate per questa lezione**, sopra le carte, ricorda cosa è stato chiesto all'IA.
 
@@ -76,12 +116,24 @@ Invece di modificare le carte una per una, chiedi con parole tue, nel campo sopr
 
 ![Chiedere una correzione all'IA](../../../assets/screenshots/en/correction.png)
 
-Tocca **Correggi**. L'IA rivede le foto (oltre 10 pagine, solo le carte: dice allora cosa non ha potuto
-fare senza le pagine) e cambia solo ciò che hai chiesto: le carte cambiate sono
-segnate come **modificata**, le nuove come **nuova**, e una frase riassume ciò che ha fatto.
-**↩ Annulla** riporta le carte com'erano,
-finché non inizi a modificare una carta. Una carta corretta da sola (**✨ Correggi questa carta**) si
-annulla allo stesso modo finché resta aperta; una volta chiusa, la correzione resta.
+Tocca **Correggi**. L'IA rivede le foto (oltre 10 pagine, solo le carte: dice allora cosa non ha
+potuto fare senza le pagine) e cambia solo ciò che hai chiesto: le carte cambiate sono segnate
+come **modificata**, le nuove come **nuova**, e una frase riassume ciò che ha fatto, con quante
+carte sono state aggiunte, modificate ed eliminate. Sotto:
+
+- **↩ Annulla** riporta le carte com'erano;
+- **🎯 Rifai con cura**, dopo una correzione rapida, la rifà con il ragionamento del modello;
+- **✓ Mantieni** la conserva: non si può più annullare.
+
+La correzione si può annullare finché non la mantieni o non inizi a modificare una carta.
+
+**Una sola carta** si corregge dalla carta aperta, nel campo **✨ Correggi con l'IA** in fondo
+("la risposta è 1789", "più breve"), poi **Correggi**. Compaiono gli stessi **↩ Annulla**,
+**🎯 Rifai con cura** e **✓ Mantieni**; chiudere la carta, o passare alla successiva, mantiene
+anch'esso la correzione.
+
+Nell'app, **🎤** accanto al campo detta la correzione. Non serve fermare prima il dettato: tocca
+subito **Correggi**, e ciò che hai detto viene scritto, poi inviato.
 
 Cambi idea mentre l'IA corregge (la lezione o una sola carta)? **Annulla** la ferma subito: le
 carte restano come erano.
