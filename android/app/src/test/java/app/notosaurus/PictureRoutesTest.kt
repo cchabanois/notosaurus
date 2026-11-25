@@ -408,7 +408,7 @@ class PictureRoutesTest : LocalServerTestBase() {
         images.resolve("$stem-2.typ").delete()
         client.post("/api/lessons/$id/cards/$cardId/picture/draw") { page(); contentType(ContentType.Application.Json); setBody("{}") }
         assertEquals(0, asked.last()["previous"]!!.jsonArray.size)
-        assertEquals("typst", asked.last().string("previous_engine")) // the core decides from what it has
+        assertEquals("", asked.last().string("previous_engine")) // nothing told of it (Pictures.redrawFrom)
     }
 
     private fun JsonObject.previous() = this["previous"]!!.jsonArray.map { it.jsonPrimitive.content }
