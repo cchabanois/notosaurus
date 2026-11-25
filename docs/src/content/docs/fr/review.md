@@ -38,7 +38,9 @@ La carte s'ouvre en plein écran (une fenêtre sur l'ordinateur), formules et fi
 telle qu'Anki la montrera :
 
 - en haut, petit, **son paquet** dans Anki (« Jules › 5e › Anglais › … › Exercices ») et ses
-  boutons : **💬 Expliquer cette carte** et **Plus d'actions** (⋯) ;
+  boutons : **📄 p. 3**, la page du cours d'où vient la carte (touchée, les pages de la leçon
+  s'ouvrent en grand à celle-là, ‹ › pour les autres ; absente pour une carte dont la page n'est
+  pas connue), **💬 Expliquer cette carte** et **Plus d'actions** (⋯) ;
 - **RECTO** : la question, avec son image quand elle va au recto ; un trait, puis **VERSO** :
   la réponse et son **🔊**, l'image quand elle va au verso, puis l'info et les aides ;
 - tout en bas, le champ **✨ Corriger avec l'IA**, avec **Corriger** à côté (voir
