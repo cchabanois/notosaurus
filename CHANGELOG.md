@@ -75,6 +75,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 💸 The lesson's own drawings cost less: no page is sent twice when a card's page is unknown (a 30-page lesson: 36 photos instead of 66), and figures are drawn right away instead of after the lesson's drawings.
 - The lesson's own drawings are looked for on the card's page and the pages next to it, not on every page of the lesson: cheaper, and found more reliably.
 - ✨ **Correct this card** sends the AI only the lesson's page the card comes from, not every page: much cheaper on long lessons (cards made from now on; older cards as before).
 - Corrections cost a little less: the AI is no longer sent where each card's picture comes from.
@@ -122,6 +123,9 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A card corrected while the pictures are drawn is no longer drawn (and paid for) from what it said before.
+- Gemini: a connection dropped while it was answering is no longer retried on another model or route, which paid for the photos again. The user is told the connection dropped.
+- A free picture's source page given as an http:// address is kept again (its CC BY credit links to it).
 - The deck names offered for a lesson with no child chosen no longer include other children's decks.
 - On the phone, the voice chosen for a language in the settings is used even when the voices can't be listed.
 - 📄 Swiping to the next card, its lesson page ("p. 2") shows with it, not a moment after.
