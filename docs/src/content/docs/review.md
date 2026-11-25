@@ -35,7 +35,9 @@ The card opens full screen (a window on a computer), formulas and figures drawn,
 show it:
 
 - at the top, small, **its deck** in Anki ("Paul › Year 7 › English › … › Exercises") and its
-  buttons: **💬 Explain this card** and **More actions** (⋯);
+  buttons: **📄 p. 3**, the lesson page the card comes from (tapped, the lesson's pages open
+  full size at that one, ‹ › to the others; none for a card whose page isn't known),
+  **💬 Explain this card** and **More actions** (⋯);
 - **FRONT**: the question, with its picture when it goes on the front; a line, then **BACK**:
   the answer and its **🔊**, the picture when it goes on the back, then the info and the helps;
 - at the very bottom, the field **✨ Correct with AI**, with **Correct** beside it (see
