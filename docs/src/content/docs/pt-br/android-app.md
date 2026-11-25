@@ -48,8 +48,10 @@ pede que você aceite a sua [política de privacidade](../app-privacy/):
    de digitar.
 4. Toque em **✨ Gerar os cartões**. A primeira lição inicia o teste grátis.
 5. Confira os cartões, corrija-os ou peça à IA com suas palavras: veja
-   [Revisar os cartões](../review/). Um cartão que não está certo: **⋯ → ⚑ Relatar** nele, cada
-   relato é lido.
+   [Revisar os cartões](../review/). Toque em um cartão, ou em **▶ Revisar cartão por cartão**: ele
+   abre em tela cheia, frente e verso como no AnkiDroid; deslize o dedo para passar ao seguinte, e
+   diga o que está errado em **✨ Corrigir com a IA**, embaixo, digitando ou com o 🎤. Um cartão que
+   não está certo: **⋯ → ⚑ Relatar** nele, cada relato é lido.
 6. Toque em **📥 Adicionar ao Anki**: os cartões vão para o AnkiDroid. Na primeira vez, o
    AnkiDroid pergunta se o Notosaurus pode adicionar cartões a ele.
 
@@ -59,6 +61,8 @@ cartões dela são atualizados no AnkiDroid, não duplicados.
 ![A página principal do app: as fotos da lição, as instruções com 🎤, o filho escolhido no alto](../../../assets/screenshots/en/app-home.png)
 
 ![Os cartões de uma lição no app, com o campo de correção e o seu 🎤](../../../assets/screenshots/en/app-review.png)
+
+![Um cartão aberto no app: o baralho dele, a frente, o verso e o seu 🔊, o campo de correção e o seu 🎤 embaixo](../../../assets/screenshots/en/app-card-open.png)
 
 ## Onde ele trabalha
 
@@ -75,9 +79,11 @@ Nas configurações, **📍 Onde o Notosaurus trabalha?** escolhe **📱 Neste c
 
 Quase todo o Notosaurus é igual ao do computador. O que só o app tem, ou não tem:
 
-- **🎤 Ditar**: falar uma instrução ou uma correção em vez de digitá-la. Suas palavras aparecem
-  enquanto você fala, escritas pelo reconhecimento de voz do celular; **✨ Passar a limpo** limpa
-  depois uma instrução. O app pede o microfone na primeira vez.
+- **🎤 Ditar**: falar uma instrução, uma correção ou o que um novo cartão deve perguntar em vez
+  de digitar. Suas palavras aparecem enquanto você fala, escritas pelo reconhecimento de voz do
+  celular. Toque em ■ para parar, ou direto em **Corrigir**, **Escrever** ou **✨ Gerar os cartões**:
+  o que você disse é escrito e depois enviado. **✨ Passar a limpo** limpa depois uma instrução. O
+  app pede o microfone na primeira vez.
 - **⚑ Relatar**, em um cartão, diz ao Notosaurus o que deu errado: uma palavra mal lida, uma
   resposta errada, uma figura torta, uma imagem inadequada. Cada relato é lido e ajuda a corrigir
   o Notosaurus (veja [Relatar um problema](../review/#relatar-um-problema)).

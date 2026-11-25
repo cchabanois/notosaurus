@@ -22,21 +22,60 @@ relato é lido, e é o melhor jeito de fazer o Notosaurus ser corrigido. Veja
   encontrada na época para seu idioma, ou nenhuma pedida) recebe uma aqui: escolha o idioma, e ela
   usa a voz escolhida para esse idioma nas configurações. **Sem voz**: nada é lido. Cartões a ler em
   uma lição sem voz: indicado em vermelho.
-- Cada cartão tem uma **frente** (a pergunta) e um **verso** (a resposta). A lista é compacta
-  (frente, verso, uma imagem pequena): toque em um cartão para abri-lo em tela cheia (uma janela no
-  computador), como no Anki, com fórmulas e figuras desenhadas e o campo **✨ Corrigir com a IA**
-  embaixo. **▶ Revisar cartão por cartão** abre o primeiro. Deslize o dedo, ou **‹ ›**, para passar
-  ao anterior ou ao seguinte; depois do último, o fim da lição. Toque em um texto para editá-lo;
-  **＋** acrescenta um cartão depois deste (deixado vazio, ele some). **✕**, Esc ou o botão voltar
-  do celular o fecham, salvo. Toque na imagem
-  dele para trocá-la (um cartão sem imagem: ⋯ → **🖼️ Adicionar uma imagem**).
+- Cada cartão tem uma **frente** (a pergunta) e um **verso** (a resposta).
+
+### A lista
+
+A lista é compacta, como uma prévia: a frente, o verso abaixo de uma linha pontilhada, uma imagem
+pequena acima da pergunta ou depois da resposta, como no Anki, e só **🔊** para ouvir o cartão.
+**Toque em um cartão para abri-lo**; **▶ Revisar cartão por cartão** abre o primeiro.
+
+### Um cartão aberto
+
+O cartão abre em tela cheia (uma janela no computador), com fórmulas e figuras desenhadas, como o
+Anki vai mostrá-lo:
+
+- no alto, em letra pequena, **o baralho dele** no Anki ("Paul › 6º ano › Inglês › … › Exercícios")
+  e os botões dele: **📄 p. 3**, a página da lição de onde o cartão vem (tocado, as páginas da
+  lição abrem em tamanho grande nessa página, **‹ ›** para as outras; nenhum para um cartão cuja
+  página não se sabe), **💬 Explicar este cartão** e **Mais ações** (⋯);
+- **FRENTE**: a pergunta, com a imagem dela quando ela vai na frente; uma linha, depois **VERSO**:
+  a resposta e o **🔊** dela, a imagem quando ela vai no verso, depois a info e as ajudas;
+- bem embaixo, o campo **✨ Corrigir com a IA**, com **Corrigir** ao lado (veja
+  [Corrigir com a IA](#corrigir-com-a-ia)).
+
+![Um cartão aberto: o baralho dele no alto, a frente com a figura, o verso e o campo de correção embaixo](../../../assets/screenshots/en/card-open.png)
+
+Toque em um texto para editá-lo. **Deslize o dedo** em qualquer lugar do cartão, ou toque em
+**‹ ›**, para passar ao cartão anterior ou ao seguinte. Depois do último vem o **fim da lição**:
+quantos cartões foram revisados ("✓ 12 cartões revisados"), **＋ Adicionar um cartão** e o botão
+para enviar a lição ao Anki. **✕**, Esc ou o botão voltar do celular fecham o cartão, salvo.
+
+![O fim da lição: quantos cartões foram revisados, um cartão a adicionar, o envio ao Anki](../../../assets/screenshots/en/lesson-end.png)
+
+Toque na imagem de um cartão para trocá-la: a página dela abre em tela cheia (veja
+[Imagens](../card-types/#imagens)). Um cartão sem imagem: ⋯ → **🖼️ Adicionar uma imagem**.
+
 - **+ info** acrescenta uma nota mostrada abaixo da resposta: gênero, plural, um exemplo…
-- **subbaralho** coloca o cartão em um subbaralho da lição ("Vocabulário", "Verbos").
-- **🔊**, ao lado da frente ou do verso, toca-o com a voz da lição. Cada cartão diz quais faces são
+- **+ subbaralho** coloca o cartão em um subbaralho da lição ("Vocabulário", "Verbos"); um cartão
+  colocado em um mostra o nome do subbaralho. Tocado, ele abre uma lista: **Nenhum: no baralho da
+  lição**, os subbaralhos da lição com o número de cartões de cada um, ou **Novo subbaralho…**.
+- **🔊**, ao lado da resposta, toca-a com a voz da lição. Cada cartão diz quais faces são
   lidas: a resposta de um cartão de vocabulário, um texto com lacunas dos dois lados, inteiro (a
-  frente como um ditado: escrevem-se nas lacunas as palavras ouvidas). O menu ⋯ do cartão: **Ler a frente em voz alta**, **Parar de ler o verso**…
-- **Mais ações** (⋯), no canto superior direito do cartão, o exclui; **＋ Adicionar um cartão**,
-  embaixo, adiciona um.
+  frente como um ditado: escrevem-se nas lacunas as palavras ouvidas). O menu ⋯ do cartão: **Ler a
+  frente em voz alta**, **Parar de ler o verso**…
+- **Mais ações** (⋯) também exclui o cartão.
+
+### Adicionar um cartão
+
+**＋** no alto de um cartão aberto adiciona um logo depois dele; **＋ Adicionar um cartão**, embaixo
+da lista ou no fim da lição, adiciona um no fim. O novo cartão abre, vazio; deixado vazio, ele some
+ao ser fechado.
+
+O mais simples, muitas vezes, é **deixar a IA escrevê-lo**: em **O que este cartão deve
+perguntar?**, embaixo, diga o que ele deve perguntar ("o pretérito de ir", "a data da tomada da
+Bastilha") e toque em **Escrever**. No celular nenhum teclado se abre: toque em **🎤** para ditar,
+ou no campo para digitar. Você também pode preencher a frente e o verso você mesmo.
 
 **📝 Instruções usadas nesta lição**, acima dos cartões, lembra o que foi pedido à IA.
 
@@ -77,10 +116,22 @@ Em vez de alterar os cartões um por um, peça com suas palavras, no campo acima
 
 Toque em **Corrigir**. A IA revê as fotos (com mais de 10 páginas, só os cartões: ela diz então o que não
 pôde fazer sem as páginas) e muda só o que você pediu: os cartões alterados são
-marcados como **alterado**, os novos como **novo**, e uma frase resume o que ela fez.
-**↩ Desfazer** deixa os cartões como estavam,
-enquanto você não começar a editar um cartão. Um cartão corrigido sozinho (**✨ Corrigir este cartão**)
-se desfaz do mesmo jeito enquanto continuar aberto; depois de fechado, a correção fica.
+marcados como **alterado**, os novos como **novo**, e uma frase resume o que ela fez, com quantos
+cartões foram adicionados, alterados e removidos. Embaixo dela:
+
+- **↩ Desfazer** deixa os cartões como estavam;
+- **🎯 Refazer com cuidado**, depois de uma correção rápida, faz de novo com a reflexão do modelo;
+- **✓ Manter** a mantém: ela não pode mais ser desfeita.
+
+A correção pode ser desfeita até você mantê-la ou começar a editar um cartão.
+
+**Um só cartão** é corrigido a partir do cartão aberto, no campo **✨ Corrigir com a IA** embaixo
+("a resposta é 1789", "mais curto"), depois **Corrigir**. Os mesmos **↩ Desfazer**,
+**🎯 Refazer com cuidado** e **✓ Manter** aparecem; fechar o cartão, ou passar ao seguinte, também
+mantém a correção.
+
+No app, **🎤** ao lado do campo dita a correção. Não precisa parar o ditado antes: toque em
+**Corrigir** direto, e o que você disse é escrito e depois enviado.
 
 Mudou de ideia enquanto a IA corrige (a lição ou um só cartão)? **Cancelar** a interrompe na
 hora: os cartões continuam como estavam.

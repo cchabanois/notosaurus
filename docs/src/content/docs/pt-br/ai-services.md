@@ -127,6 +127,6 @@ exato). Com uma chave gratuita do Gemini, nada é cobrado de fato. Por exemplo, 
 vocabulário destas capturas custou cerca de 2 centavos de dólar para gerar com o Claude Sonnet, e o
 mesmo para a correção. As imagens custam de menos de um centavo a alguns centavos cada; as figuras,
 menos de um centavo (desenhadas rápido, alguns segundos cada, enquanto você revisa os cartões).
-Ficou em dúvida sobre uma figura? "🔍", embaixo dela, faz a IA olhar para ela; se encontrar algo
+Ficou em dúvida sobre uma figura? **🔍 Verificar a figura**, embaixo dela, faz a IA olhar para ela; se encontrar algo
 errado, você escolhe se ela é redesenhada, com o erro indicado: rápido (alguns segundos), depois,
 se continuar errada, com cuidado, com o raciocínio do modelo (até um minuto).
