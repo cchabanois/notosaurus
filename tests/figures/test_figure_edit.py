@@ -212,7 +212,8 @@ def test_drawn_again_after_a_correction_from_the_figure_it_had(client, monkeypat
     previous = {cards[0]["id"]: {"source": origin, "kind": "geometry"}, cards[1]["id"]: {"source": unknown}}
     res = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"previous": previous})
     assert res.status_code == 200
-    assert sorted(told) == sorted([([TRIANGLE], "geometry", "typst"), ([], "", "typst"), ([], "", "")])
+    # The one whose source isn't ours: anew, nothing told of it (pictures.redraw_from)
+    assert sorted(told) == sorted([([TRIANGLE], "geometry", "typst"), ([], "", ""), ([], "", "")])
 
 
 def test_made_again_after_a_correction_from_the_figure_it_had(client, monkeypatch):

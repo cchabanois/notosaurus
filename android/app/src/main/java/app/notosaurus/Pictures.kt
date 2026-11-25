@@ -79,13 +79,8 @@ class Pictures(
             // only be set aside (stalePicture); the page draws it again from what it says now
             if (superseded(cards[i], lessons.get(id)?.cards()?.firstOrNull { it.string("id") == card })) return@withPermit
             try {
-                val before = previous[card]
-                val origin = before?.get("source") as? JsonObject
-                val kept = if (origin != null && cards[i].string("figure").isNotBlank()) keptSources(lessons.images(id), origin) else emptyList()
-                cards[i] = drawn(
-                    id, cards[i], fresh = false, draw = draw, find = !draw,
-                    previous = kept, previousKind = before?.string("kind").orEmpty(), previousEngine = origin?.string("engine").orEmpty(),
-                ) {
+                val redraw = redrawFrom(lessons.images(id), cards[i], replaced = previous[card])
+                cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = !draw, redraw = redraw) {
                     step(JsonObject(mapOf("card" to JsonPrimitive(card)) + it))
                 }
                 // Shown at once, not when the others are done
@@ -185,13 +180,10 @@ class Pictures(
         val id = lesson.string("id")
         val cards = lesson.cards()
         val card = cards[i]
-        val origin = (replaced?.get("source") ?: card["picture_source"]) as? JsonObject
-        val previous = if (replaced != null || changedFigure(card, subject)) keptSources(lessons.images(id), origin) else emptyList()
-        val kind = if (replaced != null) replaced.string("kind") else card.string("figure_kind")
+        val redraw = redrawFrom(lessons.images(id), card, replaced, subject)
         try {
             cards[i] = drawn(
-                id, card, fresh = true, asked = subject, language = language, draw = false, find = false, previous = previous,
-                previousKind = kind, previousEngine = origin?.string("engine").orEmpty(), onStep = step,
+                id, card, fresh = true, asked = subject, language = language, draw = false, find = false, redraw = redraw, onStep = step,
             )
             answer(lesson, cards, i)
         } catch (e: RelayException) {
@@ -238,11 +230,9 @@ class Pictures(
         val id = lesson.string("id")
         val cards = lesson.cards()
         val card = decided?.let { cards[i].decide(it) } ?: cards[i]
-        val origin = card["picture_source"] as? JsonObject
-        val previous = if (card.string("figure").isNotEmpty()) keptSources(lessons.images(id), origin) else emptyList()
         cards[i] = drawn(
             id, card, fresh = true, draw = true, find = false, problem = problem, careful = careful,
-            previous = previous, previousKind = card.string("figure_kind"), previousEngine = origin?.string("engine").orEmpty(), onStep = step,
+            redraw = redrawFrom(lessons.images(id), card, again = true), onStep = step,
         )
         answer(lesson, cards, i)
     }
@@ -304,8 +294,8 @@ class Pictures(
     /** The card with its figure (SVG) or picture (JPEG) saved: decided, found or drawn by the relay
      * (/v1/card-picture: the core's pictures.card_picture, the computer's rule too), with what it
      * shows and where it comes from. A figure's sources (what it was drawn from) kept beside it,
-     * named in its picture_source.sources (as the core's figure_or_picture); `previous`: what it
-     * was drawn from before, in the family `previousKind` and the language `previousEngine`. */
+     * named in its picture_source.sources (as the core's figure_or_picture); `redraw`: the earlier
+     * figure it is drawn again from (redrawFrom), none: drawn anew. */
     private suspend fun drawn(
         lessonId: String,
         card: JsonObject,
@@ -316,9 +306,7 @@ class Pictures(
         find: Boolean = true,
         problem: String = "",
         careful: Boolean = false,
-        previous: List<String> = emptyList(),
-        previousKind: String = "",
-        previousEngine: String = "",
+        redraw: Redraw? = null,
         onStep: Step = {},
     ): JsonObject {
         val made = relay().cardPicture(buildJsonObject {
@@ -330,9 +318,9 @@ class Pictures(
             put("draw", draw) // else picture.needs_drawing: the image model costs, the user is asked
             put("problem", problem) // its figure's, the check found it: drawn again, told it
             put("careful", careful) // with the model's thinking
-            put("previous", JsonArray(previous.map(::JsonPrimitive))) // drawn again from it: the rest kept
-            put("previous_kind", previousKind)
-            put("previous_engine", previousEngine)
+            put("previous", JsonArray(redraw?.sources.orEmpty().map(::JsonPrimitive))) // drawn again from it: the rest kept
+            put("previous_kind", redraw?.kind.orEmpty())
+            put("previous_engine", redraw?.engine.orEmpty())
         }, onStep)
         var decided = made["card"]!!.jsonObject
         val extension = if (made.string("media_type") == "image/svg+xml") "svg" else "jpg"
@@ -421,6 +409,11 @@ class Pictures(
     )
 
     private fun JsonObject.onBack() = (this["picture_on_back"] as? JsonPrimitive)?.booleanOrNull ?: false
+
+    /** An earlier figure a card's figure is drawn again from: what it was drawn from (its sources'
+     * contents), its family and its engine (the relay's previous, previous_kind and
+     * previous_engine): redrawFrom. */
+    internal data class Redraw(val sources: List<String>, val kind: String, val engine: String)
 
     companion object {
         /** A card whose picture is still to be made: it says what to show (a picture_prompt or a
@@ -539,6 +532,27 @@ class Pictures(
             })
         }
 
+        /** Which earlier figure a card's figure is drawn again from, what is asked changed and the
+         * rest kept (the core's pictures.redraw_from, core/shared-cases.json redraw_from).
+         * `replaced`: the figure a correction replaced, not drawn again since ({"source": its
+         * picture_source, "kind": its family}): that one, whatever is asked; its source missing,
+         * nothing (never the card's own). Else the card's own figure, when it is drawn again
+         * (`again`: the drawing button, a check's problem) or its description written anew
+         * (`asked`, changedFigure). Null: drawn anew (nothing to draw again from, or not in an
+         * engine figures are drawn again from, REDRAWN_FROM, or one of its sources missing). */
+        internal fun redrawFrom(folder: File?, card: JsonObject, replaced: JsonObject? = null, asked: String? = null, again: Boolean = false): Redraw? {
+            val (origin, kind) = when {
+                replaced != null -> replaced["source"] as? JsonObject to replaced.string("kind")
+                card.string("figure").isNotBlank() && (again || changedFigure(card, asked)) ->
+                    card["picture_source"] as? JsonObject to card.string("figure_kind")
+                else -> return null
+            }
+            val engine = origin?.string("engine").orEmpty()
+            if (origin == null || engine !in REDRAWN_FROM) return null
+            val sources = keptSources(folder, origin)
+            return if (sources.isEmpty()) null else Redraw(sources, kind, engine)
+        }
+
         /** A figure's description written anew (`asked`, "✨ Image"'s): drawn again from what it was
          * drawn from; the same, or none: drawn anew (the core's pictures.changed_figure). */
         internal fun changedFigure(card: JsonObject, asked: String?): Boolean {
@@ -571,6 +585,8 @@ class Pictures(
 
         private const val AT_ONCE = 4
         private const val NEEDS_DRAWING = "picture.needs_drawing" // no free picture fits: the user is asked
+        // The engines a figure is drawn again from, its sources given (the core's pictures.REDRAWN_FROM)
+        private val REDRAWN_FROM = listOf("typst")
         private val PHOTO = buildJsonObject { put("source", "photo") }
         private val LESSON = buildJsonObject { put("source", "lesson") } // its own pages' drawing
         // What the relay decides of a card's picture (Card's fields): taken into the card (core's pictures.PICTURE_FIELDS)

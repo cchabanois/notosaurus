@@ -122,6 +122,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- The deck names offered for a lesson with no child chosen no longer include other children's decks.
+- On the phone, the voice chosen for a language in the settings is used even when the voices can't be listed.
 - 📄 Swiping to the next card, its lesson page ("p. 2") shows with it, not a moment after.
 - 🔒 A figure's drawing can no longer read files or run code by writing a formula's quotes in a certain way.
 - 🔒 A card's formula can no longer add links, styles or a covering layer to Notosaurus's page, nor CSS of its own to the cards sent to Anki (`\bbox`, `\fcolorbox`, `\mmlToken`, `\unicode`, `\require`).

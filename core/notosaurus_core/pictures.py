@@ -536,6 +536,52 @@ def kept_sources(folder: Path, origin: PictureSource | None) -> list[str]:
     return [p.read_text(encoding="utf-8") for p in paths]
 
 
+class RedrawFrom(NamedTuple):
+    """An earlier figure a card's figure is drawn again from: what it was drawn from (its
+    sources' contents, kept_sources), its family and its engine (card_picture's previous,
+    previous_kind and previous_engine)."""
+
+    sources: list[str]
+    kind: str
+    engine: str
+
+
+def redraw_from(
+    folder: Path,
+    card: Card,
+    replaced: tuple[PictureSource | None, str] | None = None,
+    asked: str | None = None,
+    again: bool = False,
+) -> RedrawFrom | None:
+    """Which earlier figure a card's figure is drawn again from, what is asked changed and the
+    rest kept (the one rule for the missing pictures, "✨ Image" and its drawing, on the
+    computer and the phone: Pictures.redrawFrom, core/shared-cases.json redraw_from).
+    `replaced`: the figure a correction replaced, not drawn again since (where it came from,
+    its family): that one, whatever is asked (its description always differs from what it was
+    drawn from). Else the card's own figure, when it is drawn again (`again`: the drawing
+    button, a check's problem) or its description written anew (`asked`, changed_figure).
+    None: drawn anew (nothing to draw again from, or not in an engine figures are drawn
+    again from, REDRAWN_FROM, or one of its sources missing)."""
+    if replaced is not None:
+        origin, kind = replaced
+    elif card.figure.strip() and (again or changed_figure(card, asked)):
+        origin, kind = card.picture_source, card.figure_kind
+    else:
+        return None
+    if origin is None or origin.engine not in REDRAWN_FROM:
+        return None
+    sources = kept_sources(folder, origin)
+    return RedrawFrom(sources, kind, origin.engine) if sources else None
+
+
+def redrawn(redraw: RedrawFrom | None) -> dict[str, Any]:
+    """figure_or_picture's (card_picture's) arguments for what a figure is drawn again from
+    (redraw_from): none, drawn anew."""
+    if redraw is None:
+        return {}
+    return {"previous": redraw.sources, "previous_kind": redraw.kind, "previous_engine": redraw.engine}
+
+
 # --- The lesson's own drawings: a card's thing drawn on its pages, cut out ---------
 
 DRAWING_MARGIN = 0.04  # of the drawing's width and height, each side: nothing of it cut off
@@ -714,7 +760,7 @@ async def draw_all(
                 if step is not None:
                     tell = step  # (bound here: pyright sees it set)
                     told = lambda said, card=card: tell({"card": card.id, **said})  # noqa: E731
-                origin, kind = (previous or {}).get(card.id, (None, ""))
+                replaced = (previous or {}).get(card.id)
                 card.picture = await figure_or_picture(
                     s,
                     folder,
@@ -722,9 +768,7 @@ async def draw_all(
                     draw=draw,
                     find=not draw,
                     step=told,
-                    previous=kept_sources(folder, origin) if card.figure.strip() else [],
-                    previous_kind=kind,
-                    previous_engine=origin.engine if origin else "",
+                    **redrawn(redraw_from(folder, card, replaced)),
                 )
                 if told is not None:  # shown at once, not when the others are done
                     told({"step": "ready", **card.model_dump(mode="json", include=READY)})

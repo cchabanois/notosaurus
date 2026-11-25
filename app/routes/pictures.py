@@ -115,13 +115,10 @@ async def make_picture(
             async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
                 s = settings.current()
                 folder = lessons.existing_folder(id) / "images"
-                if req.previous is not None:  # the figure a correction replaced: the description changed
-                    origin, kind = req.previous.source, req.previous.kind
-                    again = True
-                else:
-                    origin, kind = card.picture_source, card.figure_kind  # the figure it had, if any
-                    again = pictures.changed_figure(card, req.subject)
-                previous = pictures.kept_sources(folder, origin) if again else []
+                # The figure a correction replaced (the description changed), else the card's own
+                # when its description was written anew: read before it is decided anew
+                replaced = (req.previous.source, req.previous.kind) if req.previous is not None else None
+                redraw = pictures.redraw_from(folder, card, replaced, req.subject)
                 decided = await pictures.planned(s, card, req.subject, i18n.language_name(lang), step)
                 if card.figure.strip() and not decided.figure.strip():
                     found["decided"] = DecidedPicture(
@@ -140,9 +137,7 @@ async def make_picture(
                         card,
                         fresh=True,
                         step=step,
-                        previous=previous,
-                        previous_kind=kind,
-                        previous_engine=origin.engine if origin else "",
+                        **pictures.redrawn(redraw),
                     )
                 else:
                     found["search"] = card.picture_search or card.picture_prompt
@@ -172,8 +167,7 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
                 if chosen:  # a picture decided for a figure: drawn now, the figure replaced
                     _decide(card, chosen)
                 # A figure drawn again from what it was drawn from: what is asked changed, the rest kept
-                origin = card.picture_source
-                previous = pictures.kept_sources(folder, origin) if card.figure else []
+                redraw = pictures.redraw_from(folder, card, again=True)
                 card.picture = await pictures.figure_or_picture(
                     s,
                     folder,
@@ -183,9 +177,7 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
                     step=step,
                     problem=problem,
                     careful=careful,
-                    previous=previous,
-                    previous_kind=card.figure_kind,
-                    previous_engine=origin.engine if origin else "",
+                    **pictures.redrawn(redraw),
                 )
 
         return await _edit_card(id, card_id, draw)

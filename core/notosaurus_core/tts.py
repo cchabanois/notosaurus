@@ -16,7 +16,7 @@ import hashlib
 import logging
 import re
 import shutil
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import edge_tts
@@ -298,37 +298,88 @@ PREFERRED = {
 }
 
 
-async def voice_for(language: str, chosen: Mapping[str, str] | None = None) -> str:
-    """The voice for a language ("es-ES", "en", "pt-BR"…): the one the user chose for that
+# A language's usual variety, when it is asked alone: "en" is British English, not the first
+# English voice by name (en-AU); "cmn" (the relay's name of Mandarin) China's. Else "es-es",
+# "de-de"… (Speech.VARIETY on the phone)
+USUAL = {"en": "en-gb", "pt": "pt-pt", "cmn": "cmn-cn"}
+# The relay's voice for a language (Chirp 3 HD: the same name in every language), its
+# preferred one as PREFERRED are edge-tts's (Speech.DEFAULT_VOICE on the phone)
+RELAY_VOICE = "Aoede"
+
+
+def voice_tag(language: str) -> str:
+    """A language as the relay's voices name it (lowercase): Chinese, which the AI calls "zh"
+    (zh-CN, zh-Hant, zh-HK…), under the spoken language's name, Mandarin "cmn-cn" or "cmn-tw",
+    Cantonese "yue-hk" (Hong Kong's, Macao's); any other as it is (Speech.voiceTag)."""
+    tag = language.strip().replace("_", "-").lower()
+    parts = tag.split("-")
+    if parts[0] != "zh":
+        return tag
+    region = next((p for p in parts[1:] if len(p) == 2), None)
+    if "yue" in parts or region in ("hk", "mo"):
+        return "yue-hk"
+    if region == "tw" or "hant" in parts:
+        return "cmn-tw"
+    return f"cmn-{region}" if region else "cmn"
+
+
+def pick_voice(language: str, available: Sequence[Mapping[str, str]], chosen: Mapping[str, str] | None = None) -> str:
+    """The voice for a language ("es-ES", "en", "pt-BR"…) among `available` (edge-tts's, or
+    the relay's on the phone: {"voice", "locale", "gender"}): the one the user chose for that
     variety (`chosen`, by locale; for a language alone, the one chosen for one of its
-    varieties), else the preferred voice of that variety, else one of its voices (a female
-    one first), else the preferred voice of the language, else any of its voices; "" when
-    there is none."""
+    varieties, the first by locale), else one of that language's voices: of that variety
+    first, else of its usual one (USUAL), its preferred voice first (PREFERRED, RELAY_VOICE),
+    else a female one, else the first by name; "" when there is none. Chinese found under the
+    relay's names too (voice_tag). The one rule of the computer and the phone (Speech.pick,
+    core/shared-cases.json voice_for)."""
     tag = language.strip().replace("_", "-").lower()
     if not tag:
         return ""
-    base = tag.split("-")[0]
     mine = {locale.lower(): voice for locale, voice in (chosen or {}).items() if voice}
-    if tag in mine:
-        return mine[tag]
-    if tag == base and (same := [v for locale, v in sorted(mine.items()) if locale.split("-")[0] == base]):
-        return same[0]
+    for asked in dict.fromkeys((tag, voice_tag(tag))):
+        if asked in mine:
+            return mine[asked]
+        base = asked.split("-")[0]
+        if asked == base and (same := [v for locale, v in sorted(mine.items()) if locale.split("-")[0] == base]):
+            return same[0]
+
+    def language_of(voice: Mapping[str, str]) -> str:
+        return voice["locale"].lower().split("-")[0]
+
+    if not any(language_of(v) == tag.split("-")[0] for v in available):
+        tag = voice_tag(tag)  # the relay's name of it
+    base = tag.split("-")[0]
+    usual = USUAL.get(base, f"{base}-{base}")
+    preferred = set(PREFERRED.values())
+
+    def rank(voice: Mapping[str, str]) -> tuple:
+        locale, name = voice["locale"].lower(), voice["voice"]
+        favourite = name in preferred or name.endswith(f"-{RELAY_VOICE}")
+        return (locale != tag, locale != usual, not favourite, voice.get("gender") != "Female", name)
+
+    found = [v for v in available if language_of(v) == base]
+    return min(found, key=rank)["voice"] if found else ""
+
+
+async def voice_for(language: str, chosen: Mapping[str, str] | None = None) -> str:
+    """The voice for a language ("es-ES", "en", "pt-BR"…) among edge-tts's (pick_voice): the
+    one the user chose, else the preferred voice of that variety without asking edge-tts
+    (it has them all), else as pick_voice finds it in edge-tts's list; edge-tts unreachable:
+    the preferred voice of that variety, else of the language; "" when there is none."""
+    tag = language.strip().replace("_", "-").lower()
+    if not tag:
+        return ""
+    if mine := pick_voice(tag, [], chosen):
+        return mine
+    base = tag.split("-")[0]
     preferred = PREFERRED.get(tag) or PREFERRED.get(base, "")
     if preferred.lower().startswith(tag):  # "es-ES" → es-ES-ElviraNeural, "es" → es-ES-ElviraNeural
         return preferred
     try:
         available = await voices()
     except Exception:  # no network: only the preferred ones
-        available = []
-
-    def first(found: list[dict]) -> str:
-        return sorted(found, key=lambda v: (v["gender"] != "Female", v["voice"]))[0]["voice"] if found else ""
-
-    return (
-        first([v for v in available if v["locale"].lower() == tag])
-        or preferred
-        or first([v for v in available if v["locale"].lower().split("-")[0] == base])
-    )
+        return preferred
+    return pick_voice(tag, available, chosen)
 
 
 async def voices() -> list[dict]:

@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's photos (a number n: its pages 1 to n; a list: the numbers of its pages there, one missing leaving a gap): their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by the lesson's photos (as fix_photos'): their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's photos (as fix_photos'): each call's pages sent (from 1) and the cards it asks (their indexes; a call asking only cards whose page is unknown asks only those still without a drawing), and (sent, when given) how many photos all the calls send: no page sent twice for a card whose page is unknown; Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level: Python and Kotlin only. next_page: the number of a page added to a lesson (lessons.next_page, Lessons.nextPage), by its pages' files (their numbers) and the lesson (its cards' pages and masks, its frames, its pages' texts): after the highest used anywhere, a page past 1000 or below 0 unknown; Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands nor CSS of their own (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only. merged_card: a card an edit changed (before → after: a picture drawn, found, the user's, removed) merged into the card as saved now (app/lessons.py's merged_cards, Pictures.mergedCards): the fields the edit changed, but none of a picture's it drew from a description changed meanwhile, nor for a card given another picture meanwhile (stale_picture); Python and Kotlin only. needs_picture: a card whose picture is still to be made (pictures.needs_picture, Pictures.needsPicture, the page's needsPicture): it says what to show (a picture_prompt or a figure, not blank) and has none; a sentence with gaps too.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's photos (a number n: its pages 1 to n; a list: the numbers of its pages there, one missing leaving a gap): their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by the lesson's photos (as fix_photos'): their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's photos (as fix_photos'): each call's pages sent (from 1) and the cards it asks (their indexes; a call asking only cards whose page is unknown asks only those still without a drawing), and (sent, when given) how many photos all the calls send: no page sent twice for a card whose page is unknown; Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only. same_level: two deck levels the same for a child's levels (children.same_level, Children.same, the page's sameLevel): case, accents and an ordinal's ending aside, every script's letters kept. split_deck, deck_for, decks_for_ai: a deck and the children's levels (app/children.py, Children.kt). new_deck_name: each lesson its own deck (decks.existing and free_name, Generation.existing and freeName). shared_deck, shared_id, package_name, package_deck: a package's decks, ids and file name (app/routes/generation.py, ExportRoutes.kt). speech_rate, learned_language: a lesson's speed and the language its backs are learned in (generation._rate and _learned, Speech.rate and learned). page_texts, standing_instructions: what the page and the settings give the AI (generation._page_texts, settings.standing_instructions; Generation.pageTexts and standingInstructions). All but same_level and decks_for_ai: Python and Kotlin only (decks_for_ai also the page's decksForChild, which offers the decks whole: what the AI sees of them compared). next_page: the number of a page added to a lesson (lessons.next_page, Lessons.nextPage), by its pages' files (their numbers) and the lesson (its cards' pages and masks, its frames, its pages' texts): after the highest used anywhere, a page past 1000 or below 0 unknown; Python and Kotlin only. anki_formula: a card's text as it goes to Anki (before it is escaped), its formulas without MathJax's html commands nor CSS of their own (app/note_types/formulas.py, Formulas.kt); Python and Kotlin only. merged_card: a card an edit changed (before → after: a picture drawn, found, the user's, removed) merged into the card as saved now (app/lessons.py's merged_cards, Pictures.mergedCards): the fields the edit changed, but none of a picture's it drew from a description changed meanwhile, nor for a card given another picture meanwhile (stale_picture); Python and Kotlin only. needs_picture: a card whose picture is still to be made (pictures.needs_picture, Pictures.needsPicture, the page's needsPicture): it says what to show (a picture_prompt or a figure, not blank) and has none; a sentence with gaps too.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -1789,6 +1789,25 @@
     "はな::国語",
     "ゆき::数学"
    ]
+  },
+  {
+   "children": [
+    {
+     "id": "jules",
+     "name": "Jules",
+     "grade": "5e",
+     "decks": "Jules::{classe}"
+    }
+   ],
+   "child": "jules",
+   "decks": [
+    "Jules::5e",
+    "Jules",
+    "Jules::5e::Anglais::Food"
+   ],
+   "out": [
+    "Anglais::Food"
+   ]
   }
  ],
  "new_deck_name": [
@@ -3234,6 +3253,1132 @@
      "engine": "typst"
     }
    }
+  }
+ ],
+ "redraw_from": [
+  {
+   "name": "drawn again (its drawing button): from its own sources, in order",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": {
+    "sources": [
+     "picture-c1-ab12cd34.typ",
+     "picture-c1-ab12cd34-2.typ"
+    ],
+    "kind": "geometry",
+    "engine": "typst"
+   }
+  },
+  {
+   "name": "drawn again, one of its sources missing: anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "drawn again, a source not one of ours: anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "../lesson.json"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "drawn again, it names no source (drawn before sources were kept): anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst"
+    }
+   },
+   "replaced": null,
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "drawn again, drawn as SVG: anew, whatever lies beside it",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "svg",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "drawn again, a picture (no figure): anew",
+   "card": {
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "un chat",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "drawn again, a figure of spaces alone: anew",
+   "card": {
+    "figure": "  ",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "drawn again, no picture_source: anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": null
+   },
+   "replaced": null,
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "its description written anew: from its own sources",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": "Un triangle isocèle ABC.",
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": {
+    "sources": [
+     "picture-c1-ab12cd34.typ",
+     "picture-c1-ab12cd34-2.typ"
+    ],
+    "kind": "geometry",
+    "engine": "typst"
+   }
+  },
+  {
+   "name": "its description written the same, spaces aside: anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": "  Un triangle rectangle ABC, l'angle droit en B. ",
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "nothing written: anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": null,
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "spaces written: anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": "   ",
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "its description written anew, not a figure: anew (decided anew)",
+   "card": {
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "un chat",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": null,
+   "asked": "un chien",
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "a correction replaced it: from the replaced figure, in its family",
+   "card": {
+    "figure": "Une parabole.",
+    "figure_kind": "",
+    "picture_prompt": "",
+    "picture_source": null
+   },
+   "replaced": {
+    "source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-0badf00d.typ"
+      }
+     ]
+    },
+    "kind": "function"
+   },
+   "asked": null,
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": {
+    "sources": [
+     "picture-c1-0badf00d.typ"
+    ],
+    "kind": "function",
+    "engine": "typst"
+   }
+  },
+  {
+   "name": "a correction replaced it, a description written too: still from the replaced figure",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": {
+    "source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-0badf00d.typ"
+      }
+     ]
+    },
+    "kind": "function"
+   },
+   "asked": "Un triangle isocèle ABC.",
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": {
+    "sources": [
+     "picture-c1-0badf00d.typ"
+    ],
+    "kind": "function",
+    "engine": "typst"
+   }
+  },
+  {
+   "name": "a correction replaced it, drawn again: from the replaced figure, not its own",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": {
+    "source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-0badf00d.typ"
+      }
+     ]
+    },
+    "kind": "function"
+   },
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": {
+    "sources": [
+     "picture-c1-0badf00d.typ"
+    ],
+    "kind": "function",
+    "engine": "typst"
+   }
+  },
+  {
+   "name": "a correction replaced it, the card no figure now: still from it (✨ Image may decide one)",
+   "card": {
+    "figure": "",
+    "figure_kind": "",
+    "picture_prompt": "un chat",
+    "picture_source": null
+   },
+   "replaced": {
+    "source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-0badf00d.typ"
+      }
+     ]
+    },
+    "kind": "function"
+   },
+   "asked": null,
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": {
+    "sources": [
+     "picture-c1-0badf00d.typ"
+    ],
+    "kind": "function",
+    "engine": "typst"
+   }
+  },
+  {
+   "name": "a correction replaced it, its sources gone: anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": {
+    "source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-0badf00d.typ"
+      }
+     ]
+    },
+    "kind": "function"
+   },
+   "asked": null,
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "a correction replaced it, drawn as SVG: anew",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": {
+    "source": {
+     "source": "drawn",
+     "engine": "svg",
+     "sources": [
+      {
+       "file": "picture-c1-0badf00d.typ"
+      }
+     ]
+    },
+    "kind": "function"
+   },
+   "asked": null,
+   "again": false,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  },
+  {
+   "name": "a correction replaced it, without its source: anew, never from the card's own",
+   "card": {
+    "figure": "Un triangle rectangle ABC, l'angle droit en B.",
+    "figure_kind": "geometry",
+    "picture_prompt": "",
+    "picture_source": {
+     "source": "drawn",
+     "engine": "typst",
+     "sources": [
+      {
+       "file": "picture-c1-ab12cd34.typ"
+      },
+      {
+       "file": "picture-c1-ab12cd34-2.typ"
+      }
+     ]
+    }
+   },
+   "replaced": {
+    "source": null,
+    "kind": "geometry"
+   },
+   "asked": null,
+   "again": true,
+   "files": [
+    "picture-c1-ab12cd34.typ",
+    "picture-c1-ab12cd34-2.typ",
+    "picture-c1-0badf00d.typ"
+   ],
+   "out": null
+  }
+ ],
+ "voice_lists": {
+  "edge": [
+   {
+    "voice": "de-AT-IngridNeural",
+    "locale": "de-AT",
+    "gender": "Female"
+   },
+   {
+    "voice": "de-DE-ConradNeural",
+    "locale": "de-DE",
+    "gender": "Male"
+   },
+   {
+    "voice": "de-DE-KatjaNeural",
+    "locale": "de-DE",
+    "gender": "Female"
+   },
+   {
+    "voice": "en-AU-NatashaNeural",
+    "locale": "en-AU",
+    "gender": "Female"
+   },
+   {
+    "voice": "en-GB-RyanNeural",
+    "locale": "en-GB",
+    "gender": "Male"
+   },
+   {
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB",
+    "gender": "Female"
+   },
+   {
+    "voice": "en-US-AriaNeural",
+    "locale": "en-US",
+    "gender": "Female"
+   },
+   {
+    "voice": "en-US-JennyNeural",
+    "locale": "en-US",
+    "gender": "Female"
+   },
+   {
+    "voice": "es-AR-ElenaNeural",
+    "locale": "es-AR",
+    "gender": "Female"
+   },
+   {
+    "voice": "es-AR-TomasNeural",
+    "locale": "es-AR",
+    "gender": "Male"
+   },
+   {
+    "voice": "es-ES-AlvaroNeural",
+    "locale": "es-ES",
+    "gender": "Male"
+   },
+   {
+    "voice": "es-ES-ElviraNeural",
+    "locale": "es-ES",
+    "gender": "Female"
+   },
+   {
+    "voice": "es-MX-DaliaNeural",
+    "locale": "es-MX",
+    "gender": "Female"
+   },
+   {
+    "voice": "es-MX-JorgeNeural",
+    "locale": "es-MX",
+    "gender": "Male"
+   },
+   {
+    "voice": "ja-JP-KeitaNeural",
+    "locale": "ja-JP",
+    "gender": "Male"
+   },
+   {
+    "voice": "ja-JP-NanamiNeural",
+    "locale": "ja-JP",
+    "gender": "Female"
+   },
+   {
+    "voice": "pt-BR-FranciscaNeural",
+    "locale": "pt-BR",
+    "gender": "Female"
+   },
+   {
+    "voice": "pt-PT-DuarteNeural",
+    "locale": "pt-PT",
+    "gender": "Male"
+   },
+   {
+    "voice": "pt-PT-RaquelNeural",
+    "locale": "pt-PT",
+    "gender": "Female"
+   },
+   {
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "locale": "zh-CN",
+    "gender": "Female"
+   },
+   {
+    "voice": "zh-CN-YunxiNeural",
+    "locale": "zh-CN",
+    "gender": "Male"
+   },
+   {
+    "voice": "zh-HK-HiuGaaiNeural",
+    "locale": "zh-HK",
+    "gender": "Female"
+   },
+   {
+    "voice": "zh-TW-HsiaoChenNeural",
+    "locale": "zh-TW",
+    "gender": "Female"
+   }
+  ],
+  "relay": [
+   {
+    "voice": "cmn-CN-Chirp3-HD-Puck",
+    "locale": "cmn-CN",
+    "gender": "Male"
+   },
+   {
+    "voice": "cmn-CN-Chirp3-HD-Aoede",
+    "locale": "cmn-CN",
+    "gender": "Female"
+   },
+   {
+    "voice": "cmn-TW-Chirp3-HD-Aoede",
+    "locale": "cmn-TW",
+    "gender": "Female"
+   },
+   {
+    "voice": "yue-HK-Chirp3-HD-Aoede",
+    "locale": "yue-HK",
+    "gender": "Female"
+   },
+   {
+    "voice": "en-AU-Chirp3-HD-Aoede",
+    "locale": "en-AU",
+    "gender": "Female"
+   },
+   {
+    "voice": "en-GB-Chirp3-HD-Charon",
+    "locale": "en-GB",
+    "gender": "Male"
+   },
+   {
+    "voice": "en-GB-Chirp3-HD-Aoede",
+    "locale": "en-GB",
+    "gender": "Female"
+   },
+   {
+    "voice": "es-ES-Chirp3-HD-Aoede",
+    "locale": "es-ES",
+    "gender": "Female"
+   },
+   {
+    "voice": "es-US-Chirp3-HD-Aoede",
+    "locale": "es-US",
+    "gender": "Female"
+   },
+   {
+    "voice": "fr-FR-Chirp3-HD-Charon",
+    "locale": "fr-FR",
+    "gender": "Male"
+   },
+   {
+    "voice": "fr-FR-Chirp3-HD-Kore",
+    "locale": "fr-FR",
+    "gender": "Female"
+   },
+   {
+    "voice": "fr-FR-Chirp3-HD-Fenrir",
+    "locale": "fr-FR",
+    "gender": "Male"
+   }
+  ],
+  "none": []
+ },
+ "voice_for": [
+  {
+   "name": "a language alone: its preferred voice, in its usual variety",
+   "language": "es",
+   "voices": "edge",
+   "chosen": {},
+   "out": "es-ES-ElviraNeural"
+  },
+  {
+   "name": "its usual variety: its preferred voice",
+   "language": "es-ES",
+   "voices": "edge",
+   "chosen": {},
+   "out": "es-ES-ElviraNeural"
+  },
+  {
+   "name": "another variety: its preferred voice",
+   "language": "es-MX",
+   "voices": "edge",
+   "chosen": {},
+   "out": "es-MX-DaliaNeural"
+  },
+  {
+   "name": "a variety with no preferred voice: its own, a female one first",
+   "language": "es-AR",
+   "voices": "edge",
+   "chosen": {},
+   "out": "es-AR-ElenaNeural"
+  },
+  {
+   "name": "that variety, not the language's preferred voice",
+   "language": "de-AT",
+   "voices": "edge",
+   "chosen": {},
+   "out": "de-AT-IngridNeural"
+  },
+  {
+   "name": "a variety without voices: the language's preferred one",
+   "language": "es-CO",
+   "voices": "edge",
+   "chosen": {},
+   "out": "es-ES-ElviraNeural"
+  },
+  {
+   "name": "English alone: British, not the first English voice by name",
+   "language": "en",
+   "voices": "edge",
+   "chosen": {},
+   "out": "en-GB-SoniaNeural"
+  },
+  {
+   "name": "American English: its preferred voice",
+   "language": "en-US",
+   "voices": "edge",
+   "chosen": {},
+   "out": "en-US-JennyNeural"
+  },
+  {
+   "name": "Portuguese alone: Portugal's",
+   "language": "pt",
+   "voices": "edge",
+   "chosen": {},
+   "out": "pt-PT-RaquelNeural"
+  },
+  {
+   "name": "Brazilian Portuguese",
+   "language": "pt_BR",
+   "voices": "edge",
+   "chosen": {},
+   "out": "pt-BR-FranciscaNeural"
+  },
+  {
+   "name": "no preferred voice: a female one first",
+   "language": "ja",
+   "voices": "edge",
+   "chosen": {},
+   "out": "ja-JP-NanamiNeural"
+  },
+  {
+   "name": "its variety, no preferred voice: a female one first",
+   "language": "ja-JP",
+   "voices": "edge",
+   "chosen": {},
+   "out": "ja-JP-NanamiNeural"
+  },
+  {
+   "name": "Chinese, its voices named zh: those",
+   "language": "zh-CN",
+   "voices": "edge",
+   "chosen": {},
+   "out": "zh-CN-XiaoxiaoNeural"
+  },
+  {
+   "name": "Chinese alone, its voices named zh: a female one first, by name",
+   "language": "zh",
+   "voices": "edge",
+   "chosen": {},
+   "out": "zh-CN-XiaoxiaoNeural"
+  },
+  {
+   "name": "Hong Kong's, named zh",
+   "language": "zh-HK",
+   "voices": "edge",
+   "chosen": {},
+   "out": "zh-HK-HiuGaaiNeural"
+  },
+  {
+   "name": "a language without voices: none",
+   "language": "xx",
+   "voices": "edge",
+   "chosen": {},
+   "out": ""
+  },
+  {
+   "name": "no language: none",
+   "language": "",
+   "voices": "edge",
+   "chosen": {},
+   "out": ""
+  },
+  {
+   "name": "spaces: none",
+   "language": "  ",
+   "voices": "edge",
+   "chosen": {},
+   "out": ""
+  },
+  {
+   "name": "the one chosen for that variety",
+   "language": "es-ES",
+   "voices": "edge",
+   "chosen": {
+    "es-ES": "es-ES-AlvaroNeural"
+   },
+   "out": "es-ES-AlvaroNeural"
+  },
+  {
+   "name": "the one chosen for a variety, for its language alone",
+   "language": "es",
+   "voices": "edge",
+   "chosen": {
+    "es-ES": "es-ES-AlvaroNeural"
+   },
+   "out": "es-ES-AlvaroNeural"
+  },
+  {
+   "name": "chosen for another variety: that variety's own",
+   "language": "es-MX",
+   "voices": "edge",
+   "chosen": {
+    "es-ES": "es-ES-AlvaroNeural"
+   },
+   "out": "es-MX-DaliaNeural"
+  },
+  {
+   "name": "chosen, its locale in any case",
+   "language": "ES-es",
+   "voices": "edge",
+   "chosen": {
+    "es-es": "es-ES-AlvaroNeural"
+   },
+   "out": "es-ES-AlvaroNeural"
+  },
+  {
+   "name": "chosen for two varieties, the language alone: the first by locale",
+   "language": "es",
+   "voices": "edge",
+   "chosen": {
+    "es-MX": "es-MX-JorgeNeural",
+    "es-AR": "es-AR-TomasNeural"
+   },
+   "out": "es-AR-TomasNeural"
+  },
+  {
+   "name": "a choice left empty: as if none",
+   "language": "es",
+   "voices": "edge",
+   "chosen": {
+    "es-ES": ""
+   },
+   "out": "es-ES-ElviraNeural"
+  },
+  {
+   "name": "chosen, no voices listed (the service unreachable): the one chosen",
+   "language": "es",
+   "voices": "none",
+   "chosen": {
+    "es-ES": "es-ES-AlvaroNeural"
+   },
+   "out": "es-ES-AlvaroNeural"
+  },
+  {
+   "name": "no voices listed, none chosen: none",
+   "language": "es",
+   "voices": "none",
+   "chosen": {},
+   "out": ""
+  },
+  {
+   "name": "the relay's: Chinese under Mandarin's name",
+   "language": "zh-CN",
+   "voices": "relay",
+   "chosen": {},
+   "out": "cmn-CN-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: Chinese alone, Mandarin of China",
+   "language": "zh",
+   "voices": "relay",
+   "chosen": {},
+   "out": "cmn-CN-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: simplified Chinese",
+   "language": "zh-Hans",
+   "voices": "relay",
+   "chosen": {},
+   "out": "cmn-CN-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: Taiwan's Mandarin",
+   "language": "zh-TW",
+   "voices": "relay",
+   "chosen": {},
+   "out": "cmn-TW-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: traditional Chinese, Taiwan's",
+   "language": "zh-Hant",
+   "voices": "relay",
+   "chosen": {},
+   "out": "cmn-TW-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: Hong Kong's, Cantonese",
+   "language": "zh-HK",
+   "voices": "relay",
+   "chosen": {},
+   "out": "yue-HK-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: Macao's, Cantonese",
+   "language": "zh-MO",
+   "voices": "relay",
+   "chosen": {},
+   "out": "yue-HK-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: Cantonese named",
+   "language": "zh-yue",
+   "voices": "relay",
+   "chosen": {},
+   "out": "yue-HK-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: chosen under Mandarin's name",
+   "language": "zh-CN",
+   "voices": "relay",
+   "chosen": {
+    "cmn-CN": "cmn-CN-Chirp3-HD-Puck"
+   },
+   "out": "cmn-CN-Chirp3-HD-Puck"
+  },
+  {
+   "name": "the relay's: chosen under Mandarin's name, Chinese alone",
+   "language": "zh",
+   "voices": "relay",
+   "chosen": {
+    "cmn-CN": "cmn-CN-Chirp3-HD-Puck"
+   },
+   "out": "cmn-CN-Chirp3-HD-Puck"
+  },
+  {
+   "name": "the relay's: English alone, British",
+   "language": "en",
+   "voices": "relay",
+   "chosen": {},
+   "out": "en-GB-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: that variety",
+   "language": "es-US",
+   "voices": "relay",
+   "chosen": {},
+   "out": "es-US-Chirp3-HD-Aoede"
+  },
+  {
+   "name": "the relay's: no Aoede, a female one first",
+   "language": "fr",
+   "voices": "relay",
+   "chosen": {},
+   "out": "fr-FR-Chirp3-HD-Kore"
+  },
+  {
+   "name": "the relay's: a language without voices",
+   "language": "ja-JP",
+   "voices": "relay",
+   "chosen": {},
+   "out": ""
   }
  ],
  "needs_picture": [
