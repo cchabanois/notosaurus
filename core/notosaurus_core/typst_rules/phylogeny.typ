@@ -5,8 +5,11 @@
 // characters): each character's group is the species having it, the groups nested; the tree
 // is built from them, never drawn by eye. Each innovation marked on its group's branch; a
 // character only one species has, on its own branch. species: (name, (characters…)) pairs;
-// hidden: species or characters written "?" (a card asking which one); root: the root's name
-#let phylogeny(species: (), hidden: (), root: none) = context {
+// hidden: species or characters written "?" (a card asking which one); root: the root's name;
+// groups: (name, (species…), colour) each (colour none: grey), a group of the tree (a species and all its
+// descendants: those sharing a character) outlined around its part of the tree, its name above
+#let phylogeny(species: (), hidden: (), root: none, groups: ()) = context {
+  let asked = groups  // (the characters' groups below take the name)
   assert(
     species.len() >= 2 and species.all(s => type(s) == array and s.len() == 2 and type(s.at(1)) in (array, str)),
     message: "species are (name, (characters…)) pairs, two at least",
@@ -60,6 +63,23 @@
     }
   }
   let deepest = calc.max(..nodes.map(n => n.depth))
+  // the groups outlined: each one of the tree's (its species, a node's), else said why
+  let outlined = asked.map(g => {
+    if type(g) != array or g.len() not in (2, 3) or type(g.at(1)) not in (array, str) or (g.len() == 3 and g.at(2) != none and type(g.at(2)) != color) {
+      panic("groups: each (name, (species…), colour), (\"Tétrapodes\", (\"Grenouille\", \"Lézard\", \"Chat\"), green), not " + repr(g))
+    }
+    let wanted = if type(g.at(1)) == str { (g.at(1),) } else { g.at(1) }
+    for w in wanted {
+      if w not in names { panic("groups: " + repr(w) + " is none of the species (" + names.join(", ") + ")") }
+    }
+    let members = range(species.len()).filter(i => names.at(i) in wanted)
+    let k = nodes.position(n => n.members.sorted() == members)
+    if k == none {
+      panic("groups: " + wanted.join(", ") + " is no group of the tree: a group is a species and all its descendants (the species sharing a character), here "
+        + nodes.filter(n => n.members.len() > 1 and n.parent >= 0).map(n => "(" + n.members.map(i => names.at(i)).join(", ") + ")").join(", "))
+    }
+    (name: g.at(0), node: k, members: members, paint: if g.at(2, default: none) == none { luma(90) } else { g.at(2) })
+  })
   let shown(name) = if name in hidden { [?] } else { name }
   // every label as tall as any line (accents, descenders): the names on one line
   let txt(body) = text(9pt, top-edge: "ascender", bottom-edge: "descender", body)
@@ -77,15 +97,59 @@
   let dy = calc.max(1.1, ..needs)
   let x-of-leaf(i) = order.position(j => j == i) * dx
   let leaf-y = (deepest + 1) * dy
+  // each clade's point: under the middle of its leaves, at its depth
+  let point(n) = {
+    let xs = n.members.map(x-of-leaf)
+    let x = (calc.min(..xs) + calc.max(..xs)) / 2
+    (x, if n.members.len() == 1 { leaf-y } else { n.depth * dy })
+  }
+  let points = nodes.map(point)
+  // where each branch's innovations are written: (x0, x1, y0, y1) boxes, by node
+  let written = nodes.enumerate().map(((i, n)) => {
+    let marks = innovations(n.members)
+    let (x, y) = points.at(i)
+    let low = if n.parent < 0 { y - if marks.len() > 0 { dy } else { 0.4 * dy } } else { points.at(n.parent).at(1) }
+    marks.enumerate().map(((k, c)) => {
+      let my = low + (y - low) * (k + 1) / (marks.len() + 1)
+      let (w, h) = (measure(wrapped(shown(c))).width / 1cm, height(c))
+      (x + 0.2, x + 0.2 + w, my - h / 2, my + h / 2)
+    })
+  })
+  let name-top = leaf-y + 0.15 + calc.max(..names.map(n => height(n)))
+  // each group's outline: around its node, its leaves and their names, and the innovations
+  // written inside it; kept off what lies outside it (a branch's innovations beside it); a
+  // group holding others around theirs, their names below its top
+  let inside(a, b) = a.members.len() < b.members.len() and a.members.all(i => i in b.members)
+  let frames = ()
+  for g in outlined.sorted(key: g => g.members.len()) {
+    let xs = g.members.map(x-of-leaf)
+    let half = calc.max(..g.members.map(i => measure(wrapped(shown(names.at(i)))).width / 2cm))
+    let within = nodes.enumerate().filter(((i, n)) => i != g.node and n.members.all(j => j in g.members))
+    let right = calc.max(calc.max(..xs) + half, ..within.map(((i, _)) => written.at(i).map(b => b.at(1))).flatten()) + 0.15
+    let left = calc.min(..xs) - half - 0.15
+    let (bottom, top) = (points.at(g.node).at(1) - 0.2, name-top + 0.1)
+    for f in frames.filter(f => inside(f.g, g)) {
+      left = calc.min(left, f.left - 0.12)
+      right = calc.max(right, f.right + 0.12)
+      top = calc.max(top, f.top + 0.1 + if f.g.name in (none, "", []) { 0 } else { height(f.g.name) + 0.05 })
+    }
+    // what lies outside the group within its height: kept clear of
+    for (i, n) in nodes.enumerate() {
+      if n.members.all(j => j in g.members) { continue }
+      for (x0, x1, y0, y1) in written.at(i) {
+        if y1 > bottom and y0 < top and x1 < calc.min(..xs) { left = calc.max(left, x1 + 0.08) }
+      }
+    }
+    frames.push((g: g, left: left, right: right, bottom: bottom, top: top))
+  }
   cetz.canvas({
     import cetz.draw: *
-    // each clade's point: under the middle of its leaves, at its depth
-    let point(n) = {
-      let xs = n.members.map(x-of-leaf)
-      let x = (calc.min(..xs) + calc.max(..xs)) / 2
-      (x, if n.members.len() == 1 { leaf-y } else { n.depth * dy })
+    for f in frames.rev() {
+      rect((f.left, f.bottom), (f.right, f.top), radius: 0.25, fill: f.g.paint.transparentize(88%), stroke: 1.2pt + f.g.paint)
+      if f.g.name not in (none, "", []) {
+        content(((f.left + f.right) / 2, f.top + 0.05), text(fill: f.g.paint, weight: "bold", wrapped(shown(f.g.name))), anchor: "south")
+      }
     }
-    let points = nodes.map(point)
     // a branch from (x, low) up to (x, high), its innovations evenly along it
     let branch(x, low, high, marks) = {
       line((x, low), (x, high), stroke: 1pt)
