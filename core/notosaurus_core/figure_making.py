@@ -82,7 +82,9 @@ def _from_previous(body: str) -> str:
         f"\n\nThis figure was drawn before with this Typst:\n{body}\n\n"
         "Start from it: change what the description and anything below ask for, and keep the rest "
         "as it is (its points, values, labels, sizes, colours and layout); write it anew only when "
-        "the description asks for another figure. It may call functions the rules above no longer "
+        "the description asks for another figure. Keep its functions: a change is made with their "
+        "own arguments (the rules above give them), never by drawing the same figure again with "
+        "another function, which draws it otherwise. It may call functions the rules above no longer "
         "have: the rules hold."
     )
 

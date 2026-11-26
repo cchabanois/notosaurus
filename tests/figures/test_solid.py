@@ -456,3 +456,69 @@ def test_a_bodys_layers_given_by_their_radii():
     assert one > 0 and sun.count("stroke-dasharray") == 3 * one  # a guide for each radius
     with pytest.raises(figures_typst.Unusable, match="deeper than the one above"):
         figures_typst.compile_svg("solid", "#layers(((name: [a], radius: 10), (name: [b], radius: 20)))")
+
+
+PYRAMID = 'names: ("A", "B", "C", "D", "S"), foot: "H"'
+CUBOID = 'names: ("A", "B", "C", "D", "E", "F", "G", "H")'
+
+
+@pytest.mark.parametrize(
+    ("body", "hidden"),
+    [
+        # the base's diagonals, inside (the base turned away): dashed, with the pyramid's own 4
+        (f'#pyramid(side: 4, height: 4, {PYRAMID}, segments: (("A", "C"), ("B", "D")))', 6),
+        # the height again, in red: dashed as it is (inside)
+        (f'#pyramid(side: 4, height: 4, {PYRAMID}, segments: (("S", "H", red),))', 5),
+        # an edge seen in red: solid
+        (f'#pyramid(side: 4, height: 5, {PYRAMID}, segments: (("S", "A", red),))', 4),
+        # a face's diagonal on the front (AF) and the top (EG): solid; the space diagonal AG: dashed
+        (f'#cuboid(5, 3, 3, {CUBOID}, segments: (("A", "F"), ("E", "G")))', 3),
+        (f'#cuboid(5, 3, 3, {CUBOID}, segments: (("A", "G", blue),))', 4),
+        # a segment to the section's point, on the front face: solid
+        (
+            '#prism(((0, 0), (4, 0), (1, 3)), 4, names: ("A", "B", "C", "D", "E", "F"), section: 2, '
+            'section-names: ("I", "J", "K"), segments: (("A", "J"),))',
+            5,
+        ),
+    ],
+)
+def test_a_solids_segments_dashed_as_computed(body, hidden):
+    """A segment the description adds to a solid (a diagonal, a height, an edge in colour), between
+    its named points: solid when a face seen holds it, else dashed, computed (asked to add [AC] to
+    a pyramid, the AI drew it all again with space(), another view and other names)."""
+    svg = figures.clean(figures_typst.compile_svg("solid", body))
+    assert svg.count("stroke-dasharray") == hidden
+
+
+def test_a_solids_colours_drawn():
+    """A segment's colour, a face's and the section's, as the description gives them: the segment
+    in it, the face and the section tinted (the edges seen through them); « the height in red »
+    was said done, the pyramid having no colour."""
+    svg = figures.clean(
+        figures_typst.compile_svg(
+            "solid",
+            f'#pyramid(side: 4, height: 4, {PYRAMID}, section: 2, section-names: ("I", "J", "K", "L"), '
+            'section-fill: blue, segments: (("S", "H", red),), fills: (("A", "B", "S", yellow),))',
+        )
+    )
+    assert 'stroke="#ff4136"' in svg  # red
+    tints = re.findall(r'fill="#([0-9a-f]{6})([0-9a-f]{2})"', svg)
+    assert {colour for colour, _ in tints} == {"ffdc00", "0074d9"}  # yellow, blue
+    assert all(int(alpha, 16) < 128 for _, alpha in tints)  # see-through
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        (f'#pyramid({PYRAMID}, segments: (("A", "X"),))', '"X" is none of the points named (A, B, C, D, S, H)'),
+        (f'#pyramid({PYRAMID}, fills: (("A", "B", "Z", blue),))', '"Z" is none of the points named'),
+        (f'#pyramid({PYRAMID}, fills: (("A", "B", "S"),))', "fills: each the polygon's points then its colour"),
+        (f'#cuboid(2, 2, 2, {CUBOID}, segments: (("A", "G", "red"),))', 'segments: each ("A", "C") or ("A", "C", red)'),
+    ],
+)
+def test_a_solids_segment_refused_saying_why(body, said):
+    """A segment or a face whose point isn't named, or written otherwise: refused saying what is
+    named and how (Typst's message given back to the AI)."""
+    with pytest.raises(figures_typst.Unusable) as error:
+        figures_typst.compile_svg("solid", body)
+    assert said in str(error.value)

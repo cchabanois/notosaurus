@@ -87,8 +87,45 @@
   _label(((a.at(0) + b.at(0)) / 2 + side.at(0), (a.at(1) + b.at(1)) / 2 + side.at(1)), body)
 }
 // `hidden: false`: a solid made of cubes, full: its hidden edges not drawn
-#let _polyhedron(points, faces, names: (), edge-labels: (), extra: none, largest: none, section: none, section-names: (), sides: (:), lines: (), marks: (), hidden: true) = {
+// segments: ((a, b), (a, b, colour), …) between named points (the vertices, the marks: a
+// height's foot, the section's points), each solid when a face seen holds it, else dashed (inside
+// the solid, or on faces turned away), computed; an edge given a colour drawn again in it.
+// fills: ((a, b, c, …, colour), …) a polygon of named points (a face, a triangle inside) tinted
+// in it, the edges seen through it. section-fill: the section's colour (none: grey)
+#let _tint(paint) = paint.transparentize(65%)
+#let _polyhedron(points, faces, names: (), edge-labels: (), extra: none, largest: none, section: none, section-names: (), sides: (:), lines: (), marks: (), hidden: true, segments: (), fills: (), section-fill: none) = {
   let cut = if section == none { none } else { _section(points, faces, names, sides, section) }
+  // every named point, in the solid's lengths: its vertices, its marks, its section's points
+  let where = (:)
+  for (i, name) in names.enumerate() { if i < points.len() { where.insert(_plain(name), points.at(i)) } }
+  for (q, name) in marks { where.insert(_plain(name), q) }
+  if cut != none {
+    for (k, name) in section-names.enumerate() {
+      let found = cut.points.pairs().find(((_, q)) => q.foot == cut.face.at(k, default: -1))
+      if found != none { where.insert(_plain(name), found.at(1).p) }
+    }
+  }
+  let point(name, what) = {
+    let key = _plain(name)
+    if key not in where {
+      panic(what + ": " + repr(key) + " is none of the points named (" + where.keys().join(", ") + "): name the vertices with names:, the foot with foot:")
+    }
+    where.at(key)
+  }
+  // each segment: its ends, its colour (none: black)
+  let drawn = segments.map(seg => {
+    if type(seg) != array or seg.len() not in (2, 3) or (seg.len() == 3 and type(seg.at(2)) != color) {
+      panic("segments: each (\"A\", \"C\") or (\"A\", \"C\", red), not " + repr(seg))
+    }
+    (a: point(seg.at(0), "segments"), b: point(seg.at(1), "segments"), paint: seg.at(2, default: none))
+  })
+  let tinted = fills.map(f => {
+    if type(f) != array or f.len() < 4 or type(f.last()) != color {
+      panic("fills: each the polygon's points then its colour, (\"A\", \"B\", \"C\", \"D\", blue), not " + repr(f))
+    }
+    (corners: f.slice(0, -1).map(n => point(n, "fills")), paint: f.last())
+  })
+  let lines = lines + drawn.map(d => (d.a, d.b))
   let size = calc.max(..range(3).map(i => calc.max(..points.map(p => p.at(i))) - calc.min(..points.map(p => p.at(i)))))
   let scale = 4 / if largest == none { size } else { largest }
   let points = points.map(p => p.map(x => x * scale))
@@ -114,13 +151,26 @@
   let segments = edges.values().map(e => (_proj(points.at(e.u)), _proj(points.at(e.v))))
   if cut != none { segments += cut.sides.map(l => (spots.at(l.a), spots.at(l.b))) }
   segments += lines.map(((a, b)) => (at(a), at(b)))
+  // a point on a face: in its plane and within it (its edges and corners too); the faces convex
+  let on(q, f) = {
+    let ps = f.map(i => points.at(i))
+    let q = q.map(x => x * scale)
+    let n = _cross(_sub(ps.at(1), ps.at(0)), _sub(ps.at(2), ps.at(0)))
+    let len = calc.sqrt(_dot(n, n))
+    if calc.abs(_dot(n, _sub(q, ps.at(0)))) > 1e-6 * len * 4 { return false }
+    let turns = range(ps.len()).map(j => _dot(n, _cross(_sub(ps.at(calc.rem(j + 1, ps.len())), ps.at(j)), _sub(q, ps.at(j)))))
+    turns.all(t => t >= -1e-6 * len * 16) or turns.all(t => t <= 1e-6 * len * 16)
+  }
+  // seen: a face turned to the viewer holds the whole segment
+  let seen(a, b) = faces.enumerate().any(((i, f)) => visible.at(i) and on(a, f) and on(b, f))
   cetz.canvas({
     import cetz.draw: *
     if cut != none and spots.len() >= 3 {
       let m = _mean(spots.values())
       let around = spots.values().sorted(key: q => calc.atan2(q.at(0) - m.at(0), q.at(1) - m.at(1)).deg())
-      line(..around, close: true, fill: luma(225), stroke: none)
+      line(..around, close: true, fill: if section-fill == none { luma(225) } else { _tint(section-fill) }, stroke: none)
     }
+    for t in tinted { line(..t.corners.map(at), close: true, fill: _tint(t.paint), stroke: none) }
     for e in edges.values().filter(e => hidden or e.seen) {
       line(_proj(points.at(e.u)), _proj(points.at(e.v)),
         stroke: if e.seen { 1pt } else { (thickness: 0.7pt, dash: "dashed") })
@@ -131,6 +181,11 @@
       }
     }
     if extra != none { extra(at) }
+    // a segment in colour a little thicker: seen at once, dashed as much as solid
+    for d in drawn {
+      let (paint, more) = if d.paint == none { (black, 0pt) } else { (d.paint, 0.5pt) }
+      line(at(d.a), at(d.b), stroke: if seen(d.a, d.b) { (paint: paint, thickness: 1pt + more) } else { (paint: paint, thickness: 0.7pt + more, dash: "dashed") })
+    }
     // each name in the one of 8 directions around its point farthest from every edge and
     // from the names already placed (a mark inside the solid, a height's foot, first)
     let named = marks.map(((q, name)) => (at(q), name)) + names.enumerate().map(((i, name)) => (_proj(points.at(i)), name))
@@ -166,7 +221,7 @@
 // B front right, C back right, D back left, EFGH above them
 // `cubes: true`: made of unit cubes, its lengths their counts, every cube's edges on its seen
 // faces (the front, the top, the right) drawn thin, to count them
-#let cuboid(length, width, height, names: (), length-label: none, width-label: none, height-label: none, largest: none, section: none, section-names: (), cubes: false) = {
+#let cuboid(length, width, height, names: (), length-label: none, width-label: none, height-label: none, largest: none, section: none, section-names: (), cubes: false, segments: (), fills: (), section-fill: none) = {
   let (l, w, h) = (length, width, height)
   if cubes {
     assert((l, w, h).all(n => type(n) == int and n >= 1), message: "cubes: true, the lengths are counts of cubes: whole numbers")
@@ -182,13 +237,13 @@
   let faces = ((0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4), (3, 2, 6, 7), (0, 3, 7, 4), (1, 2, 6, 5))
   let labels = ((0, 1, length-label), (1, 2, width-label), (0, 4, height-label)).filter(e => e.at(2) != none)
   let sides = (base: 0, top: 1, front: 2, back: 3, left: 4, right: 5)
-  _polyhedron(points, faces, names: names, edge-labels: labels, extra: extra, largest: largest, section: section, section-names: section-names, sides: sides, lines: grid, hidden: not cubes)
+  _polyhedron(points, faces, names: names, edge-labels: labels, extra: extra, largest: largest, section: section, section-names: section-names, sides: sides, lines: grid, hidden: not cubes, segments: segments, fills: fills, section-fill: section-fill)
 }
 
 // A right prism: its base a polygon of (x, y) points (y away from the viewer), standing
 // (ABC… below, then the top's in the same order); lying: true, its base upright, (x, z)
 // points, the prism going away from the viewer
-#let prism(base, height, lying: false, names: (), height-label: none, largest: none, section: none, section-names: ()) = {
+#let prism(base, height, lying: false, names: (), height-label: none, largest: none, section: none, section-names: (), segments: (), fills: (), section-fill: none) = {
   let n = base.len()
   let points = if lying {
     base.map(((x, z)) => (x, 0, z)) + base.map(((x, z)) => (x, height, z))
@@ -197,13 +252,13 @@
   }
   let faces = (range(n), range(n, 2 * n)) + range(n).map(i => (i, calc.rem(i + 1, n), n + calc.rem(i + 1, n), n + i))
   let labels = if height-label == none { () } else { ((0, n, height-label),) }
-  _polyhedron(points, faces, names: names, edge-labels: labels, largest: largest, section: section, section-names: section-names, sides: (base: 0, top: 1))
+  _polyhedron(points, faces, names: names, edge-labels: labels, largest: largest, section: section, section-names: section-names, sides: (base: 0, top: 1), segments: segments, fills: fills, section-fill: section-fill)
 }
 
 // A pyramid: its base a square of side `side` (a rectangle with `depth`), or any polygon
 // of (x, y) points, its apex above the base's centre; names: the base's, then the apex's;
 // foot: the base's centre named, the height drawn to it (dashed) with its right angle
-#let pyramid(side: 4, height: 5, depth: none, base: none, names: (), foot: none, side-label: none, height-label: none, largest: none, section: none, section-names: ()) = {
+#let pyramid(side: 4, height: 5, depth: none, base: none, names: (), foot: none, side-label: none, height-label: none, largest: none, section: none, section-names: (), segments: (), fills: (), section-fill: none) = {
   let base = if base != none { base } else {
     let d = if depth == none { side } else { depth }
     ((0, 0), (side, 0), (side, d), (0, d))
@@ -255,7 +310,7 @@
   }
   let height-line = if foot == none and height-label == none { () } else { (((cx, cy, 0), (cx, cy, height)),) }
   let marks = if foot == none { () } else { (((cx, cy, 0), foot),) }
-  context _polyhedron(points, faces, names: names, edge-labels: labels, extra: extra, largest: largest, section: section, section-names: section-names, sides: (base: 0), lines: height-line, marks: marks)
+  context _polyhedron(points, faces, names: names, edge-labels: labels, extra: extra, largest: largest, section: section, section-names: section-names, sides: (base: 0), lines: height-line, marks: marks, segments: segments, fills: fills, section-fill: section-fill)
 }
 // Round solids as textbooks draw them: their circles as horizontal ellipses (half as deep:
 // _flat), the hidden half dashed; their sizes in proportion, scaled as polyhedra
