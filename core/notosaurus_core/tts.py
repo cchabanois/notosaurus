@@ -14,6 +14,7 @@ both (Speech.kt, core/shared-cases.json sound_file). card_voice says which one a
 import asyncio
 import hashlib
 import logging
+import os
 import re
 import shutil
 from collections.abc import Callable, Mapping, Sequence
@@ -230,7 +231,10 @@ async def _synthesize_lines(text: str, voice: str, path: Path, rate: str) -> Non
         for line, part in zip(said, parts, strict=True):
             await _synthesize(line, voice, part, rate)
         tmp = path.with_suffix(".joined")
-        tmp.write_bytes(b"".join(part.read_bytes() for part in parts))
+        with tmp.open("wb") as f:
+            f.write(b"".join(part.read_bytes() for part in parts))
+            f.flush()
+            os.fsync(f.fileno())  # on the disk before its rename: never an empty mp3 after a crash
         tmp.rename(path)
     finally:
         for part in parts:

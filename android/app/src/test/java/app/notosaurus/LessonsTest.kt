@@ -185,6 +185,30 @@ class LessonsTest {
     }
 
     @Test
+    fun aLessonLeftEmptyByACrashLeavesTheOthersListed() {
+        val lessons = lessons()
+        val kept = lessons.create(mapOf("deck" to JsonPrimitive("kept")), emptyList()).string("id")
+        val empty = lessons.create(mapOf("deck" to JsonPrimitive("empty")), emptyList()).string("id")
+        folder.root.resolve(empty).resolve("lesson.json").writeText("") // a crash while it was saved
+        val broken = lessons.create(mapOf("deck" to JsonPrimitive("broken")), emptyList()).string("id")
+        folder.root.resolve(broken).resolve("lesson.json").writeText("{\"deck\": ")
+        assertNull(lessons.get(empty))
+        assertNull(lessons.get(broken))
+        assertEquals(listOf(kept), lessons.list().map { it.string("id") })
+    }
+
+    @Test
+    fun aNewLessonIsMadeAsideThenPutInPlace() {
+        val lessons = lessons()
+        val id = lessons.create(mapOf("deck" to JsonPrimitive("x")), listOf("p1".toByteArray())).string("id")
+        val copy = lessons.copy(id, "y", "")!!.string("id")
+        // Nothing left of their making: no hidden folder, no temporary file
+        assertEquals(setOf(id, copy), folder.root.list()!!.toSet())
+        assertEquals(listOf("lesson.json", "page-1.jpg"), folder.root.resolve(copy).list()!!.sorted())
+        assertEquals(2, lessons.list().size)
+    }
+
+    @Test
     fun slugs() {
         assertEquals("espagnol-lecon-5-la-famille", Lessons.slug("Espagnol::Leçon 5 - La famille"))
         assertEquals("", Lessons.slug("!!!"))

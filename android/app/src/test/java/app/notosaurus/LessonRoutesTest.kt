@@ -600,6 +600,32 @@ class LessonRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aLessonLeftEmptyByACrashBreaksNoOther() = app { client ->
+        val id = client.extract().string("id")
+        val empty = client.extract().string("id")
+        folder.root.resolve("lessons/$empty/lesson.json").writeText("") // a crash while it was saved
+        val list = client.get("/api/lessons") { page() }
+        assertEquals(HttpStatusCode.OK, list.status)
+        assertEquals(listOf(id), list.json().jsonArray.map { it.jsonObject.string("id") })
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$empty") { page() }.status)
+    }
+
+    @Test
+    fun aSoundLeftEmptyByACrashIsMadeAgain() = app { client ->
+        val id = client.extract(voice = "").string("id")
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val speaker = Speaker(voices = listOf("es-ES-Chirp3-HD-Aoede"))
+        relay.dispatcher = speaker
+        val say = "/api/tts?text=la%20madre&voice=es-ES-Chirp3-HD-Aoede&lesson=$id"
+        client.get(say) { page() }
+        val mp3 = audioOf(id).listFiles { f -> f.name.endsWith(".mp3") }!!.single()
+        mp3.writeBytes(ByteArray(0)) // a crash while it was saved
+        assertTrue(client.get(say) { page() }.bodyAsBytes().isNotEmpty())
+        assertEquals(listOf("la madre", "la madre"), speaker.read)
+        assertTrue(mp3.length() > 0)
+    }
+
+    @Test
     fun aLessonsSoundsInItsOwnFolder() = app { client ->
         val id = client.extract(voice = "").string("id")
         relay.takeRequest(5, TimeUnit.SECONDS) // the extraction

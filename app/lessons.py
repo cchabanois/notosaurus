@@ -167,6 +167,9 @@ def _summary(path: Path) -> LessonSummary | None:
     except storage.DataTooNew as e:  # saved by a newer Notosaurus: left alone
         log.warning("Lesson %s not listed: %s", path.name, e.detail_text)
         return None
+    except ValueError as e:  # unreadable (left empty by a crash, written by hand): the others listed
+        log.warning("Lesson %s not listed, its lesson.json unreadable: %s", path.name, e)
+        return None
     summary = LessonSummary(card_count=len(lesson.cards), **lesson.model_dump(exclude={"cards"}))
     _summaries[path] = (version, summary)
     return summary
@@ -265,6 +268,9 @@ def get(id: str) -> Lesson | None:
     try:
         return _read(path) if path else None
     except FileNotFoundError:  # deleted since folder() found it
+        return None
+    except ValueError as e:  # unreadable (left empty by a crash): as if there were none
+        log.warning("Lesson %s unreadable: %s", id, e)
         return None
 
 

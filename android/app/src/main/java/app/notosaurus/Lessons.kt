@@ -13,11 +13,15 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.RandomAccessFile
 import java.text.Normalizer
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import java.util.logging.Logger
 
 /**
  * The lessons, on the phone, as the computer keeps them (app/lessons.py): one folder
@@ -41,10 +45,13 @@ class Lessons(private val root: File) {
         .sortedByDescending { it.string("updated_at") }
 
     /** The lesson, with its pages as its folder has them: their count ("photo_count") and their
-     * numbers ("pages", in order: a page missing leaves a gap), as the computer's lessons._read. */
+     * numbers ("pages", in order: a page missing leaves a gap), as the computer's lessons._read.
+     * Its lesson.json unreadable (left empty by a crash): none, so every other lesson still listed. */
     fun get(id: String): JsonObject? {
         val dir = folder(id) ?: return null
-        val lesson = dir.resolve("lesson.json").takeIf { it.isFile }?.let { json.parseToJsonElement(it.readText()).jsonObject } ?: return null
+        val file = dir.resolve("lesson.json").takeIf { it.isFile } ?: return null
+        val lesson = runCatching { json.parseToJsonElement(file.readText()).jsonObject }
+            .onFailure { Logger.getLogger("Notosaurus").warning("Lesson $id unreadable: $it") }.getOrNull() ?: return null
         val pages = pageNumbers(dir)
         return JsonObject(lesson + mapOf("photo_count" to JsonPrimitive(pages.size), "pages" to JsonArray(pages.map(::JsonPrimitive))))
     }
@@ -61,22 +68,23 @@ class Lessons(private val root: File) {
      * another in its place: a card's page is its number). */
     fun photos(id: String): Map<Int, ByteArray> = pages(id).mapNotNull { n -> photo(id, n)?.let { n to it.readBytes() } }.toMap()
 
-    /** A new lesson from what the AI made: its own folder, named after the date and deck. */
+    /** A new lesson from what the AI made: its own folder, named after the date and deck; made
+     * in a hidden one (never listed), then renamed: complete, or not there at all. */
     fun create(content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject = locked {
         val id = newId(content["deck"]?.jsonPrimitive?.content ?: "")
-        val dir = root.resolve(id).apply { mkdirs() }
-        photos.forEachIndexed { i, data -> dir.resolve("page-${i + 1}.jpg").writeBytes(data) }
-        val now = now()
-        val lesson = JsonObject(
-            DEFAULTS + content + mapOf(
-                "id" to JsonPrimitive(id),
-                "cards" to withIds(content["cards"]),
-                "photo_count" to JsonPrimitive(photos.size),
-                "created_at" to JsonPrimitive(now),
-                "updated_at" to JsonPrimitive(now),
-            ),
-        )
-        write(lesson)
+        val lesson = staged(id) { dir ->
+            photos.forEachIndexed { i, data -> dir.resolve("page-${i + 1}.jpg").writeBytesSafely(data) }
+            val now = now()
+            JsonObject(
+                DEFAULTS + content + mapOf(
+                    "id" to JsonPrimitive(id),
+                    "cards" to withIds(content["cards"]),
+                    "photo_count" to JsonPrimitive(photos.size),
+                    "created_at" to JsonPrimitive(now),
+                    "updated_at" to JsonPrimitive(now),
+                ),
+            ).also { write(it, dir) }
+        }
         get(id) ?: lesson // its pages, as read back
     }
 
@@ -87,34 +95,48 @@ class Lessons(private val root: File) {
         val source = folder(id) ?: return@locked null
         val lesson = get(id) ?: return@locked null
         val copyId = newId(deck)
-        val dir = root.resolve(copyId)
-        source.copyRecursively(dir) // photos, pictures
-        val cards = lesson.cards().map { card ->
-            val fresh = UUID.randomUUID().toString().replace("-", "").take(12)
-            val picture = card.string("picture")
-            val file = dir.resolve("images").resolve(picture)
-            if (!PICTURE.matches(picture) || !file.isFile) return@map card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(""))
-            val renamed = picture.replaceFirst(Regex("^picture-[a-z0-9]+-"), "picture-$fresh-").also { moved(file, file.resolveSibling(it)) }
-            val copied = card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(renamed))
-            val origin = card["picture_source"] as? JsonObject
-            val files = (origin?.get("sources") as? JsonArray).orEmpty().map { (it as? JsonObject)?.string("file").orEmpty() }
-            if (origin == null || files.isEmpty()) return@map copied
-            // A figure's sources, named after it too (as the computer's lessons.copy); the copied
-            // ones, under its old name, gone
-            val kept = Pictures.keptSources(source.resolve("images"), origin)
-            files.filter { Pictures.SOURCE_NAME.matches(it) }.forEach { dir.resolve("images").resolve(it).delete() }
-            copied.with("picture_source" to origin.with("sources" to Pictures.keepSources(dir.resolve("images"), renamed, kept)))
+        val copy = staged(copyId) { dir ->
+            source.copyRecursively(dir, overwrite = true) // photos, pictures
+            dir.walkTopDown().filter { it.isFile }.forEach(::synced)
+            val cards = lesson.cards().map { card ->
+                val fresh = UUID.randomUUID().toString().replace("-", "").take(12)
+                val picture = card.string("picture")
+                val file = dir.resolve("images").resolve(picture)
+                if (!PICTURE.matches(picture) || !file.isFile) return@map card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(""))
+                val renamed = picture.replaceFirst(Regex("^picture-[a-z0-9]+-"), "picture-$fresh-").also { moved(file, file.resolveSibling(it)) }
+                val copied = card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(renamed))
+                val origin = card["picture_source"] as? JsonObject
+                val files = (origin?.get("sources") as? JsonArray).orEmpty().map { (it as? JsonObject)?.string("file").orEmpty() }
+                if (origin == null || files.isEmpty()) return@map copied
+                // A figure's sources, named after it too (as the computer's lessons.copy); the copied
+                // ones, under its old name, gone
+                val kept = Pictures.keptSources(source.resolve("images"), origin)
+                files.filter { Pictures.SOURCE_NAME.matches(it) }.forEach { dir.resolve("images").resolve(it).delete() }
+                copied.with("picture_source" to origin.with("sources" to Pictures.keepSources(dir.resolve("images"), renamed, kept)))
+            }
+            val now = now()
+            JsonObject(
+                lesson - "anki_notes" + mapOf(
+                    "id" to JsonPrimitive(copyId), "deck" to JsonPrimitive(deck), "child" to JsonPrimitive(child),
+                    "shared" to JsonPrimitive(false), "cards" to JsonArray(cards), "ai_calls" to JsonArray(emptyList()),
+                    "created_at" to JsonPrimitive(now), "updated_at" to JsonPrimitive(now), "exported_at" to JsonNull,
+                ),
+            ).also { write(it, dir) }
         }
-        val now = now()
-        val copy = JsonObject(
-            lesson - "anki_notes" + mapOf(
-                "id" to JsonPrimitive(copyId), "deck" to JsonPrimitive(deck), "child" to JsonPrimitive(child),
-                "shared" to JsonPrimitive(false), "cards" to JsonArray(cards), "ai_calls" to JsonArray(emptyList()),
-                "created_at" to JsonPrimitive(now), "updated_at" to JsonPrimitive(now), "exported_at" to JsonNull,
-            ),
-        )
-        write(copy)
         get(copyId) ?: copy
+    }
+
+    /** A new lesson `id` made by `build` in a hidden folder (not a lesson's name: never listed),
+     * then renamed into place: complete, or not there at all (a crash, a failure: nothing). */
+    private fun <T> staged(id: String, build: (File) -> T): T {
+        val staging = root.resolve(".$id.tmp").apply { deleteRecursively(); mkdirs() }
+        try {
+            val made = build(staging)
+            if (!staging.renameTo(root.resolve(id))) throw IOException("lesson $id not put in place")
+            return made
+        } finally {
+            staging.deleteRecursively() // gone already once in place
+        }
     }
 
     /** A new lesson's folder name: the date and its deck, another if taken. */
@@ -129,7 +151,7 @@ class Lessons(private val root: File) {
         val lesson = get(id) ?: return@locked null
         val dir = folder(id) ?: return@locked null
         dir.listFiles { f -> f.name.matches(PHOTO) }?.forEach { it.delete() }
-        photos.forEachIndexed { i, data -> dir.resolve("page-${i + 1}.jpg").writeBytes(data) }
+        photos.forEachIndexed { i, data -> dir.resolve("page-${i + 1}.jpg").writeBytesSafely(data) }
         fun either(key: String) = JsonPrimitive(
             content[key]?.jsonPrimitive?.booleanOrNull == true || lesson[key]?.jsonPrimitive?.booleanOrNull == true,
         )
@@ -157,7 +179,7 @@ class Lessons(private val root: File) {
         val lesson = get(id) ?: return@locked null
         val dir = folder(id) ?: return@locked null
         val before = nextPage(pageNumbers(dir), lesson) - 1
-        photos.forEachIndexed { i, data -> dir.resolve("page-${before + i + 1}.jpg").writeBytes(data) }
+        photos.forEachIndexed { i, data -> dir.resolve("page-${before + i + 1}.jpg").writeBytesSafely(data) }
         fun shifted(item: JsonObject, key: String): JsonObject {
             val mask = item[key] as? JsonObject ?: return item
             val page = mask["page"]?.jsonPrimitive?.intOrNull ?: return item
@@ -225,12 +247,8 @@ class Lessons(private val root: File) {
         lesson.filterKeys { it != "cards" } + ("card_count" to JsonPrimitive(lesson["cards"]?.jsonArray?.size ?: 0)),
     )
 
-    private fun write(lesson: JsonObject) {
-        val dir = root.resolve(lesson.string("id"))
-        val tmp = dir.resolve("lesson.json.tmp")
-        tmp.writeText(JsonObject(lesson - "pages").toString()) // its folder's (get), not kept
-        moved(tmp, dir.resolve("lesson.json")) // never half a file
-    }
+    private fun write(lesson: JsonObject, dir: File = root.resolve(lesson.string("id"))) =
+        dir.resolve("lesson.json").writeTextSafely(JsonObject(lesson - "pages").toString()) // its folder's (get), not kept
 
     /** The lesson's sounds' folder (Speech: its mp3s and what they say); null: no such lesson. */
     fun audio(id: String): File? = folder(id)?.resolve("audio")
@@ -373,6 +391,20 @@ fun JsonElement.plain(): String = (this as? JsonPrimitive)?.content ?: toString(
  * neither: IOException, never the old file left as if it were the new one. */
 internal fun moved(from: java.io.File, to: java.io.File) {
     if (from.renameTo(to)) return
-    from.copyTo(to, overwrite = true)
+    synced(from.copyTo(to, overwrite = true))
     if (!from.delete()) from.deleteOnExit()
 }
+
+/** `data` written to this file whole or not at all, even through a crash or a power cut: written
+ * beside it and on the disk (sync) before it is moved over it. Never left empty (a lesson.json of
+ * 0 bytes, after a crash while saving, broke every lesson's list). */
+internal fun File.writeBytesSafely(data: ByteArray) {
+    val tmp = resolveSibling("$name.tmp")
+    FileOutputStream(tmp).use { it.write(data); it.fd.sync() }
+    moved(tmp, this)
+}
+
+internal fun File.writeTextSafely(text: String) = writeBytesSafely(text.toByteArray())
+
+/** A file written otherwise (a copy, a stream) on the disk now, not only in the system's cache. */
+internal fun synced(file: File) = RandomAccessFile(file, "rw").use { it.fd.sync() }

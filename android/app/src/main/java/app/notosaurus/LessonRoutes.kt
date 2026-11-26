@@ -85,7 +85,7 @@ internal fun Route.lessonRoutes(server: LocalServer) {
             lessons.locked {
                 val lesson = lessons.get(id) ?: notFound()
                 val photo = lessons.photo(id, n) ?: notFound()
-                photo.writeBytes(turnPhoto(photo.readBytes(), 90))
+                photo.writeBytesSafely(turnPhoto(photo.readBytes(), 90))
                 val cards = lesson.cards().map { Diagrams.turnedMask(it, n, 90) }
                 val frames = (lesson["frames"] as? JsonArray)?.map { Diagrams.turnedFrame(it.jsonObject, n, 90) }.orEmpty()
                 lessons.update(id, buildJsonObject { put("cards", JsonArray(cards)); put("frames", JsonArray(frames)) }) ?: notFound()
