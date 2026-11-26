@@ -127,6 +127,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A lesson left damaged by a crash while it was saved no longer breaks "My lessons", generation, export and exams: it is skipped, and lessons, photos, pictures and sounds are now saved so that a crash never leaves them empty.
 - A card corrected after a doubt keeps its correction when the lesson or the card is corrected again with the AI: the page's mistake no longer comes back.
 - A lesson made again keeps its deck instead of moving to a new "(3)", "(4)"…
 - The sub-deck list of a card: each radio beside its name, names no longer cut.
