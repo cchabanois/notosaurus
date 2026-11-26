@@ -45,15 +45,23 @@
   let c = if found == none { spot(dirs.first(), d) } else { found }
   (c, hw, hh)
 }
-// a ray from p to q, its arrow in its middle (the light's way), dashed when virtual
-#let _ray(p, q, dashed: false, arrow: true) = {
+// a ray from p to q, its arrow in its middle (the light's way), dashed when virtual; `paint`
+// its colour (the description's)
+#let _ray(p, q, dashed: false, arrow: true, paint: black) = {
   import cetz.draw: *
-  let stroke = if dashed { (thickness: 0.7pt, dash: "dashed") } else { 1pt }
+  let stroke = if dashed { (thickness: 0.7pt, dash: "dashed", paint: paint) } else { 1pt + paint }
   if arrow and not dashed {
     let m = ((p.at(0) + q.at(0)) / 2, (p.at(1) + q.at(1)) / 2)
-    line(p, m, stroke: stroke, mark: (end: "stealth", fill: black, scale: 0.7))
+    line(p, m, stroke: stroke, mark: (end: "stealth", fill: paint, scale: 0.7))
     line(m, q, stroke: stroke)
   } else { line(p, q, stroke: stroke) }
+}
+// the rays' colours the description gives, by their names (`keys`: the function's rays): each
+// one's colour, black when not given
+#let _colours(colours, keys, what) = {
+  assert(type(colours) == dictionary and colours.pairs().all(((k, c)) => k in keys and type(c) == color),
+    message: "colours: " + what + " by name, each a colour: (" + keys.map(k => k + ": red").join(", ") + "), not " + repr(colours))
+  keys.map(k => (k, colours.at(k, default: black))).to-dict()
 }
 
 // The refracted ray's angle from the normal, in degrees (n1 sin i1 = n2 sin i2); none beyond
@@ -74,7 +82,8 @@
 // lower). reflected: the reflected ray drawn too (always beyond the critical angle). names:
 // the angles' names; values: their values written (computed); hidden: the names a card asks.
 #let refraction(n1: 1.00, n2: 1.33, incidence: 40, media: none, reflected: false,
-  names: (i1: $i_1$, i2: $i_2$, r: $r$), values: false, hidden: (), normal: true, point: none, mirror: false) = context {
+  names: (i1: $i_1$, i2: $i_2$, r: $r$), values: false, hidden: (), normal: true, point: none, mirror: false, colours: (:)) = context {
+  let paint = _colours(colours, ("incident", "refracted", "reflected"), "the rays")
   let i1 = if type(incidence) == angle { incidence.deg() } else { incidence }
   assert(type(i1) in (int, float) and i1 >= 0 and i1 < 90, message: "incidence is the angle from the normal, in degrees, from 0 to 90")
   assert(type(n1) in (int, float) and type(n2) in (int, float) and n1 > 0 and n2 > 0, message: "n1 and n2 are the media's indices: numbers")
@@ -109,9 +118,9 @@
     }
     let low = if mirror { 0 } else { -2.6 }
     if normal { line((0, low), (0, 2.6), stroke: (thickness: 0.6pt, dash: "dashed")) }
-    _ray(S, I)
-    if T != none { _ray(I, T) }
-    if R != none { _ray(I, R) }
+    _ray(S, I, paint: paint.incident)
+    if T != none { _ray(I, T, paint: paint.refracted) }
+    if R != none { _ray(I, R, paint: paint.reflected) }
     let segments = ((S, I), ((-wide, 0), (wide, 0)), ((0, low), (0, 2.6)))
     if mirror { segments.push(((-wide, -0.25), (wide, -0.25))) }  // its hatching
     if T != none { segments.push((I, T)) }
@@ -170,7 +179,10 @@
 // F'; through F, then parallel) drawn to B' (a virtual image: the rays' extensions dashed back
 // to it). distances: OA and OA' marked under the axis; names: the points' names; hidden: the
 // names (or "OA", "OA'") a card asks.
-#let lens(focal: 4, object: -6, height: 2, distances: false, unit: "cm", hidden: (), names: (:)) = context {
+#let lens(focal: 4, object: -6, height: 2, distances: false, unit: "cm", hidden: (), names: (:), colours: (:)) = context {
+  // the three rays from B: through O ("centre"), parallel to the axis then through F' ("parallel"),
+  // through F then parallel ("focal")
+  let paint = _colours(colours, ("centre", "parallel", "focal"), "the rays")
   assert(type(focal) in (int, float) and focal > 0, message: "focal is the converging lens's f', a positive number")
   assert(type(object) in (int, float) and object < 0, message: "object is OA, before the lens: a negative number (OA = −6 cm: -6)")
   assert(type(height) in (int, float) and height != 0, message: "height is the object's AB, a number")
@@ -216,14 +228,14 @@
       mark: (end: "stealth", fill: black, scale: 0.8))
     let segments = ((P(lo, 0), (right, 0)), ((0, -top), (0, top)), (A, B), (A2, B2))
     // from B to the lens (the third through F), then on: through B' (the second through F')
-    for p in (p1, p2, p3) {
+    for (p, key) in ((p1, "centre"), (p2, "parallel"), (p3, "focal")) {
       let q = beyond(p)
-      _ray(B, p)
+      _ray(B, p, paint: paint.at(key))
       segments.push((B, p))
-      _ray(p, q)
+      _ray(p, q, paint: paint.at(key))
       segments.push((p, q))
       if not real {
-        line(p, B2, stroke: (thickness: 0.6pt, dash: "dashed"))
+        line(p, B2, stroke: (thickness: 0.6pt, dash: "dashed", paint: paint.at(key)))
         segments.push((p, B2))
       }
     }
@@ -271,7 +283,8 @@
 // the focal plane (A1B1 = f1 tan α), then leaves L2 parallel to (B1 O2), at α' with
 // tan α' = (f1 / f2) tan α. Its three rays (one through O1); α at O1, α' at O2 on the line
 // from B1 through O2 (dashed). names: the points' and angles' names; hidden: those a card asks.
-#let telescope(focal1: 5, focal2: 1, angle: 10, names: (:), hidden: ()) = context {
+#let telescope(focal1: 5, focal2: 1, angle: 10, names: (:), hidden: (), colour: black) = context {
+  assert(type(colour) == color, message: "colour is the beam's colour: red, not " + repr(colour))
   let number(x) = type(x) in (int, float)
   assert(number(focal1) and number(focal2) and focal1 > 0 and focal2 > 0,
     message: "focal1 and focal2 are the objective's and the eyepiece's focal lengths, positive numbers")
@@ -309,9 +322,9 @@
       let y2 = at2(y1)
       let p2 = P(x2, y2)
       let out = P(x2 + after, y2 + after * t2)
-      _ray(start, p1)
-      _ray(p1, p2)
-      _ray(p2, out)
+      _ray(start, p1, paint: colour)
+      _ray(p1, p2, paint: colour)
+      _ray(p2, out, paint: colour)
       segments += ((start, p1), (p1, p2), (p2, out))
     }
     // the line from B1 through O2, which the rays leaving L2 are parallel to

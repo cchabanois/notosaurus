@@ -14,12 +14,19 @@
     cetz.draw.circle((w, 0), radius: 0.06, fill: black)
   })
 }
+// a current's or a voltage's colour, the description's: checked, its arrow and its name in it
+#let _paint(c, what) = {
+  assert(type(c) == color, message: what + " is a colour: red, not " + repr(c))
+  c
+}
 // An arrow head halfway from a to b, pointing to b, its name beside it on the side `side`
-// (1: left of the way from a to b, -1: right), with the wire from a to b
-#let arrow-on-wire(a, b, label, side) = {
+// (1: left of the way from a to b, -1: right), with the wire from a to b; `paint` the arrow's
+// and its name's colour
+#let arrow-on-wire(a, b, label, side, paint: black) = {
   wire(a, b)
   let m = ((a.at(0) + b.at(0)) / 2, (a.at(1) + b.at(1)) / 2)
-  cetz.draw.mark(m, b, symbol: ">", fill: black, anchor: "center", scale: 0.9)
+  cetz.draw.mark(m, b, symbol: ">", fill: paint, stroke: paint, anchor: "center", scale: 0.9)
+  let label = text(fill: paint, label)
   let (dx, dy) = (b.at(0) - a.at(0), b.at(1) - a.at(1))
   let d = calc.sqrt(dx * dx + dy * dy)
   let (nx, ny) = (-dy / d * side, dx / d * side)
@@ -30,10 +37,12 @@
 // b, pointing to b, its name beside it (whatever way the components were drawn). The wire
 // from a to b drawn too: an arrow written between two wires, as one more stretch of the
 // circuit, never leaves it open
-#let current-arrow(a, b, label) = {
+#let current-arrow(a, b, label, colour: black) = {
+  let paint = _paint(colour, "colour, the current's arrow's,")
+  let label = text(fill: paint, label)
   wire(a, b)
   let m = ((a.at(0) + b.at(0)) / 2, (a.at(1) + b.at(1)) / 2)
-  cetz.draw.mark(m, b, symbol: ">", fill: black, anchor: "center", scale: 0.9)
+  cetz.draw.mark(m, b, symbol: ">", fill: paint, stroke: paint, anchor: "center", scale: 0.9)
   let vertical = calc.abs(b.at(0) - a.at(0)) < calc.abs(b.at(1) - a.at(1))
   if vertical {
     cetz.draw.content((m.at(0) + 0.2, m.at(1)), label, anchor: "west")
@@ -111,7 +120,7 @@
 // (`size`, 0.8 at least), its name beside it. It points to the component's + : a generator's
 // second point; a receiver's first, where the current comes in (the receiver convention: the
 // component written the way its current goes)
-#let voltage-arrow(a, b, label, generator, size, across) = {
+#let voltage-arrow(a, b, label, generator, size, across, paint: black) = {
   let (ax, ay) = (float(a.at(0)), float(a.at(1)))
   let (bx, by) = (float(b.at(0)), float(b.at(1)))
   let (dx, dy) = (bx - ax, by - ay)
@@ -122,20 +131,21 @@
   let half = calc.max(size, 0.8) / 2 + 0.1
   let p(s) = (ax + ux * (d / 2 + s) + nx * off, ay + uy * (d / 2 + s) + ny * off)
   let (tail, head) = if generator { (p(-half), p(half)) } else { (p(half), p(-half)) }
-  cetz.draw.line(tail, head, stroke: 0.7pt, mark: (end: ">", fill: black, scale: 0.8))
+  cetz.draw.line(tail, head, stroke: 0.7pt + paint, mark: (end: ">", fill: paint, scale: 0.8))
   let anchor = if calc.abs(nx) > calc.abs(ny) { if nx > 0 { "west" } else { "east" } } else { if ny > 0 { "south" } else { "north" } }
   let m = p(0)
-  cetz.draw.content((m.at(0) + 0.12 * nx, m.at(1) + 0.12 * ny), label, anchor: anchor)
+  cetz.draw.content((m.at(0) + 0.12 * nx, m.at(1) + 0.12 * ny), text(fill: paint, label), anchor: anchor)
 }
 // A component drawn as zap draws it, its voltage's arrow too when `voltage:` is given
 #let with-voltage(draw, generator, size, across) = (name, ..args) => {
   let params = args.named()
   let voltage = params.remove("voltage", default: none)
+  let paint = _paint(params.remove("voltage-colour", default: black), "voltage-colour, the voltage's arrow's,")
   draw(name, ..args.pos(), ..params)
   if voltage != none {
     let (a, b) = args.pos()
     let scale = params.at("scale", default: 1)
-    voltage-arrow(a, b, voltage, generator, size * scale, across * scale)
+    voltage-arrow(a, b, voltage, generator, size * scale, across * scale, paint: paint)
   }
 }
 // A component given without its points, for `branch` to place: its drawing, its length along
@@ -229,7 +239,8 @@
 // towards `to` (a generator's + towards `to`), the current's arrow pointing to `to`. The
 // components' names on one side of the branch (zap's: left of the way it goes), the
 // current's on the other
-#let branch(from, to, ..items, current: none) = {
+#let branch(from, to, ..items, current: none, current-colour: black) = {
+  let paint = _paint(current-colour, "current-colour, the current's arrow's,")
   let parts = items.pos()
   assert(parts.all(p => type(p) == dictionary and "placeable" in p), message: "branch: its components are given "
     + "without points, each one of " + _placeables.join(", ") + " (lamp(\"l\", label: $L$)); a wire or a "
@@ -247,7 +258,7 @@
     let arrow = layout.arrow
     if arrow != none and s <= arrow.at(0) and arrow.at(1) <= e {
       wire(at(s), at(arrow.at(0)))
-      arrow-on-wire(at(arrow.at(0)), at(arrow.at(1)), current, -1)
+      arrow-on-wire(at(arrow.at(0)), at(arrow.at(1)), current, -1, paint: paint)
       wire(at(arrow.at(1)), at(e))
     } else if e - s > 0.001 {
       wire(at(s), at(e))
