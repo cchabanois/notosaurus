@@ -12,6 +12,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
+import java.io.IOException
 import java.io.OutputStream
 import java.time.LocalDateTime
 import java.util.UUID
@@ -140,21 +141,21 @@ class LessonsTransfer(
             for ((entry, inside) in members) {
                 val target = inside.fold(staging) { dir, part -> dir.resolve(part) }
                 target.parentFile!!.mkdirs()
-                z.getInputStream(entry).use { input -> target.outputStream().use { input.copyTo(it) } }
+                z.getInputStream(entry).use { input -> target.outputStream().use { input.copyTo(it); it.fd.sync() } }
             }
             val incoming = json.parseToJsonElement(staging.resolve("lesson.json").readText()).jsonObject
             val existing = lessons.get(id)
             if (existing != null && !newer(incoming.string("updated_at"), existing.string("updated_at"))) return "kept"
-            staging.resolve("lesson.json").writeText(arrived(incoming, id, here, staging).toString())
+            staging.resolve("lesson.json").writeTextSafely(arrived(incoming, id, here, staging).toString())
             val place = root.resolve(id)
-            if (existing != null) {
+            if (place.exists()) { // its lesson, or one left unreadable by a crash: replaced
                 val old = root.resolve(".replaced-$id-${UUID.randomUUID().toString().take(6)}")
-                place.renameTo(old)
-                staging.renameTo(place)
+                if (!place.renameTo(old)) throw IOException("lesson $id not replaced")
+                if (!staging.renameTo(place)) { old.renameTo(place); throw IOException("lesson $id not replaced") }
                 old.deleteRecursively()
                 return "replaced"
             }
-            staging.renameTo(place)
+            if (!staging.renameTo(place)) throw IOException("lesson $id not added")
             return "added"
         } finally {
             staging.deleteRecursively() // gone already once in place

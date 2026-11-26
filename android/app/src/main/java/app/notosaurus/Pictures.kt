@@ -289,7 +289,7 @@ class Pictures(
 
     /** A lesson's picture file, by its name (ours only: no "../"); null when there is none. */
     fun file(lessonId: String, name: String): File? =
-        lessons.images(lessonId)?.resolve(name)?.takeIf { NAME.matches(name) && it.isFile }
+        lessons.images(lessonId)?.resolve(name)?.takeIf { NAME.matches(name) && it.isFile && it.length() > 0 } // empty: a crash while saved
 
     /** The card with its figure (SVG) or picture (JPEG) saved: decided, found or drawn by the relay
      * (/v1/card-picture: the core's pictures.card_picture, the computer's rule too), with what it
@@ -339,7 +339,7 @@ class Pictures(
         folder.mkdirs()
         val digest = MessageDigest.getInstance("SHA-1").digest(data).joinToString("") { "%02x".format(it) }
         val name = "picture-$cardId-${digest.take(8)}.$extension"
-        File(folder, name).writeBytes(data)
+        File(folder, name).writeBytesSafely(data)
         return name
     }
 
@@ -527,7 +527,7 @@ class Pictures(
             val stem = picture.substringBeforeLast('.')
             return JsonArray(contents.mapIndexed { n, content ->
                 val name = if (n == 0) "$stem.typ" else "$stem-${n + 1}.typ"
-                File(folder, name).writeText(content)
+                File(folder, name).writeTextSafely(content)
                 buildJsonObject { put("file", name) }
             })
         }

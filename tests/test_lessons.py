@@ -333,3 +333,16 @@ def test_edit_of_a_lesson_gone(client):
     with pytest.raises(AppError) as e:
         asyncio.run(lessons.edit("no-such-lesson", lambda draft: None))
     assert e.value.status == 404
+
+
+def test_an_unreadable_lesson_leaves_the_others_listed(client, tmp_path):
+    """A lesson.json left empty (a crash while it was saved) or broken: the others still
+    listed, that one not found (404) rather than an error for every request."""
+    kept = lessons.create(Generated(LessonIn(deck="Kept", cards=[]), [], prompt="p"))
+    for broken in ("Empty", "Broken"):
+        made = lessons.create(Generated(LessonIn(deck=broken, cards=[]), [], prompt="p"))
+        (tmp_path / "data" / "lessons" / made.id / "lesson.json").write_text("" if broken == "Empty" else "{")
+        assert lessons.get(made.id) is None
+        assert client.get(f"/api/lessons/{made.id}").status_code == 404
+    assert [s.id for s in lessons.list_all()] == [kept.id]
+    assert [s["id"] for s in client.get("/api/lessons").json()] == [kept.id]

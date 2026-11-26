@@ -44,16 +44,16 @@ class Speech(
         val r = rateOf(rate)
         val dir = lesson.takeIf { it.isNotEmpty() }?.let(lessonAudio)
         val mp3 = File(dir ?: folder, fileName(text, voice, r))
-        if (mp3.isFile) return mp3
+        if (made(mp3)) return mp3
         if (dir != null) {
             // Made before: the same sound previewed, or kept by an older version in `folder`
-            val before = listOf(File(folder, mp3.name), File(folder, legacyName(text, voice, r))).firstOrNull { it.isFile }
+            val before = listOf(File(folder, mp3.name), File(folder, legacyName(text, voice, r))).firstOrNull(::made)
             if (before != null) {
-                withContext(Dispatchers.IO) { dir.mkdirs(); before.copyTo(mp3, overwrite = true) }
+                withContext(Dispatchers.IO) { dir.mkdirs(); mp3.writeBytesSafely(before.readBytes()) }
                 return mp3
             }
         } else {
-            File(folder, legacyName(text, voice, r)).takeIf { it.isFile }?.let { return it }
+            File(folder, legacyName(text, voice, r)).takeIf(::made)?.let { return it }
         }
         // Each line on its own, the mp3s joined (as the computer's tts.lines): a natural voice
         // given a lone word then a sentence in one text makes up words. 200 characters a line.
@@ -61,12 +61,13 @@ class Speech(
         val bytes = lines(text).map { relay().speak(it, voice, speed) }.reduce { all, part -> all + part }
         withContext(Dispatchers.IO) {
             mp3.parentFile?.mkdirs()
-            val tmp = File(mp3.parentFile, mp3.name + ".tmp")
-            tmp.writeBytes(bytes)
-            tmp.renameTo(mp3)
+            mp3.writeBytesSafely(bytes)
         }
         return mp3
     }
+
+    /** A sound made: there, not left empty (a crash while it was saved: made again). */
+    private fun made(mp3: File): Boolean = mp3.isFile && mp3.length() > 0
 
     /** The rate a sound is read at: the lesson's, else the settings', else SLOWED. */
     private fun rateOf(rate: String): String = rate.ifEmpty { prefs[TTS_RATE].orEmpty() }.takeIf { it in RATES } ?: SLOWED
@@ -108,7 +109,7 @@ class Speech(
             for (text in cards.flatMap { spokenSides(it, on("dictation") || on("dictation_only")).toList() }.filter { it.isNotEmpty() }.distinct()) {
                 val old = File(folder, legacyName(text, voice, r)).takeIf { it.isFile } ?: continue
                 dir.mkdirs()
-                old.copyTo(File(dir, fileName(text, voice, r)), overwrite = true)
+                File(dir, fileName(text, voice, r)).writeBytesSafely(old.readBytes())
             }
         }
         folder.listFiles { f -> LEGACY.matches(f.name) }?.forEach { it.delete() }

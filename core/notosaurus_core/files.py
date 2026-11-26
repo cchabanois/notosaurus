@@ -43,13 +43,16 @@ def read_json(path: Path, default=None):
 
 
 def write_json(path: Path, data) -> None:
-    """Write through a temporary file then rename, so a crash never leaves half a file."""
+    """Write through a temporary file, on the disk before its rename, so a crash (or a power
+    cut) never leaves half a file, nor an empty one."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
             f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(tmp, path)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)

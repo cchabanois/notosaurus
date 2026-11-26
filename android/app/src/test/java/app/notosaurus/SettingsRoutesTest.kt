@@ -106,6 +106,11 @@ class SettingsRoutesTest : LocalServerTestBase() {
         assertEquals(42L, back["anki_notes"]!!.jsonObject.values.single().jsonPrimitive.content.toLong())
         assertEquals("mp3", folder.root.resolve("lessons/$id/audio/la-madre-55895502.mp3").readText())
         assertEquals(0, client.importFile(zip)["added"]!!.jsonPrimitive.int) // again: kept, nothing twice
+
+        // Its lesson.json left empty by a crash: taken in again in its place
+        folder.root.resolve("lessons/$id/lesson.json").writeText("")
+        assertEquals(1, client.importFile(zip)["replaced"]!!.jsonPrimitive.int)
+        assertEquals(id, local.lessons.get(id)!!.string("id"))
     }
 
     @Test
