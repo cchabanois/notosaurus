@@ -615,7 +615,10 @@
       "inAnki": "{sent} cartes sur {total} dans Anki",
       "notSent": "Pas encore dans Anki : l'étiquette viendra avec la leçon à l'envoi.",
       "send": "📥 Envoyer à Anki",
-      "sendAll": "📥 Tout envoyer à Anki ({count} leçons)",
+      "sendAll": {
+        "one": "📥 Tout envoyer à Anki ({count} leçon)",
+        "other": "📥 Tout envoyer à Anki ({count} leçons)"
+      },
       "sending": "Envoi… (encore {count})",
       "tag": "Étiquette",
       "ankiClosed": "Anki est fermé : l'étiquette suivra au prochain envoi.",

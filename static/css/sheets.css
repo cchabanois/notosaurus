@@ -109,7 +109,8 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
   background: none;
   text-align: left;
 }
-.lesson strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A long title wraps, whole, beside its badges: not cut short (Android's WebView drew it on past its end) */
+.lesson strong { overflow-wrap: anywhere; }
 .lesson small { color: var(--muted); }
 .lesson-list li.current .lesson { background: var(--primary-soft); }
 .lesson-list li.current strong { color: var(--primary); }

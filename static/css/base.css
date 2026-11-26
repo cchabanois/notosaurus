@@ -30,7 +30,8 @@ input:disabled, textarea:disabled, select:disabled {
 code { font-size: .85em; background: var(--surface-2); padding: .05em .35em; border-radius: 6px; }
 small { font-size: .82rem; }
 
-input, textarea, select {
+/* The text fields: not a radio or a tick box (their own size, beside their label) */
+input:where(:not([type=radio], [type=checkbox])), textarea, select {
   width: 100%;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);

@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The network's changes told to the page (its "online" event: a "can't reach the service"
+         cleared once back); no permission asked of the user -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- The 🎤 of the instructions and the correction: asked the first time it's used -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Working: the app kept running while the AI makes a lesson, its network kept (Android 15+

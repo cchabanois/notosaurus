@@ -615,7 +615,10 @@
       "inAnki": "{sent} of {total} cards in Anki",
       "notSent": "Not in Anki yet: the tag comes with the lesson when it is sent.",
       "send": "📥 Send to Anki",
-      "sendAll": "📥 Send all to Anki ({count} lessons)",
+      "sendAll": {
+        "one": "📥 Send all to Anki ({count} lesson)",
+        "other": "📥 Send all to Anki ({count} lessons)"
+      },
       "sending": "Sending… ({count} left)",
       "tag": "Tag",
       "ankiClosed": "Anki is closed: the tag will follow at the next send.",

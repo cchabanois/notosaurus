@@ -125,6 +125,8 @@ function storage(action, value, key = LAST_PROMPT) {
 }
 // The licence lapsed: subscribing (again) is what to do (the toast's "Subscribe": errorKind)
 const LAPSED = ["relay.trial_ended", "relay.trial_closed", "relay.trial_refused", "relay.subscription_ended", "relay.payment_pending"];
+// The network down: the service, or the relay behind it, not reached (cleared back online)
+const UNREACHABLE = ["unreachable", "relay.unreachable"];
 const NOTICE_CLOSED = "notosaurus.noticeClosed";  // the id of the last notice closed on this device
 const CAREFUL = "notosaurus.careful";  // "Careful" chosen over "Quick" (the default), kept on this device
 const OPEN_SUBJECTS = "notosaurus.openSubjects";  // subjects opened or closed in the lessons, on this device
@@ -330,6 +332,12 @@ document.addEventListener("alpine:init", () => {
       // Phone locked or tab closed: don't wait for the delay.
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "hidden" && this.saveTimer) this.saveNow(true);
+      });
+
+      // Back online: "can't reach the service" is out of date (the Android app: its WebView
+      // tells it with ACCESS_NETWORK_STATE)
+      window.addEventListener("online", () => {
+        if (UNREACHABLE.some((code) => errorMessage({ code }) === this.error)) this.error = "";
       });
 
       // MathJax loads after the page (deferred), then starts: the previews redraw once it has

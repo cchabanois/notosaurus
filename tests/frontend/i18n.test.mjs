@@ -38,6 +38,16 @@ test("plurals follow the language's rules (French: zero takes the singular)", as
   assert.equal(fr.run('t("common.count.cards", { count: 2 })'), "2 cartes");
 });
 
+test("a test's lessons counted in the singular for one, in every language", async () => {
+  const one = { fr: "leçon", en: "lesson", de: "Lektion", es: "lección", it: "lezione", pt: "lição" };
+  for (const [lang, word] of Object.entries(one)) {
+    const page = await loadScripts("app.js");
+    await page.run(`setLanguage("${lang}")`);
+    assert.ok(page.run('t("app.exams.sendAll", { count: 1 })').endsWith(`(1 ${word})`), lang);
+    assert.ok(!page.run('t("app.exams.sendAll", { count: 2 })').endsWith(`(2 ${word})`), lang);
+  }
+});
+
 test("parameters are interpolated; unknown ones stay as written", async () => {
   const page = await loadScripts("app.js");
   assert.equal(

@@ -1224,6 +1224,28 @@ def test_a_sound_that_cant_be_heard_says_why(page):
     sync_api.expect(alert.get_by_role("link", name="S'abonner")).to_be_visible()
 
 
+def test_a_sub_decks_radio_beside_its_name(page):
+    """The sub-decks' list on a phone: each radio its own small size, its name just after
+    it and whole (the text fields' full width once pushed the names to a narrow column)."""
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate(
+        """() => Alpine.$data(document.querySelector('[x-data]')).cards.forEach((c, i) => {
+            c.subdeck = i < 3 ? 'Variables' : 'Invariables'; })"""
+    )
+    card = open_card(page.locator(".flash").first)
+    card.locator(".subdeck-tag").click()
+    picker = card.get_by_role("radiogroup", name="Sous-paquet de cette carte")
+    options = picker.locator(".subdeck-option")
+    sync_api.expect(options).to_have_count(3)
+    right = picker.bounding_box()["x"] + picker.bounding_box()["width"]
+    for option in options.all():
+        radio, name = option.locator("input[type=radio]").bounding_box(), option.locator("span").bounding_box()
+        assert radio["width"] < 32, radio
+        assert 0 <= name["x"] - (radio["x"] + radio["width"]) <= 16, (radio, name)
+        assert option.locator("span").evaluate("e => e.scrollWidth <= e.clientWidth + 1")
+        assert name["x"] + name["width"] <= right
+
+
 def test_a_cards_sub_deck_chosen_in_a_list(page):
     """The sub-deck touched: a list the page draws (a field's suggestions showed little or
     nothing in Android's WebView, its ▼ promising a list, 2026-11-22): none, the lesson's
