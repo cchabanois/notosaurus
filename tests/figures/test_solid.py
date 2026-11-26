@@ -522,3 +522,71 @@ def test_a_solids_segment_refused_saying_why(body, said):
     with pytest.raises(figures_typst.Unusable) as error:
         figures_typst.compile_svg("solid", body)
     assert said in str(error.value)
+
+
+CYLINDER = 'centre-names: ("O", "O\'")'
+CONE = 'apex-name: "S", centre-name: "O", base-name: "A"'
+
+
+@pytest.mark.parametrize(
+    ("body", "hidden"),
+    [
+        # the base's back half, the axis (dashed as drawn): and a radius of the base, behind the side
+        (f'#cylinder(3, 5, {CYLINDER}, points: (A: 0), segments: (("O", "A", red),))', 3),
+        # a slant line of the side in front: solid; one at the back: dashed
+        (f'#cylinder(3, 5, {CYLINDER}, points: (B: 270), top-points: ("C": 270), segments: (("B", "C"),))', 2),
+        (f'#cylinder(3, 5, {CYLINDER}, points: (B: 90), top-points: ("C": 90), segments: (("B", "C"),))', 3),
+        # a radius of the top: solid
+        (f'#cylinder(3, 5, {CYLINDER}, top-points: ("A\'": 0), segments: (("O\'", "A\'"),))', 2),
+        # the cone's slant height to A (seen) solid, its height inside dashed; to a point at the back dashed
+        (f'#cone(3, 4, {CONE}, segments: (("S", "A", blue),))', 2),
+        (f'#cone(3, 4, {CONE}, segments: (("S", "O", red),))', 3),
+        (f'#cone(3, 4, {CONE}, points: (B: 100), segments: (("S", "B"),))', 3),
+        # on a ball its diameter solid, as drawn
+        ('#sphere(3, centre-name: "O", diameter: ("A", "B"), segments: (("A", "B", red),))', 1),
+    ],
+)
+def test_a_round_solids_segments_dashed_as_computed(body, hidden):
+    """A segment the description adds to a round solid (a radius, a height, a slant height in colour),
+    between its named points: solid when it lies on a surface seen, else dashed, computed (asked for
+    a cylinder's radius [OA] in red and its base in blue, a cone's height in red: none drawn)."""
+    svg = figures.clean(figures_typst.compile_svg("solid", body))
+    assert svg.count("stroke-dasharray") == hidden
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        f'#cylinder(3, 5, {CYLINDER}, points: (A: 0), segments: (("O", "A", red),), fills: (("base", blue),), '
+        "section: 2, section-fill: yellow)",
+        f'#cone(3, 4, {CONE}, segments: (("S", "O", red),), fills: (("side", blue),), section: 2, '
+        "section-fill: yellow)",
+        '#sphere(3, diameter: ("A", "B"), segments: (("A", "B", red),), fills: (("ball", blue),), section: 1, '
+        "section-fill: yellow)",
+        '#hemisphere(3, centre-name: "O", points: (A: 300), segments: (("O", "A", red),), '
+        'fills: (("dome", blue), ("base", yellow)))',
+    ],
+)
+def test_a_round_solids_colours_drawn(body):
+    """A round solid's segment in its colour, its parts and its section tinted (see-through)."""
+    svg = figures.clean(figures_typst.compile_svg("solid", body))
+    assert 'stroke="#ff4136"' in svg  # red
+    tints = re.findall(r'fill="#([0-9a-f]{6})([0-9a-f]{2})"', svg)
+    assert {colour for colour, _ in tints} == {"0074d9", "ffdc00"}  # blue, yellow
+    assert all(int(alpha, 16) < 128 for _, alpha in tints)
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        (f'#cylinder(3, 5, {CYLINDER}, segments: (("O", "X"),))', '"X" is none of the points named (O, O\')'),
+        (f'#cone(3, 4, {CONE}, fills: (("top", blue),))', '"top" is none of this solid\'s parts (base, side)'),
+        ('#sphere(3, points: (A: "front"),)', "A's angle on the circle, in degrees"),
+        ("#cylinder(3, 5, lying: true, points: (A: 0))", "on a standing cylinder's circles only"),
+    ],
+)
+def test_a_round_solids_segment_refused_saying_why(body, said):
+    """A point not named, a part the solid hasn't, an angle that isn't one: refused saying why."""
+    with pytest.raises(figures_typst.Unusable) as error:
+        figures_typst.compile_svg("solid", body)
+    assert said in str(error.value)
