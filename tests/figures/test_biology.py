@@ -146,3 +146,62 @@ def test_two_strands_ends_written_when_asked():
 def test_two_strands_not_paired_refused_saying_where(body, said):
     with pytest.raises(figures_typst.Unusable, match=said):
         figures_typst.compile_svg("sequence", body)
+
+
+VERTEBRATES = (
+    '("Lamproie", ()), ("Truite", ("mâchoires",)), ("Grenouille", ("mâchoires", "membres")), '
+    '("Lézard", ("mâchoires", "membres", "amnios")), ("Chat", ("mâchoires", "membres", "amnios", "poils"))'
+)
+
+
+def test_a_phylogenetic_trees_groups_outlined():
+    """A group outlined in a colour, its name above (« the tetrapods outlined in green »): the
+    AI wrote groups:, refused, and drew the tree without (0 in 2). Each group a frame around its
+    part of the tree, in its colour, groups inside others within theirs."""
+    bare = figures.clean(figures_typst.compile_svg("phylogeny", f"#phylogeny(species: ({VERTEBRATES}))"))
+    one = figures.clean(
+        figures_typst.compile_svg(
+            "phylogeny",
+            f'#phylogeny(species: ({VERTEBRATES}), groups: (("Tétrapodes", ("Grenouille", "Lézard", "Chat"), green),))',
+        )
+    )
+    assert 'stroke="#2ecc40"' in one and 'stroke="#2ecc40"' not in bare  # green
+    nested = figures.clean(
+        figures_typst.compile_svg(
+            "phylogeny",
+            f'#phylogeny(species: ({VERTEBRATES}), groups: (("Amniotes", ("Lézard", "Chat"), red), '
+            '("Tétrapodes", ("Grenouille", "Lézard", "Chat"), green)))',
+        )
+    )
+    assert 'stroke="#ff4136"' in nested and 'stroke="#2ecc40"' in nested
+    # a group without a colour given (none): outlined all the same
+    grey = figures.clean(
+        figures_typst.compile_svg(
+            "phylogeny", f'#phylogeny(species: ({VERTEBRATES}), groups: (("Amniotes", ("Lézard", "Chat"), none),))'
+        )
+    )
+    assert grey != bare and grey.count("<path") > bare.count("<path")
+    # the same groups in any order: the same drawing
+    assert nested == figures.clean(
+        figures_typst.compile_svg(
+            "phylogeny",
+            f'#phylogeny(species: ({VERTEBRATES}), groups: (("Tétrapodes", ("Chat", "Lézard", "Grenouille"), green), '
+            '("Amniotes", ("Lézard", "Chat"), red)))',
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    ("groups", "said"),
+    [
+        # not a group of the tree: said, and which are
+        ('(("X", ("Truite", "Chat"), red),)', r"Truite, Chat is no group of the tree.*\(Lézard, Chat\)"),
+        ('(("X", ("Requin",), red),)', r'"Requin" is none of the species'),
+        ('(("X", ("Lézard", "Chat"), "red"),)', r"groups: each \(name, \(species…\), colour\)"),
+    ],
+)
+def test_a_phylogenetic_trees_group_refused_saying_why(groups, said):
+    """A group that isn't one of the tree's, a species not in it, a group written otherwise:
+    refused saying why (Typst's message given back to the AI)."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("phylogeny", f"#phylogeny(species: ({VERTEBRATES}), groups: {groups})")
