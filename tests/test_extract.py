@@ -223,6 +223,27 @@ def test_each_lesson_has_a_deck_of_its_own(anki, client):
     assert again["deck"] == "Espagnol::Leçon 5 - La famille"
 
 
+def test_a_lesson_made_again_is_not_shown_its_own_deck(client, monkeypatch):
+    """The AI makes a deck no lesson has (rules/system.md): shown the lesson's own deck among the
+    existing ones when it is made again, it made another, "Les aires urbaines (3)" for one at
+    "(2)" (release test 1.2.0, SCH-01). Its own deck is left out, the others' stay."""
+    from app.routes import generation
+    from notosaurus_core import llm
+
+    seen = {}
+
+    async def extract_cards(s, images, prompt, options, **kwargs):
+        seen["decks"] = options.decks
+        return await llm.extract_cards(s, images, prompt, options)
+
+    monkeypatch.setattr(generation, "extract_cards", extract_cards)
+    first = extract_lesson(client)
+    second = extract_lesson(client)
+    assert second["deck"] == f"{first['deck']} (2)"
+    client.post(f"/api/lessons/{second['id']}/regenerate", data={"prompt": "FR → ES"})
+    assert first["deck"] in seen["decks"] and second["deck"] not in seen["decks"]
+
+
 def test_a_card_made_again_keeps_its_note(anki, client):
     """A lesson made again in its place: each card the same keeps its id (cards.kept_ids), its
     note's key: sent again, its note is updated, its history kept. The demo's last card says how
