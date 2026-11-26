@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📐 Solids (cuboid, prism, pyramid) take segments and colours: a diagonal, a height or an edge in colour, a face or a section coloured, hidden parts dashed.
 - 🔊 A lesson's voice can be chosen once it is made (« Voix », under the deck): a lesson made without one gets it.
 - 📄 **The page a card comes from**: the open card shows "📄 p. 3"; a touch shows the lesson's page in full (‹ › to the others), in a lesson read only too.
 - 🗂 An open card shows its Anki deck at its top, small, as Anki does: « Jules › 5e › Anglais › … › Exercices ».
@@ -123,6 +124,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🐛 A figure corrected keeps its look: a solid asked for a diagonal is no longer redrawn otherwise, and a colour asked for is drawn instead of being said done.
 - A card corrected while the pictures are drawn is no longer drawn (and paid for) from what it said before.
 - Gemini: a connection dropped while it was answering is no longer retried on another model or route, which paid for the photos again. The user is told the connection dropped.
 - A free picture's source page given as an http:// address is kept again (its CC BY credit links to it).
