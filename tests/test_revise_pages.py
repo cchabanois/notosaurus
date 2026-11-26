@@ -11,7 +11,7 @@ from notosaurus_core import ai, llm
 from notosaurus_core.calls import Image
 from notosaurus_core.config import AIConfig
 from notosaurus_core.models import Card, Deck, Mask, Revision
-from notosaurus_core.prompts import _revision_text
+from notosaurus_core.prompts import _fix_text, _revision_text
 
 S = AIConfig(llm="gemini", gemini_api_key="k")
 NOT_SHOWN = "The lesson's photos (its pages) are not shown here"
@@ -121,3 +121,20 @@ def test_a_diagram_card_keeps_its_place_without_the_photos(monkeypatch):
         kept, added = revision.cards
         assert kept.mask == mask and kept.page == 4 and kept.id == "c1"
         assert added.mask is None and added.page == 0
+
+
+def test_a_card_corrected_against_its_page_is_kept_as_corrected():
+    """A card the user corrected (its doubt's correction taken, or edited by hand) differs from
+    the page: a later correction, the lesson's or this card's, keeps it and raises no doubt
+    again, instead of rewriting it from the photo. Without a photo there is no page to differ."""
+    card = Card(front="q", back="a")
+    deck = Deck(deck="D", cards=[card])
+    kept = "corrected on purpose"
+    lesson = _revision_text("p", deck, "swap front and back", "French", 1)
+    assert kept in lesson and "wins over the photos" in lesson and 'no "doubt"' in lesson
+    one = _fix_text("p", "D", card, (), "swap front and back", "French", 1, sent="card")
+    assert kept in one and "wins over the photos" in one and 'no "doubt"' in one
+    assert kept not in _revision_text("p", deck, "fix", "French", 0)
+    assert kept not in _revision_text("p", deck, "fix", "French", 0, sent="none")
+    assert kept not in _fix_text("p", "D", card, (), "fix", "French", 0, sent="none")
+    assert kept not in _fix_text("p", "D", Card(front="", back=""), (), "a card on X", "French", 1)  # one to write

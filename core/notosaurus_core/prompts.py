@@ -201,6 +201,15 @@ def _revision_text(
         if fmt == "pixels":
             known = [f"photo {i}: {size[0]}x{size[1]}" for i, size in enumerate(sizes, 1) if size]
             add += " Photo sizes: " + ", ".join(known) + "."
+    keep = ""
+    if photos:
+        # A card fixed after its doubt, or by hand, differs from its page: never undone
+        keep = (
+            " The current cards, not the photos, are the reference: where a card's text differs from"
+            " the photos, it was corrected on purpose: unless the request is about that very text, it"
+            ' wins over the photos (never put back what they say) and gets no "doubt" about what it'
+            " already corrects."
+        )
     if photos and list(pages) not in ([], list(range(1, photos + 1))):
         seen += (
             "\nThe photos are not all of the lesson's pages, nor numbered as they are: "
@@ -218,7 +227,7 @@ Requested correction: {instruction.strip()}
 
 Apply this request and return the complete deck (every card, not only the ones that \
 change). Only change what the request is about; keep the other cards exactly as they \
-are, in the same order. {add} In "summary", {said}"""
+are, in the same order.{keep} {add} In "summary", {said}"""
 
 
 def _fix_text(
@@ -265,6 +274,10 @@ Requested correction for this card: {instruction.strip()}
 
 Apply this request to this card only and return it, as the one card in "cards". Only change \
 what the request is about; keep the rest of the card as it is."""
+        if photos:
+            asked += """ Where the card's text differs from the photos, it was corrected on \
+purpose: unless the request is about that very text, it wins over the photos (never put back \
+what they say) and gets no "doubt" about what it already corrects."""
         if figure:
             where = "image after the photo" if photos == 1 else "image after the lesson's photos"
             asked += f"""
