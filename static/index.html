@@ -903,7 +903,7 @@
         <span class="fold" aria-hidden="true" x-text="examsOpen ? '▾' : '▸'"></span>
         <span x-text="exams.length ? $t('app.exams.folded', { count: exams.length }) : $t('app.exams.title')"></span>
       </button>
-      <div class="exam-new" x-show="examsOpen">
+      <div class="exam-new-chip" x-show="examsOpen">
         <button type="button" class="chip-btn" @click="lessonsOpen = false; openExams(null, true)" x-text="$t('app.exams.newShort')"></button>
       </div>
       <ul class="child-rows" x-show="examsOpen">

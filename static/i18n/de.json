@@ -615,7 +615,10 @@
       "inAnki": "{sent} von {total} Karten in Anki",
       "notSent": "Noch nicht in Anki: das Schlagwort kommt mit der Lektion beim Senden.",
       "send": "📥 An Anki senden",
-      "sendAll": "📥 Alle an Anki senden ({count} Lektionen)",
+      "sendAll": {
+        "one": "📥 Alle an Anki senden ({count} Lektion)",
+        "other": "📥 Alle an Anki senden ({count} Lektionen)"
+      },
       "sending": "Wird gesendet… (noch {count})",
       "tag": "Schlagwort",
       "ankiClosed": "Anki ist geschlossen: das Schlagwort folgt beim nächsten Senden.",

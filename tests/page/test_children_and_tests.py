@@ -8,6 +8,7 @@ sync_api = pytest.importorskip("playwright.sync_api")
 
 from page.support import (  # noqa: E402
     FRONT_PROMPT,
+    generate_free,
 )
 
 
@@ -100,6 +101,23 @@ def test_a_test_made_from_my_lessons_then_its_lessons_ticked(page):
     (exam,) = page.request.get("/api/exams").json()
     assert exam["name"] == "Interro"
     assert [p["lesson"] for p in exam["lessons"]] in ([made[0]["id"]], [made[1]["id"]])
+
+
+def test_a_new_tests_form_the_sheets_whole_width(page):
+    """A lesson's tests on a phone: "+ Nouveau contrôle", its name, date and "Créer" across the
+    sheet's width, not in its right half (the row of "＋ Nouveau contrôle" in My lessons, of
+    the same name, pushed them there)."""
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].openExams()")
+    sheet = page.get_by_role("dialog", name="Contrôles à préparer")
+    form = sheet.locator("form.exam-new")
+    sync_api.expect(form).to_be_visible()
+    body = sheet.locator(".sheet-body").first.bounding_box()
+    name, date = form.locator("input").first, form.locator("input[type=date]")
+    for part in (form.get_by_role("heading"), name, date, form.get_by_role("button", name="Créer")):
+        box = part.bounding_box()
+        assert box["x"] - body["x"] < 24, (part, box, body)
+    assert name.bounding_box()["width"] > 0.8 * body["width"]
 
 
 def test_many_lessons_to_add_their_button_in_view_a_long_title_beside_its_box(page):

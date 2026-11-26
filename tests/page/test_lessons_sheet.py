@@ -355,3 +355,33 @@ def test_my_lessons_leave_the_lessons_the_room(page):
     assert in_view >= 7
     fold.click()
     sync_api.expect(sheet.get_by_role("button", name="＋ Nouveau contrôle")).to_be_visible()
+
+
+def test_a_long_title_wraps_left_of_its_badges(page):
+    """📚 Mes leçons on a phone: a lesson's long title shown whole, on several lines, before
+    "exportée" and 🗑, never under them (cut short, Android's WebView drew it on past its end)."""
+    page.goto("/")
+    made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
+    deck = "Histoire::Chapitre 1 : La Première Guerre mondiale et ses conséquences"
+    page.request.put(f"/api/lessons/{made['id']}", data={"deck": deck, "cards": made["cards"]})
+
+    def exported(route):
+        listed = route.fetch().json()
+        route.fulfill(json=[{**lesson, "exported_at": lesson["updated_at"]} for lesson in listed])
+
+    page.route("**/api/lessons", exported)
+    page.reload()
+    page.get_by_role("button", name="Leçons", exact=True).click()
+    row = page.locator(".lesson-list li").first
+    badge = row.locator(".badge", has_text="exportée")
+    sync_api.expect(badge).to_be_visible()
+    title = row.locator(".lesson strong")
+    assert title.evaluate("e => e.scrollWidth <= e.clientWidth")  # nothing hidden, nothing past its end
+    lines = title.evaluate(
+        "e => { const r = document.createRange(); r.selectNodeContents(e);"
+        " return new Set([...r.getClientRects()].map((rect) => Math.round(rect.top))).size; }"
+    )
+    assert lines > 1
+    box = title.bounding_box()
+    for other in (badge, row.get_by_role("button", name="Supprimer la leçon")):
+        assert box["x"] + box["width"] <= other.bounding_box()["x"] + 0.5
