@@ -332,6 +332,27 @@ class GenerationRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aLessonMadeAgainIsNotShownItsOwnDeck() = app { client ->
+        // The AI makes a deck no lesson has (rules/system.md): shown the lesson's own deck among
+        // the existing ones when it is made again, it made another, "Les aires urbaines (3)" for
+        // one at "(2)" (release test 1.2.0, SCH-01). Its own deck is left out, the others' stay
+        suspend fun made(path: String): JsonObject {
+            relayAnswers("""{"deck": {"deck": "Géographie::Les aires urbaines", "cards": [{"front": "Q", "back": "R"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+            return client.submitFormWithBinaryData(path, pageForm(1..1)) { page() }.json().jsonObject
+        }
+        fun shown() = relay.takeRequest().multipartRequest()["decks"]!!.jsonArray.map { it.jsonPrimitive.content }
+        made("/api/extract")
+        relay.takeRequest()
+        val second = made("/api/extract")
+        assertEquals("Géographie::Les aires urbaines (2)", second.string("deck"))
+        assertTrue("Géographie::Les aires urbaines (2)" !in shown()) // not made yet
+        made("/api/lessons/${second.string("id")}/regenerate")
+        val again = shown()
+        assertTrue("Géographie::Les aires urbaines" in again) // the other lesson's
+        assertTrue("Géographie::Les aires urbaines (2)" !in again)
+    }
+
+    @Test
     fun aCardsPageCountedAmongTheLessonsPhotos() = app { client ->
         // The AI numbers the photos of its call: a page past them is unknown (0); a lesson
         // completed numbers its next pages' cards after its own, its older cards untouched

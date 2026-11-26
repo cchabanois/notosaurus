@@ -93,7 +93,7 @@ async def _generate(
     data, texts = await _inputs(form, images)
     profile = await ankiconnect.active_profile() or ""  # the lesson belongs to this Anki profile
     s = settings.current()
-    child, known = await _child(form, profile)
+    child, known = await _child(form, profile, lesson_id)
     options = ExtractOptions(
         deck=form.deck,
         decks=known,
@@ -132,11 +132,14 @@ async def _inputs(form: GenerationForm, images: list[Photo]) -> tuple[list[Image
     return data, _page_texts(form.page_texts, len(data))
 
 
-async def _child(form: GenerationForm, profile: str) -> tuple[children.Child | None, list[str]]:
+async def _child(
+    form: GenerationForm, profile: str, lesson_id: str | None = None
+) -> tuple[children.Child | None, list[str]]:
     """The child the lesson is for (chosen, else its Anki profile's), and the decks the AI
     may reuse: this child's and no child's, without the children's levels (no child's
-    name to the AI, nothing of another child's lessons)."""
-    known = await decks.known(profile)
+    name to the AI, nothing of another child's lessons); `lesson_id`: the lesson made
+    again or completed, its own deck not among them (decks.known)."""
+    known = await decks.known(profile, but=lesson_id)
     every = await asyncio.to_thread(children.list_all)
     child = children.chosen(every, form.child, profile)
     return child, children.decks_for_ai(known, every, child)

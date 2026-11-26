@@ -54,9 +54,10 @@ class Generation(
         val every = children.list()
         val child = every.firstOrNull { it.id == fields["child"] } // the child it is for: its class, instructions, decks
         // The decks the AI may reuse: this child's and no child's, without the children's levels
-        // (no child's name to the AI, nothing of another child's lessons)
+        // (no child's name to the AI, nothing of another child's lessons); the lesson made again
+        // or completed not among them (shown its own deck, the AI made another one, "… (3)")
         val saved = lessons.list()
-        val decks = Children.decksForAi(saved.map { it.string("deck") }, every, child)
+        val decks = Children.decksForAi(saved.filter { it.string("id") != but }.map { it.string("deck") }, every, child)
         val request = buildJsonObject {
             put("prompt", fields["prompt"] ?: "")
             put("deck", fields["deck"] ?: "")

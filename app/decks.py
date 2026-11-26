@@ -42,10 +42,11 @@ def existing(anki: Iterable[str], lesson_decks: Iterable[str], own: str = "") ->
     return names
 
 
-async def known(profile: str | None) -> list[str]:
+async def known(profile: str | None, but: str | None = None) -> list[str]:
     """Sorted names; the top levels first kept when there are too many. Anki closed:
-    the lessons' decks alone."""
-    kept = sorted(await _all(profile), key=lambda n: (n.count("::"), n.casefold()))[:LIMIT]
+    the lessons' decks alone. `but`: the lesson being generated again, its deck left out
+    (the AI makes a deck no other has: shown its own, it made another, "… (3)")."""
+    kept = sorted(await _all(profile, but), key=lambda n: (n.count("::"), n.casefold()))[:LIMIT]
     return sorted(kept, key=str.casefold)
 
 
