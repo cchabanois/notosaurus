@@ -190,3 +190,38 @@ def test_a_timelines_one_year_period_lasts_its_year():
     one, year = bar("1914, 1914"), bar("1914, 1915")
     assert one[2] - one[0] > 10
     assert one[2] - one[0] == pytest.approx(year[2] - year[0], abs=2)
+
+
+def test_a_timelines_colours_as_the_description_gives_them():
+    """A period or an event given a colour (« la Terreur en rouge »): its bar, or its dot and
+    text, drawn in it, the others in the function's own; a period said red was drawn in the
+    palette's blue, the function taking no colour."""
+    body = (
+        '#timeline(start: 1788, end: 1800, step: 2, events: ((1789, "Prise de la Bastille", red), '
+        '(1792, "République", "flag", blue), (1795, "Directoire")), '
+        'periods: ((1793, 1794, "La Terreur", red), (1789, 1792, "Monarchie constitutionnelle")))'
+    )
+    svg = figures.clean(figures_typst.compile_svg("timeline", body))
+    fills = set(re.findall(r'fill="(#[0-9a-f]{6})"', svg))
+    assert "#ff847c" in fills  # the red period's bar (red, lightened: its name read on it)
+    assert {"#ff4136", "#0074d9"} <= fills  # the events' dots and texts
+    assert "#f6c76b" in fills  # the other period: the palette's second (its place)
+    plain = figures.clean(
+        figures_typst.compile_svg(
+            "timeline", '#timeline(start: 1788, end: 1800, step: 2, periods: ((1793, 1794, "La Terreur"),))'
+        )
+    )
+    assert "#9cc9e8" in plain and "#ff847c" not in plain  # none given: the palette's
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        ('#timeline(periods: ((1793, 1794, "La Terreur", "red"),))', r"periods: each \(start, end, name\)"),
+        ('#timeline(events: ((1789, "Prise", 3),))', r"events: each \(date, text\)"),
+    ],
+)
+def test_a_timelines_colour_written_otherwise_refused(body, said):
+    """A colour written as a word, a stray item: refused saying how an item is written."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("timeline", body)
