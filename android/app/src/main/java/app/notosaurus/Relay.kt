@@ -5,11 +5,14 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -84,10 +87,27 @@ class Relay(
         if (route !in KEPT_ROUTES) return work()
         busy.begin()
         try {
-            return work()
+            return CHARGED.withPermit { unlessBusy(work) }
         } finally {
             busy.end()
         }
+    }
+
+    /** `work` asked again while the relay says it has as many of this licence's calls running as
+     * it takes (relay.busy: refused before the AI is asked, nothing charged): a moment after, a
+     * little longer each time; the last refusal thrown. */
+    private suspend fun <T> unlessBusy(work: suspend () -> T): T {
+        var wait = BUSY_WAIT_MS
+        repeat(BUSY_TRIES - 1) {
+            try {
+                return work()
+            } catch (e: RelayException) {
+                if (e.code != BUSY) throw e
+            }
+            delay(wait)
+            wait *= 2
+        }
+        return work()
     }
 
     private val base = baseUrl.trimEnd('/')
@@ -317,6 +337,19 @@ class Relay(
         // in the background too. The AI's, and what comes with a lesson: its own drawings (just
         // after it is made), its sounds (sent to AnkiDroid), the free pictures
         val KEPT_ROUTES = AI_ROUTES + setOf("lesson-drawings", "speak", "pictures/search", "pictures/found")
+
+        // The relay's charged calls running at once, from every part of the app (a lesson's pictures,
+        // 4 at a time, its sounds, 4 at a time, the lesson being read): fewer than the relay takes
+        // from a licence (RELAY_CONCURRENT_PER_LICENCE, 6), which refuses the others (relay.busy:
+        // a lesson's sounds were lost so, 2026-11-26), one kept for a call ended here but not there yet
+        const val CALLS_AT_ONCE = 5
+        private val CHARGED = Semaphore(CALLS_AT_ONCE)
+
+        // Refused all the same (another phone on the licence, a call the relay still counts): asked
+        // again, BUSY_TRIES times at most, BUSY_WAIT_MS then twice as long each time
+        const val BUSY = "relay.busy"
+        const val BUSY_TRIES = 4
+        const val BUSY_WAIT_MS = 500L
 
         // The relay's answers for a subscription past its end: ended, on hold, or the free trial over
         const val INVALID_KEY = "relay.invalid_key"
