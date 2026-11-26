@@ -329,11 +329,12 @@
     body(s)
   })
 }
-// A round solid's section by a plane parallel to its base: its disc filled grey, its front
-// half drawn, its back half dashed (upright: a lying cylinder's, its left half in front)
-#let _round-section(c, rx, ry, upright: false) = {
+// A round solid's section by a plane parallel to its base: its disc filled grey (`paint`: tinted
+// in it), its front half drawn, its back half dashed (upright: a lying cylinder's, its left half
+// in front)
+#let _round-section(c, rx, ry, upright: false, paint: none) = {
   import cetz.draw: *
-  line(.._arc(c, rx, ry, 0, 360), close: true, fill: luma(225), stroke: none)
+  line(.._arc(c, rx, ry, 0, 360), close: true, fill: if paint == none { luma(225) } else { _tint(paint) }, stroke: none)
   let a = if upright { 90 } else { 180 }
   line(.._arc(c, rx, ry, a, a + 180), stroke: _solid)
   line(.._arc(c, rx, ry, a - 180, a), stroke: _hidden)
@@ -350,20 +351,88 @@
 #let _within(at, from, to, what) = if type(at) not in (int, float) or at <= from or at >= to {
   panic("section: " + what + " between " + repr(from) + " and " + repr(to) + ", not " + repr(at))
 }
+// A round solid's named points, segments and colours, as the polyhedra's (_polyhedron):
+// `where` each named point by its name, (p: where it is drawn, on: what it lies on, for `seen`);
+// points: (A: 270, …) points on a circle by their angle (degrees: 0 right, 90 at the back, 180
+// left, 270 in front), placed by `rim(angle)`, `on` built by `kind(angle)`
+#let _rim-points(points, rim, kind, what) = {
+  if type(points) != dictionary { panic(what + ": (A: 270, B: 90), each point's name and its angle on the circle in degrees, not " + repr(points)) }
+  points.pairs().map(((name, angle)) => {
+    if type(angle) not in (int, float) { panic(what + ": " + name + "'s angle on the circle, in degrees (0 right, 90 at the back, 180 left, 270 in front), not " + repr(angle)) }
+    (name, (p: rim(angle), on: kind(angle), new: true))
+  })
+}
+// each segment between two named points: solid when `seen(a, b)` (a surface seen holds it),
+// else dashed; a colour as a third value, drawn a little thicker
+#let _round-segments(where, segments, seen) = {
+  import cetz.draw: *
+  let named = where.keys().filter(k => k != "")
+  let find(name) = {
+    let key = _plain(name)
+    if key not in where { panic("segments: " + repr(key) + " is none of the points named (" + named.join(", ") + "): name them first (their own names:, or points:)") }
+    where.at(key)
+  }
+  for seg in segments {
+    if type(seg) != array or seg.len() not in (2, 3) or (seg.len() == 3 and type(seg.at(2)) != color) {
+      panic("segments: each (\"O\", \"A\") or (\"O\", \"A\", red), not " + repr(seg))
+    }
+    let (a, b) = (find(seg.at(0)), find(seg.at(1)))
+    let (paint, more) = if seg.len() == 3 { (seg.at(2), 0.5pt) } else { (black, 0pt) }
+    line(a.p, b.p, stroke: if seen(a.on, b.on) { (paint: paint, thickness: 1pt + more) } else { (paint: paint, thickness: 0.7pt + more, dash: "dashed") })
+  }
+}
+// fills: ((part, colour), …) each part of the solid (`parts`: its outline by name) tinted
+#let _round-fills(parts, fills) = {
+  import cetz.draw: *
+  for f in fills {
+    if type(f) != array or f.len() != 2 or type(f.at(1)) != color { panic("fills: each (part, colour), (\"base\", blue), not " + repr(f)) }
+    if f.at(0) not in parts { panic("fills: " + repr(f.at(0)) + " is none of this solid's parts (" + parts.keys().join(", ") + ")") }
+    line(..parts.at(f.at(0)), close: true, fill: _tint(f.at(1)), stroke: none)
+  }
+}
+// the new points' names (those of points:), clear of the lines drawn
+#let _rim-names(where, drawn) = for (name, q) in where.pairs() { if q.at("new", default: false) { _name(q.p, name, drawn) } }
 #let _right-angle(o, r) = cetz.draw.line((o.at(0) + r, o.at(1)), (o.at(0) + r, o.at(1) + r), (o.at(0), o.at(1) + r), stroke: 0.6pt)
 
 // A cylinder standing on a base (lying: true, its axis horizontal, going to the right);
 // centre-names: its bases' centres ("O", "O'"), its axis then dashed
 // section: a plane parallel to its bases, that far from the first (below, or left when lying),
 // section-centre: its centre's name
-#let cylinder(radius, height, lying: false, radius-label: none, height-label: none, centre-names: (), largest: none, section: none, section-centre: none) = _round(
+// points: on the base's circle by their angle, top-points: on the top's (standing); segments:,
+// fills: ("base" | "top" | "side", colour), section-fill: (_round-segments, _round-fills)
+#let cylinder(radius, height, lying: false, radius-label: none, height-label: none, centre-names: (), largest: none, section: none, section-centre: none, points: (:), top-points: (:), segments: (), fills: (), section-fill: none) = _round(
   calc.max(2 * radius, height), largest, s => {
     import cetz.draw: *
     let (r, h) = (radius * s, height * s)
+    if lying and (points.len() > 0 or top-points.len() > 0) { panic("points:, top-points: on a standing cylinder's circles only") }
+    // what is named: the centres (on the axis, inside), the section's, the points on the circles
+    let (b, t) = if lying { ((0, 0), (h, 0)) } else { ((0, 0), (0, h)) }
+    let where = (:)
+    if centre-names.len() > 0 { where.insert(_plain(centre-names.at(0)), (p: b, on: "inside")) }
+    if centre-names.len() > 1 and centre-names.at(1) != none { where.insert(_plain(centre-names.at(1)), (p: t, on: "top")) }
+    if section-centre != none and section != none {
+      where.insert(_plain(section-centre), (p: if lying { (section * s, 0) } else { (0, section * s) }, on: "inside"))
+    }
+    for (name, q) in _rim-points(points, a => (r * calc.cos(a * 1deg), r * _flat * calc.sin(a * 1deg)), a => (circle: 0, angle: a), "points") { where.insert(name, q) }
+    for (name, q) in _rim-points(top-points, a => (r * calc.cos(a * 1deg), h + r * _flat * calc.sin(a * 1deg)), a => (circle: 1, angle: a), "top-points") { where.insert(name, q) }
+    // seen: on the top (its centre, its circle), or a line of the side in front (both ends at
+    // the same angle, one on each circle, at the front half); else inside or behind: dashed
+    let front(a) = calc.sin(a * 1deg) <= 1e-9
+    let top(q) = q == "top" or (type(q) == dictionary and q.circle == 1)
+    let seen(u, v) = (top(u) and top(v)) or (
+      type(u) == dictionary and type(v) == dictionary and u.circle != v.circle and calc.abs(calc.rem(u.angle - v.angle, 360)) < 1e-6 and front(u.angle))
+    let parts = if lying {
+      (base: _arc(b, r * _flat, r, 0, 360), top: _arc(t, r * _flat, r, 0, 360),
+        side: _arc(b, r * _flat, r, 90, 270) + _arc(t, r * _flat, r, 270, 90))
+    } else {
+      (base: _arc(b, r, r * _flat, 0, 360), top: _arc(t, r, r * _flat, 0, 360),
+        side: _arc(b, r, r * _flat, 180, 360) + _arc(t, r, r * _flat, 360, 180))
+    }
+    _round-fills(parts, fills)
     if section != none {
       _within(section, 0, height, "its distance from the base")
       let c = if lying { (section * s, 0) } else { (0, section * s) }
-      if lying { _round-section(c, r * _flat, r, upright: true) } else { _round-section(c, r, r * _flat) }
+      if lying { _round-section(c, r * _flat, r, upright: true, paint: section-fill) } else { _round-section(c, r, r * _flat, paint: section-fill) }
       if section-centre != none {
         circle(c, radius: 0.04, fill: black)
         if lying { _label((c.at(0), c.at(1) - 0.08), section-centre, anchor: "north") } else { _label((c.at(0) - 0.08, c.at(1)), section-centre, anchor: "east") }
@@ -400,6 +469,8 @@
       if radius-label != none { line(b, (h, r), stroke: 0.7pt); _label((h + r * _flat + 0.22, r / 2), radius-label) }
       if height-label != none { _dimension((0, -r - 0.4), (h, -r - 0.4), height-label, (0, -0.3)) }
     }
+    _round-segments(where, segments, seen)
+    _rim-names(where, parts.values() + ((b, t),))
   },
 )
 
@@ -407,21 +478,38 @@
 // apex to the base's ellipse (computed), the base's hidden arc dashed
 // section: a plane parallel to its base, that far from it (a smaller disc); section-centre:
 // its centre's name
-#let cone(radius, height, apex-name: none, centre-name: none, base-name: none, radius-label: none, height-label: none, slant-label: none, largest: none, section: none, section-centre: none) = context _round(
+// points: on the base's circle by their angle; segments:, fills: ("base" | "side", colour),
+// section-fill: (_round-segments, _round-fills)
+#let cone(radius, height, apex-name: none, centre-name: none, base-name: none, radius-label: none, height-label: none, slant-label: none, largest: none, section: none, section-centre: none, points: (:), segments: (), fills: (), section-fill: none) = context _round(
   calc.max(2 * radius, height), largest, s => {
     import cetz.draw: *
     let (r, h, ry) = (radius * s, height * s, radius * s * _flat)
-    if section != none {
-      _within(section, 0, height, "its distance from the base")
-      let c = (0, section * s)
-      let k = r * (1 - section / height)
-      _round-section(c, k, k * _flat)
-      if section-centre != none { circle(c, radius: 0.04, fill: black); _label((-0.08, c.at(1)), section-centre, anchor: "east") }
-    }
     // where the tangents from the apex (0, h) touch the ellipse x²/r² + y²/ry² = 1
     let ty = calc.min(ry * ry / h, ry * 0.999)
     let tx = r * calc.sqrt(1 - calc.pow(ty / ry, 2))
     let t = calc.asin(ty / ry).deg()
+    // what is named: the apex, the base's centre (inside), A where the slant height meets the
+    // base, the section's centre, the points on the base's circle
+    let where = (:)
+    if apex-name != none { where.insert(_plain(apex-name), (p: (0, h), on: "apex")) }
+    if centre-name != none { where.insert(_plain(centre-name), (p: (0, 0), on: "inside")) }
+    if base-name != none { where.insert(_plain(base-name), (p: (tx, ty), on: (angle: t))) }
+    if section-centre != none and section != none { where.insert(_plain(section-centre), (p: (0, section * s), on: "inside")) }
+    for (name, q) in _rim-points(points, a => (r * calc.cos(a * 1deg), ry * calc.sin(a * 1deg)), a => (angle: a), "points") { where.insert(name, q) }
+    // seen: a slant line from the apex to a point of the base's circle on the side seen (the
+    // front arc, between the two tangents); else inside or behind: dashed
+    let rim(q) = type(q) == dictionary
+    let seen(u, v) = ((u == "apex" and rim(v)) or (v == "apex" and rim(u))) and (
+      calc.sin((if rim(u) { u } else { v }).angle * 1deg) <= ty / ry + 1e-9)
+    let parts = (base: _arc((0, 0), r, ry, 0, 360), side: _arc((0, 0), r, ry, 180 - t, 360 + t) + ((0, h),))
+    _round-fills(parts, fills)
+    if section != none {
+      _within(section, 0, height, "its distance from the base")
+      let c = (0, section * s)
+      let k = r * (1 - section / height)
+      _round-section(c, k, k * _flat, paint: section-fill)
+      if section-centre != none { circle(c, radius: 0.04, fill: black); _label((-0.08, c.at(1)), section-centre, anchor: "east") }
+    }
     line(.._arc((0, 0), r, ry, 180 - t, 360 + t), stroke: _solid)
     line(.._arc((0, 0), r, ry, t, 180 - t), stroke: _hidden)
     line((-tx, ty), (0, h), (tx, ty), stroke: _solid)
@@ -445,6 +533,8 @@
       }
     }
     if slant-label != none { _label((tx / 2 + 0.3, (ty + h) / 2 + 0.1), slant-label, anchor: "west") }
+    _round-segments(where, segments, seen)
+    _rim-names(where, (parts.base, ((-tx, ty), (0, h), (tx, ty)), ((0, 0), (0, h))))
   },
 )
 
@@ -455,17 +545,28 @@
 // its length; section-label: the circle's radius [HA]; radius-label then on [OA], A on the
 // circle; no equator then, unless asked. The radius's label where it fits: above the radius,
 // else beyond its end
-#let sphere(radius, centre-name: none, radius-label: none, diameter: (), equator: auto, largest: none, section: none, section-centre: none, section-label: none, distance-label: none) = context _round(
+// points: on the equator by their angle; segments: (solid, as its radii and diameters are
+// drawn), fills: ("ball", colour), section-fill: (_round-segments, _round-fills)
+#let sphere(radius, centre-name: none, radius-label: none, diameter: (), equator: auto, largest: none, section: none, section-centre: none, section-label: none, distance-label: none, points: (:), segments: (), fills: (), section-fill: none) = context _round(
   2 * radius, largest, s => {
     import cetz.draw: *
     let r = radius * s
     let o = (0, 0)
     let drawn = (_arc(o, r, r, 0, 360),)  // every line drawn, for the names to keep clear of
     let h = none
+    let where = (:)
+    if centre-name != none { where.insert(_plain(centre-name), (p: o, on: "ball")) }
+    if diameter.len() == 2 {
+      where.insert(_plain(diameter.at(0)), (p: (-r, 0), on: "ball"))
+      where.insert(_plain(diameter.at(1)), (p: (r, 0), on: "ball"))
+    }
+    if section-centre != none and section != none { where.insert(_plain(section-centre), (p: (0, section * s), on: "ball")) }
+    for (name, q) in _rim-points(points, a => (r * calc.cos(a * 1deg), r * _flat * calc.sin(a * 1deg)), a => "ball", "points") { where.insert(name, q) }
+    _round-fills((ball: _arc(o, r, r, 0, 360)), fills)
     if section != none {
       _within(section, -radius, radius, "its distance from the centre")
       let (y, k) = (section * s, calc.sqrt(radius * radius - section * section) * s)
-      _round-section((0, y), k, k * _flat)
+      _round-section((0, y), k, k * _flat, paint: section-fill)
       drawn.push(_arc((0, y), k, k * _flat, 0, 360))
       h = (0, y)
       let a = (k, y)
@@ -544,8 +645,11 @@
       _label((-r - 0.25, 0), diameter.at(0))
       _label((r + 0.25, 0), diameter.at(1))
     }
+    _round-segments(where, segments, (u, v) => true)
+    for seg in segments { drawn.push((where.at(_plain(seg.at(0))).p, where.at(_plain(seg.at(1))).p)) }
     if centre-name != none { circle(o, radius: 0.04, fill: black); _name(o, centre-name, drawn) }
     if section-centre != none and h != none { circle(h, radius: 0.04, fill: black); _name(h, section-centre, drawn) }
+    _rim-names(where, drawn)
   },
 )
 
@@ -634,15 +738,24 @@
 }
 
 // A half-sphere (a half-ball) on its flat face: its dome, its base's hidden half dashed
-#let hemisphere(radius, centre-name: none, radius-label: none, largest: none) = _round(
+// points: on its flat face's circle by their angle; segments: (solid, as its radius is
+// drawn), fills: ("base" | "dome", colour)
+#let hemisphere(radius, centre-name: none, radius-label: none, largest: none, points: (:), segments: (), fills: ()) = _round(
   2 * radius, largest, s => {
     import cetz.draw: *
     let r = radius * s
+    let where = (:)
+    if centre-name != none { where.insert(_plain(centre-name), (p: (0, 0), on: "ball")) }
+    for (name, q) in _rim-points(points, a => (r * calc.cos(a * 1deg), r * _flat * calc.sin(a * 1deg)), a => "ball", "points") { where.insert(name, q) }
+    let dome = range(41).map(i => (r * calc.cos(i * 180deg / 40), r * calc.sin(i * 180deg / 40)))
+    _round-fills((base: _arc((0, 0), r, r * _flat, 0, 360), dome: dome + _arc((0, 0), r, r * _flat, 180, 360)), fills)
     line(..range(41).map(i => (r * calc.cos(i * 180deg / 40), r * calc.sin(i * 180deg / 40))), stroke: _solid)
     line(.._arc((0, 0), r, r * _flat, 180, 360), stroke: _solid)
     line(.._arc((0, 0), r, r * _flat, 0, 180), stroke: _hidden)
     if centre-name != none { circle((0, 0), radius: 0.04, fill: black); _label((-0.1, -0.25), centre-name) }
     if radius-label != none { line((0, 0), (r, 0), stroke: 0.7pt); _label((r / 2, 0.22), radius-label) }
+    _round-segments(where, segments, (u, v) => true)
+    _rim-names(where, (dome, _arc((0, 0), r, r * _flat, 0, 360)))
   },
 )
 // A coordinate frame of space (O ; i, j, k) as textbooks draw it: x towards the viewer (down
