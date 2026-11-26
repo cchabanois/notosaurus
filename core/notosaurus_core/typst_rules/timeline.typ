@@ -6,7 +6,10 @@
 // in its own colour from its start to its end, its name on it; the years on the line's round
 // multiples of `step` (1500, 1600, never 1453, 1553). A line of moments without dates (a
 // verb's tenses), 0 the present: `step: none` writes no year; `now` the present's text, under
-// its mark across the line at 0; `past` and `future` written under the line's two ends
+// its mark across the line at 0; `past` and `future` written under the line's two ends.
+// A colour the description gives: a period's (start, end, name, red) its bar in it (lightened,
+// its name read on it); an event's (date, text, red), with or without its icon, its dot, line
+// and text in it
 #let timeline(
   start: 0, end: 10, step: 1, width: 12, events: (), periods: (), now: none, past: none, future: none,
 ) = context {
@@ -16,6 +19,19 @@
   // a list of one (its last item its text, a list's last item an event)
   let events = if events.len() > 0 and type(events.last()) != array { (events,) } else { events }
   let periods = if periods.len() > 0 and type(periods.last()) != array { (periods,) } else { periods }
+  for p in periods {
+    if type(p) != array or p.len() not in (3, 4) or (p.len() == 4 and type(p.at(3)) != color) {
+      panic("periods: each (start, end, name) or (start, end, name, red), not " + repr(p))
+    }
+  }
+  // an event's icon (a word) and colour, after its text, either or both
+  let icon-of(e) = e.slice(2).find(x => type(x) == str)
+  let colour-of(e) = e.slice(2).find(x => type(x) == color)
+  for e in events {
+    if type(e) != array or e.len() < 2 or e.len() > 4 or e.slice(2).any(x => type(x) not in (str, color)) {
+      panic("events: each (date, text), (date, text, \"icon\"), (date, text, red) or (date, text, \"icon\", red), not " + repr(e))
+    }
+  }
   // a date: its year, or (year, month, day): placed within its year
   let year(date) = if type(date) == array { date.at(0) } else { date }
   let when(date) = if type(date) == array {
@@ -47,9 +63,10 @@
   let items = events.map(e => {
     let y = year(e.at(0))
     let body = if dated and calc.fract(y) == 0 and not has-year(e.at(1), y) { [#kept(e.at(1)) (#written-year(y))] } else { kept(e.at(1)) }
-    // an event's icon, its third item (an English word: icon()), before its text
-    if e.len() > 2 { body = [#icon(e.at(2)) #body] }
-    (x: at(e.at(0)), body: shown(body))
+    // an event's icon (an English word: icon()), before its text; its colour, its text's
+    if icon-of(e) != none { body = [#icon(icon-of(e)) #body] }
+    let paint = colour-of(e)
+    (x: at(e.at(0)), body: shown(if paint == none { body } else { text(fill: paint, body) }), paint: paint)
   }).sorted(key: i => -i.x)
   // From the right: each text starts at its date, above the line, over every text it reaches
   // (and so over their lines): no line crosses a text, no text on another
@@ -100,7 +117,7 @@
       (named(if one > 4.5 { 3.7 } else { one + 0.05 }, left), false)
     }
     let size = measure(body)
-    (i: i, x0: x0, x1: x1, body: body, inside: inside, w: size.width / 1cm, h: size.height / 1cm)
+    (i: i, x0: x0, x1: x1, body: body, inside: inside, w: size.width / 1cm, h: size.height / 1cm, paint: p.at(3, default: none))
   })
   // Lanes: in order of start, each bar on the first lane where it overlaps none: periods that
   // overlap on different lanes, as few lanes as there are periods at once; periods that
@@ -149,7 +166,8 @@
     for b in bars {
       let k = lane-of.at(str(b.i))
       let (top, h) = (lane-top(k), lane-h.at(k))
-      rect((b.x0, top), (b.x1, top - h), fill: palette.at(calc.rem(b.i, palette.len())), stroke: 0.5pt + luma(80))
+      let fill = if b.paint == none { palette.at(calc.rem(b.i, palette.len())) } else { b.paint.lighten(35%) }
+      rect((b.x0, top), (b.x1, top - h), fill: fill, stroke: 0.5pt + luma(80))
       if b.inside { content(((b.x0 + b.x1) / 2, top - h / 2), b.body, anchor: "center") }
     }
     for n in notes {
@@ -158,10 +176,13 @@
       content((n.x + 0.1, n.y), n.body, anchor: "north-west")
     }
     for p in placed {
-      line((p.x, 0.14), (p.x, p.y + p.h), stroke: 0.4pt)
+      line((p.x, 0.14), (p.x, p.y + p.h), stroke: 0.4pt + if p.paint == none { black } else { p.paint })
       content((p.x + 0.1, p.y), p.body, anchor: "south-west")
     }
-    for e in events { circle((at(e.at(0)), 0), radius: 0.07, fill: black) }
+    for e in events {
+      let paint = if colour-of(e) == none { black } else { colour-of(e) }
+      circle((at(e.at(0)), 0), radius: 0.07, fill: paint, stroke: paint)
+    }
   })
 }
 // ---- What the AI writes, from here (the rule's example: everything above is given)
