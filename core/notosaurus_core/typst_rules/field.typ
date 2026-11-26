@@ -82,7 +82,9 @@
   }
   (pts: pts, end: end)
 }
-#let field(magnets: (), charges: (), lines: auto) = {
+#let field(magnets: (), charges: (), lines: auto, colour: black) = {
+  // the lines' colour and their arrows', the description's
+  assert(type(colour) == color, message: "colour is the field lines' colour: blue, not " + repr(colour))
   assert(type(magnets) == array and type(charges) == array, message: "magnets and charges are lists: magnets: ((at: (0, 0), north: \"right\"),)")
   assert(magnets.len() + charges.len() > 0, message: "a field needs a magnet or a charge")
   for m in magnets {
@@ -142,11 +144,11 @@
   cetz.canvas({
     import cetz.draw: *
     for pts in drawn {
-      line(..pts, stroke: 0.7pt)
+      line(..pts, stroke: 0.7pt + colour)
       // the arrow, the field's way, at the middle of the line
       let i = calc.floor(pts.len() / 2)
       let (a, b) = (pts.at(calc.max(0, i - 2)), pts.at(calc.min(pts.len() - 1, i + 2)))
-      line(a, b, stroke: 0.7pt, mark: (end: "stealth", fill: black, scale: 0.7))
+      line(a, b, stroke: 0.7pt + colour, mark: (end: "stealth", fill: colour, scale: 0.7))
     }
     for m in magnets {
       let a = _ways.at(m.at("north", default: "right"))

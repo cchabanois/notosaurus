@@ -21,6 +21,10 @@
 // support's way is marked (its value, or the name given: (F: $alpha$)); path: the body's
 // displacement on the plane, from its first point to its second ((A, B), or (A, B, its length));
 // clockwise: the body turning clockwise on its circle
+// A vector's colour, the description's: its last value (("P", "down", red), ("F", 30, 2, blue)),
+// its arrow and its name drawn in it; none: black. _bare: the vector without it
+#let _colour(v) = if type(v) == array and v.len() > 0 and type(v.last()) == color { v.last() } else { none }
+#let _bare(v) = if _colour(v) != none { v.slice(0, -1) } else { v }
 // a slope rising at `angle` degrees: its foot, the body's foot at the origin on it
 #let slope-foot(angle) = (-2.5 * calc.cos(angle * 1deg), -2.5 * calc.sin(angle * 1deg))
 // the point of a body resting on that slope, `half` its half height
@@ -45,11 +49,12 @@
   let words = ("up", "down", "left", "right", "normal", "along", "back", "centre", "outward", "uphill",
     "downhill", "towards", "away")
   for v in vectors + others {
+    let v = _bare(v)
     assert(
       type(v) == array and v.len() in (2, 3) and (v.at(1) in words or type(v.at(1)) in (int, float))
         and (v.len() == 2 or type(v.at(2)) in (int, float)),
-      message: "vectors are (name, direction) or (name, direction, length): a direction is one of "
-        + words.join(", ") + ", or a number of degrees",
+      message: "vectors are (name, direction) or (name, direction, length), a colour last when the description gives one "
+        + "((\"P\", \"down\", red)): a direction is one of " + words.join(", ") + ", or a number of degrees",
     )
     assert(
       not (v.at(1) in ("uphill", "downhill") and support != "slope"),
@@ -125,8 +130,8 @@
   // cetz.draw has a scale of its own
   let per-cm = scale
   let unit = 1.5
-  let length(v) = if scale != none { if v.len() == 3 { v.at(2) / scale.at(0) } else { unit } } else {
-    unit * if v.len() == 3 { v.at(2) } else { 1 }
+  let length(v) = if scale != none { if _bare(v).len() == 3 { v.at(2) / scale.at(0) } else { unit } } else {
+    unit * if _bare(v).len() == 3 { v.at(2) } else { 1 }
   }
   // each vector's start and tip: vectors going the same way from one point side by side
   let arrows-at(from, vs) = {
@@ -280,12 +285,13 @@
     let placed = ()
     for (i, (v, a, s, t)) in drawn.enumerate() {
       let a = a * 1deg
-      line(s, t, stroke: 1.1pt, mark: (end: "stealth", fill: black, scale: 0.8))
+      let paint = if _colour(v) == none { black } else { _colour(v) }
+      line(s, t, stroke: 1.1pt + paint, mark: (end: "stealth", fill: paint, scale: 0.8))
       let m = ((s.at(0) + t.at(0)) / 2, (s.at(1) + t.at(1)) / 2)
       // two bodies facing each other: each name over its arrow, from its middle towards the
       // space between the bodies (shared by the two names)
       if other != none {
-        content((m.at(0), m.at(1) + 0.3), named(v.at(0)), anchor: if calc.cos(a) >= 0 { "south-west" } else { "south-east" })
+        content((m.at(0), m.at(1) + 0.3), text(fill: paint, named(v.at(0))), anchor: if calc.cos(a) >= 0 { "south-west" } else { "south-east" })
         continue
       }
       let spots = (_off(t, a, 0.34), _off(t, a + 90deg, 0.4), _off(t, a - 90deg, 0.4), _off(m, a + 90deg, 0.4),
@@ -300,7 +306,7 @@
       let spot = spots.find(clear)
       if spot == none { spot = spots.first() }
       placed.push(spot)
-      content(spot, named(v.at(0)))
+      content(spot, text(fill: paint, named(v.at(0))))
     }
     // a body's name in the widest gap between its vectors (and the support), clear of them:
     // a point's name close to it, a body's beyond its shape
@@ -539,9 +545,11 @@
     message: "height is (the upper point, the lower one, its name): (\"A\", \"B\", $h$)")
   let words = ("up", "down", "normal", "along", "back")
   for v in vectors {
+    let v = _bare(v)
     assert(
       type(v) == array and v.len() in (2, 3) and (v.at(1) in words or type(v.at(1)) in (int, float)),
-      message: "vectors are (name, direction): a direction is one of " + words.join(", ") + ", or a number of degrees",
+      message: "vectors are (name, direction), a colour last when the description gives one ((\"P\", \"down\", red)): "
+        + "a direction is one of " + words.join(", ") + ", or a number of degrees",
     )
   }
   assert(vectors.len() == 0 or at != none, message: "the vectors are at the body: say where it is with at")
@@ -576,7 +584,7 @@
   }
   let drawn = vectors.map(v => {
     let a = degrees(v.at(1))
-    (v, a, centre, _off(centre, a, 1.4 * if v.len() == 3 { v.at(2) } else { 1 }))
+    (v, a, centre, _off(centre, a, 1.4 * if _bare(v).len() == 3 { v.at(2) } else { 1 }))
   })
   // a text's box (lower left, upper right, in cm) placed with `anchor` at q
   let size(c) = { let m = measure(c); (m.width / 1cm + 0.1, m.height / 1cm + 0.1) }
@@ -639,7 +647,7 @@
     texts.push((c, q, anchor, b))
   }
   for (v, a, s, t) in drawn {
-    let c = named(v.at(0))
+    let c = text(fill: if _colour(v) == none { black } else { _colour(v) }, named(v.at(0)))
     let (q, anchor, b) = place(c, ((_off(t, a, 0.3), "center"),) + around(t, (0.2, 0.45, 0.75), first: (calc.round(a / 1deg) + 90, calc.round(a / 1deg) - 90)), placed)
     placed.push(b)
     texts.push((c, q, anchor, b))
@@ -706,7 +714,8 @@
       }
     }
     for (v, a, s, t) in drawn {
-      line(s, t, stroke: 1.1pt, mark: (end: "stealth", fill: black, scale: 0.8))
+      let paint = if _colour(v) == none { black } else { _colour(v) }
+      line(s, t, stroke: 1.1pt + paint, mark: (end: "stealth", fill: paint, scale: 0.8))
     }
     for (i, name) in names.enumerate() { if name != "" { circle(knots.at(i), radius: 0.07, fill: black) } }
     for (c, q, anchor, b) in l.texts { content(q, c, anchor: anchor) }
