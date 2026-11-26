@@ -124,6 +124,11 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- The sub-deck list of a card: each radio beside its name, names no longer cut.
+- My lessons: a long lesson title shown whole, no longer under "exported" and the bin.
+- A lesson's tests: the "+ New test" form uses the sheet's whole width on a phone.
+- "Send all to Anki (1 lesson)" in the singular.
+- "Can't reach the Notosaurus service" goes away once the network is back.
 - 🐛 A figure corrected keeps its look: a solid asked for a diagonal is no longer redrawn otherwise, and a colour asked for is drawn instead of being said done.
 - A card corrected while the pictures are drawn is no longer drawn (and paid for) from what it said before.
 - Gemini: a connection dropped while it was answering is no longer retried on another model or route, which paid for the photos again. The user is told the connection dropped.
