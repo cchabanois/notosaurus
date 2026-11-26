@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📐 Cylinders, cones, spheres and hemispheres take segments and colours: a radius, a height or a slant height in colour, a base, a side or a section coloured, hidden parts dashed.
 - 🎨 Physics figures take the colours asked for: a force or a velocity, a light ray, the current's or a voltage's arrow, magnetic field lines.
 - 🎨 Timelines: a period or an event in the colour the description gives (« la Terreur en rouge »).
 - 📐 Solids (cuboid, prism, pyramid) take segments and colours: a diagonal, a height or an edge in colour, a face or a section coloured, hidden parts dashed.
