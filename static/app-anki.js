@@ -152,6 +152,18 @@ const ankiPart = {
     if (this.reviewInAnki && !this.ankiIcon) this.loadAnkiIcon();
   },
 
+  // A lesson sent, its notes no longer in Anki (AnkiDroid emptied or reinstalled, the notes
+  // deleted there): to add again, not "up to date". Anki unable to tell (closed, another
+  // profile, an older server): as sent
+  async checkNotesThere() {
+    const id = this.lessonId;
+    if (!id || !this.lessonExported || this.readOnly()) return;
+    try {
+      const found = await (await api(`/api/lessons/${encodeURIComponent(id)}/anki-notes`)).json();
+      if (found.available && found.count === 0 && this.lessonId === id) this.lessonExported = false;
+    } catch {}
+  },
+
   // The app: AnkiDroid's own icon, as installed on this phone, for "Open AnkiDroid" (🎓 until
   // it is installed; asked again at most once a minute, so it appears once it is)
   async loadAnkiIcon() {

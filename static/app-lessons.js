@@ -350,6 +350,7 @@ const lessonsPart = {
     // dates, not texts: the app writes "10:15" for 10:15:00
     const sent = Date.parse(lesson.exported_at ?? "");
     this.sentKey = sent >= Date.parse(lesson.updated_at ?? "") ? this.ankiKey() : null;
+    this.checkNotesThere();
     this.saveState = "saved";
     this.revision = { text: "", busy: false, summary: "", stats: "", undo: null };
     this.leaveCards();
