@@ -215,6 +215,15 @@ const revisionPart = {
     const unused = [...oldCards];
     let added = 0, modified = 0;
     const cards = newCards.map((card) => {
+      // The same card first by its id, which the server keeps (correction.found_again: its note in
+      // Anki, its history): rewritten on both sides, it is changed, not removed and added
+      const kept = card.id ? unused.findIndex((o) => o.id === card.id) : -1;
+      if (kept !== -1) {
+        const old = unused.splice(kept, 1)[0];
+        if (same(old, card)) return { ...card, key: old.key };
+        modified++;
+        return { ...withKey(card), key: old.key, _state: "modified" };
+      }
       const exact = unused.findIndex((o) => same(o, card));
       if (exact !== -1) return { ...card, key: unused.splice(exact, 1)[0].key };
       const sameFront = unused.findIndex((o) => o.front === card.front);

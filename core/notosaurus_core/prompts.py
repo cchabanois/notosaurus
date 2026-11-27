@@ -173,6 +173,8 @@ def _revision_text(
     request naming a page by the lesson's number."""
     hidden = SET_BY_NOTOSAURUS if photos else SET_BY_NOTOSAURUS | {"page"}
     shown = deck.model_dump(exclude={"cards": {"__all__": hidden}})
+    # Each card numbered, its "ref": the card a returned one is (correction.revise_cards)
+    shown["cards"] = [{"ref": n, **card} for n, card in enumerate(shown["cards"], 1)]
     current = json.dumps(shown, ensure_ascii=False, indent=1)
     source = "these photos with these instructions" if photos else "these instructions (no photo)"
     add = "To add cards, use the photos." if photos else "To add cards, follow the instructions."
@@ -227,7 +229,8 @@ Requested correction: {instruction.strip()}
 
 Apply this request and return the complete deck (every card, not only the ones that \
 change). Only change what the request is about; keep the other cards exactly as they \
-are, in the same order.{keep} {add} In "summary", {said}"""
+are, in the same order. Give every card you return the "ref" of the card it is, however much \
+you changed it; 0 for a card you add.{keep} {add} In "summary", {said}"""
 
 
 def _fix_text(

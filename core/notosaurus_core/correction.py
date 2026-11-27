@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from . import ai, diagrams, figures
 from .calls import MAX_IMAGES, ExtractionError, Image
-from .cards import as_pages, matching, page_numbers, pages_within, plain_cards
+from .cards import as_pages, matching, page_numbers, pages_within, plain_cards, same_text, text_key
 from .cards import plain as plain_text
 from .config import AIConfig
 from .models import Card, CardFix, Deck, FixedCard, PhotosSent, Revision
@@ -99,16 +99,19 @@ async def revise_cards(
         images,
         text,
         # No photo seen: no page to write (numbered among the photos it is given)
-        ai.ai_schema(Revision, fun_facts=True, helps=True, claude=ai.for_claude(s), page=bool(images)),
+        ai.ai_schema(Revision, fun_facts=True, helps=True, claude=ai.for_claude(s), page=bool(images), ref=True),
         quick=quick,
         demo=lambda: demo_ai.revision(plain, instruction, texts),  # as the AI would: from what it is shown
     )
-    revision = Revision.model_validate(ai._accepted(answer).model_dump())
+    accepted = ai._accepted(answer)
+    refs = [getattr(card, "ref", 0) for card in getattr(accepted, "cards", [])]  # the demo's: none
+    revision = Revision.model_validate(accepted.model_dump())
     plain_cards(revision.cards)
     pages_within(revision.cards, len(images))  # numbered among the photos given…
     as_pages(revision.cards, numbers)  # …turned into the lesson's page numbers
     revision.summary = plain_text(revision.summary)
-    _keep_masks(revision.cards, deck.cards, sizes, fmt, added=bool(images), pages=numbers)
+    matches = found_again(revision.cards, deck.cards, refs)
+    _keep_masks(revision.cards, deck.cards, sizes, fmt, added=bool(images), pages=numbers, matches=matches)
     return revision
 
 
@@ -177,12 +180,37 @@ def _drawn(figure_svg: str) -> bytes | None:
         return None
 
 
-def _keep_ids(revised: list[Card], before: list[Card]) -> None:
-    """A revised card keeps the id and the picture of the card it was (cards.matching, in any
-    part of the deck: a correction may move it): Anki updates its note, the picture stays,
-    unless what to draw changed (the picture's subject, the figure's description); its page
-    too, unless the AI gave one."""
-    for card, match in zip(revised, matching(revised, before, any_part=True), strict=True):
+def found_again(revised: list[Card], before: list[Card], refs: Sequence[int] = ()) -> list[Card | None]:
+    """Each revised card's card of `before`, the one it was, else None (a card the correction
+    adds). A card the same front and back is that card; else the one its "ref" names (the AI
+    told each card's number among those it was shown: whatever it rewrote, its sides swapped,
+    rephrased, translated), a ref out of range or a card already taken ignored; else, for a card
+    without one, cards.matching on the cards left (its texts: the same front, the same back)."""
+    found: list[Card | None] = [None] * len(revised)
+    left = list(before)
+    for i, card in enumerate(revised):  # the same card, unchanged: unambiguous
+        match = next((c for c in left if same_text(c.front, card.front) and same_text(c.back, card.back)), None)
+        if match is not None and text_key(card.front):
+            found[i] = match
+            left.remove(match)
+    for i, ref in enumerate(list(refs)[: len(revised)]):
+        if found[i] is None and 1 <= ref <= len(before) and before[ref - 1] in left:
+            found[i] = before[ref - 1]
+            left.remove(before[ref - 1])
+    rest = [i for i, f in enumerate(found) if f is None]
+    for i, match in zip(rest, matching([revised[i] for i in rest], left, any_part=True), strict=True):
+        found[i] = match
+    return found
+
+
+def _keep_ids(revised: list[Card], before: list[Card], matches: Sequence[Card | None] | None = None) -> None:
+    """A revised card keeps the id and the picture of the card it was (`matches`: found_again;
+    none given, cards.matching, in any part of the deck: a correction may move it): Anki updates
+    its note, the picture stays, unless what to draw changed (the picture's subject, the figure's
+    description); its page too, unless the AI gave one."""
+    if matches is None:
+        matches = matching(revised, before, any_part=True)
+    for card, match in zip(revised, matches, strict=True):
         if match:
             _same_card(card, match)
             card.page = card.page or match.page
@@ -210,21 +238,25 @@ def _keep_masks(
     fmt: str = "pixels",
     added: bool = True,
     pages: Sequence[int] = (),
+    matches: Sequence[Card | None] | None = None,
 ) -> None:
     """Give each revised card the mask of the card it was (cards.matching, as its id: a
     changed answer keeps its place on the diagram). Other cards keep the mask the model gave
     (a label added by the correction), placed like at extraction, with a number not used yet
     on its photo; none when `added` is False (the AI saw no photo: a box it gives is on none).
-    `pages`: the lesson's page numbers of the photos the AI numbered from 1 (none: 1 to n)."""
+    `pages`: the lesson's page numbers of the photos the AI numbered from 1 (none: 1 to n).
+    `matches`: each card's card it was (found_again; none given, cards.matching)."""
+    if matches is None:
+        matches = matching(revised, before, any_part=True)
     new = []
-    for card, match in zip(revised, matching(revised, before, any_part=True), strict=True):
+    for card, match in zip(revised, matches, strict=True):
         if match and match.mask:
             card.mask = match.mask
         elif card.mask and added:
             new.append(card)
         else:
             card.mask = None
-    _keep_ids(revised, before)
+    _keep_ids(revised, before, matches)
     diagrams.normalize(new, sizes, fmt)
     for card in new:  # placed on its photo: on the lesson's page that photo is
         if card.mask and 1 <= card.mask.page <= len(pages):
