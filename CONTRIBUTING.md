@@ -218,7 +218,10 @@ entry:
 
 Once the pull request is merged, the *Changelog* workflow puts these entries under
 **Unreleased** in [CHANGELOG.md](CHANGELOG.md) (`tools/changelog_add.py`, from the squash
-commit's message) and pushes them. No pull request edits `CHANGELOG.md` itself: two of them
+commit's message) and pushes them, on `main` as it is then (`tools/changelog_push.sh`: another
+merge landed meanwhile, it adds them again on top). Should a run fail all the same, run the
+workflow by hand (*Actions → Changelog → Run workflow*) with the merged pull request's squash
+commit. No pull request edits `CHANGELOG.md` itself: two of them
 never conflict on it, and none is rebased, nor tested again, for a line of changelog. A pull
 request that changes nothing worth telling (a dependency update, a typo) is labelled
 `no changelog`; the *Changelog check* workflow asks for one or the other, and refuses entries

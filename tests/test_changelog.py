@@ -1,6 +1,11 @@
 """The changelog written after the merge (tools/changelog_add.py): a pull request's entries,
 read from its description, put under Unreleased without any pull request touching the file."""
 
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 
 from tools import changelog_add
@@ -136,3 +141,62 @@ def test_check_refuses_a_description_without_entries(monkeypatch):
     monkeypatch.setattr("sys.stdin", __import__("io").StringIO("Just words."))
     with pytest.raises(SystemExit, match="No changelog entry"):
         changelog_add.main(["--check"])
+
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def _git(cwd: Path, *args: str) -> str:
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+
+
+@pytest.mark.skipif(sys.platform == "win32" or not shutil.which("bash"), reason="the workflow's script: bash, on Linux")
+def test_pushed_on_main_as_it_is_now(tmp_path):
+    """The Changelog workflow's push (tools/changelog_push.sh) from a checkout behind main: a
+    merge landed after the one it adds (actions/checkout's origin/main is the commit that ran
+    it). Its entries added on main as it is now and pushed, the other merge kept: #821's entry
+    was refused so, twice, 2026-11-27."""
+    remote = tmp_path / "remote.git"
+    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(remote))
+    author = ["-c", "user.name=t", "-c", "user.email=t@t"]
+
+    def clone(name: str) -> Path:
+        _git(tmp_path, "clone", "-q", str(remote), name)
+        return tmp_path / name
+
+    first = tmp_path / "first"
+    first.mkdir()
+    _git(first, "init", "-q", "-b", "main")
+    (first / "tools").mkdir()
+    for script in ("changelog_add.py", "changelog_push.sh"):
+        shutil.copy2(ROOT / "tools" / script, first / "tools" / script)
+    (first / "CHANGELOG.md").write_text("# Changelog\n\n## [Unreleased]\n\n## [1.0.0] - 2026-10-01\n", encoding="utf-8")
+    _git(first, "add", ".")
+    _git(first, *author, "commit", "-q", "-m", "Start")
+    _git(first, "remote", "add", "origin", str(remote))
+    _git(first, "push", "-q", "origin", "main")
+    merged = "🔊 Sounds kept (#821)\n\n## Changelog\n\n### Fixed\n- 🔊 A lesson's sounds no longer go missing."
+    _git(first, *author, "commit", "-q", "--allow-empty", "-m", merged)
+    _git(first, "push", "-q", "origin", "main")
+    sha = _git(first, "rev-parse", "HEAD")
+
+    other = clone("other")  # another merge, after it
+    (other / "x.txt").write_text("x", encoding="utf-8")
+    _git(other, "add", "x.txt")
+    _git(other, *author, "commit", "-q", "-m", "🧪 Another merge (#822)")
+    _git(other, "push", "-q", "origin", "main")
+
+    bot = {
+        "GIT_AUTHOR_NAME": "bot",
+        "GIT_AUTHOR_EMAIL": "b@b",
+        "GIT_COMMITTER_NAME": "bot",
+        "GIT_COMMITTER_EMAIL": "b@b",
+    }
+    env = {"PATH": "/usr/bin:/bin", "PYTHON": sys.executable, "HOME": str(tmp_path), **bot}
+    subprocess.run(["bash", "tools/changelog_push.sh", sha], cwd=first, env=env, check=True, capture_output=True)
+
+    after = clone("after")
+    assert _git(after, "log", "-2", "--format=%s") == "📝 Changelog: 🔊 Sounds kept (#821)\n🧪 Another merge (#822)"
+    changelog = (after / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "### Fixed\n\n- 🔊 A lesson's sounds no longer go missing." in changelog
+    assert (after / "x.txt").exists()  # the other merge kept
