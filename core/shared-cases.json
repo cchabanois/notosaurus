@@ -610,7 +610,103 @@
     "out": [
      ""
     ]
-   }
+   },
+  {
+   "name": "its sides swapped: the same card, asked the other way",
+   "before": [
+    {
+     "id": "a",
+     "front": "la mère",
+     "back": "la madre"
+    },
+    {
+     "id": "b",
+     "front": "le père",
+     "back": "el padre"
+    }
+   ],
+   "made": [
+    {
+     "front": "la madre",
+     "back": "la mère"
+    },
+    {
+     "front": "el padre",
+     "back": "le père"
+    }
+   ],
+   "out": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "name": "swapped, a capital and a full stop aside: the same card",
+   "before": [
+    {
+     "id": "a",
+     "front": "Quelle est la capitale de l'Italie ?",
+     "back": "Rome"
+    }
+   ],
+   "made": [
+    {
+     "front": "rome",
+     "back": "quelle est la capitale de l'Italie"
+    }
+   ],
+   "out": [
+    "a"
+   ]
+  },
+  {
+   "name": "one side only the other's: not swapped",
+   "before": [
+    {
+     "id": "a",
+     "front": "la mère",
+     "back": "la madre"
+    }
+   ],
+   "made": [
+    {
+     "front": "la madre",
+     "back": "la maman"
+    }
+   ],
+   "out": [
+    ""
+   ]
+  },
+  {
+   "name": "a card the same both ways round kept first: never another's id",
+   "before": [
+    {
+     "id": "a",
+     "front": "oui",
+     "back": "sí"
+    },
+    {
+     "id": "b",
+     "front": "sí",
+     "back": "oui"
+    }
+   ],
+   "made": [
+    {
+     "front": "sí",
+     "back": "oui"
+    },
+    {
+     "front": "oui",
+     "back": "sí"
+    }
+   ],
+   "out": [
+    "b",
+    "a"
+   ]
+  }
  ],
  "same_text": [
   {

@@ -259,8 +259,10 @@ def same_text(a: str, b: str) -> bool:
 def matching(made: list[Card], before: list[Card], *, any_part: bool = False) -> list[Card | None]:
     """Each new card's card of `before`, the one it is (its id, its note in Anki, its picture,
     its place on a diagram), else None (a new card): the one rule for a lesson made again
-    (kept_ids) and the AI's correction (llm). The same front and back, else the same front
-    (same_text: a capital, a final full stop…), each old card given once; never by a front
+    (kept_ids) and the AI's correction (llm). The same front and back, else the same two sides
+    the other way round (front and back swapped: the same card asked the other way, its note
+    and history kept), else the same front (same_text: a capital, a final full stop…), each
+    old card given once; never by a front
     empty or the blank alone ("…": the same for every dictation without a sentence). Else its
     front written otherwise (the AI's own words, a picture now: ID-02), the same back where
     that back tells one card: not empty, the lesson's only one, no choices on either side
@@ -281,6 +283,15 @@ def matching(made: list[Card], before: list[Card], *, any_part: bool = False) ->
         choices = any(c.strip() for c in a.choices) or any(c.strip() for c in b.choices)
         return unique and not choices and part(a, b)
 
+    def swapped(a: Card, b: Card) -> bool:
+        return (
+            part(a, b)
+            and text_key(a.front) != ""
+            and text_key(a.back) != ""
+            and same_text(a.front, b.back)
+            and same_text(a.back, b.front)
+        )
+
     def same(a: Card, b: Card, back: bool) -> bool:
         return (
             part(a, b)
@@ -295,6 +306,7 @@ def matching(made: list[Card], before: list[Card], *, any_part: bool = False) ->
             continue
         match = (
             next((c for c in left if same(card, c, back=True)), None)
+            or next((c for c in left if swapped(card, c)), None)
             or next((c for c in left if same(card, c, back=False)), None)
             or next((c for c in left if by_back(card, c)), None)
         )

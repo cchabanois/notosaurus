@@ -129,6 +129,21 @@ test("the AI correction's stats and per-card flags", () => {
   assert.equal(cards[0].back, "la mamá");
   assert.equal(stats, "+1 new · 1 changed · −1 removed");
 
+  // A card the server kept (its id: its note, its history) asked the other way round: changed,
+  // not removed and added (the whole lesson's sides swapped said "+18 new · −18 removed")
+  const swapped = review.compareCards(
+    [
+      { key: 1, id: "a", front: "la mère", back: "la madre" },
+      { key: 2, id: "b", front: "le père", back: "el padre" },
+    ],
+    [
+      { id: "a", front: "la madre", back: "la mère" },
+      { id: "b", front: "el padre", back: "le père" },
+    ],
+  );
+  assert.deepEqual(swapped.cards.map((c) => [c.key, c._state]), [[1, "modified"], [2, "modified"]]);
+  assert.equal(swapped.stats, "2 changed");
+
   const same = review.compareCards([{ key: 7, front: "a", back: "b" }], [{ front: "a", back: "b" }]);
   assert.deepEqual(plain(same.cards), [{ key: 7, front: "a", back: "b" }]);  // key kept, no flag
   assert.equal(same.stats, "no change");
