@@ -127,6 +127,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🐛 A correction that rewrites both sides of the cards (front and back swapped, rephrased…) keeps them the same cards: their notes in Anki and the review history stay, shown as changed instead of new and removed.
 - A lesson whose cards are no longer in Anki (AnkiDroid emptied or reinstalled) offers "Add to Anki" again instead of "Up to date in Anki".
 - 🔊 A lesson's sounds no longer go missing when its pictures are drawn at the same time.
 - A lesson left damaged by a crash while it was saved no longer breaks "My lessons", generation, export and exams: it is skipped, and lessons, photos, pictures and sounds are now saved so that a crash never leaves them empty.
