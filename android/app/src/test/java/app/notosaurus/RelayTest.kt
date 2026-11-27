@@ -1,5 +1,8 @@
 package app.notosaurus
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -13,6 +16,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import com.sun.net.httpserver.HttpServer
+import java.net.InetSocketAddress
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 /** The relay's client, against a fake relay. */
 class RelayTest {
@@ -168,5 +175,60 @@ class RelayTest {
         } catch (e: RelayException) {
             assertEquals("relay.unreachable", e.code)
         }
+    }
+
+    /** A lesson's pictures and its sounds asked together (4 and 4 at a time, a lesson being read):
+     * never more at once than the relay takes from a licence (6), which refused the others
+     * (relay.busy), their sounds lost (2026-11-26). Counted where the relay counts them, while it
+     * answers: a call's answer comes as it is made (a picture's steps), its headers first, its end
+     * seconds later; OkHttp's own limit (5 a host) lets a call go once its headers are in. */
+    @Test
+    fun neverMoreCallsAtOnceThanTheRelayTakes() = runBlocking {
+        val running = AtomicInteger()
+        val most = AtomicInteger()
+        val slow = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
+            executor = Executors.newCachedThreadPool()
+            createContext("/") { exchange ->
+                most.accumulateAndGet(running.incrementAndGet(), ::maxOf)
+                exchange.sendResponseHeaders(200, 0) // its headers at once, then its answer as it comes
+                exchange.responseBody.use { body ->
+                    body.flush()
+                    Thread.sleep(300)
+                    body.write("mp3".toByteArray())
+                }
+                running.decrementAndGet()
+            }
+            start()
+        }
+        try {
+            val relay = Relay("http://127.0.0.1:${slow.address.port}/", "nts_key")
+            val sounds = (1..10).map { async(Dispatchers.IO) { relay.speak("mot $it", "fr-FR-Chirp3-HD-Aoede") } }.awaitAll()
+            assertEquals(List(10) { "mp3" }, sounds.map { String(it) })
+            assertTrue("${most.get()} at once", most.get() <= Relay.CALLS_AT_ONCE)
+            assertTrue(Relay.CALLS_AT_ONCE < 6) // the relay's own limit, one kept
+        } finally {
+            slow.stop(0)
+        }
+    }
+
+    /** Refused all the same, too many of the licence's calls running (relay.busy, before the AI is
+     * asked: nothing charged): asked again a moment after; any other refusal said at once. */
+    @Test
+    fun aBusyRefusalAskedAgainAnyOtherSaid() = runBlocking {
+        val busy = """{"code": "relay.busy", "params": {}}"""
+        server.enqueue(MockResponse.Builder().code(429).body(busy).build())
+        server.enqueue(MockResponse.Builder().code(429).body(busy).build())
+        server.enqueue(MockResponse.Builder().body("mp3").build())
+        assertEquals("mp3", String(relay().speak("le père", "fr-FR-Chirp3-HD-Aoede")))
+        assertEquals(3, server.requestCount)
+
+        server.enqueue(MockResponse.Builder().code(429).body("""{"code": "relay.daily_limit", "params": {}}""").build())
+        try {
+            relay().speak("la mère", "fr-FR-Chirp3-HD-Aoede")
+            fail("refused")
+        } catch (e: RelayException) {
+            assertEquals("relay.daily_limit", e.code)
+        }
+        assertEquals(4, server.requestCount) // once
     }
 }
