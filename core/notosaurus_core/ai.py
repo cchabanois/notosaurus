@@ -52,6 +52,15 @@ def for_claude(s: AIConfig) -> bool:
 TAGS_ASKED = re.compile(r"\btags?\b|étiquette|etikett|etiqueta|etichett", re.IGNORECASE)
 
 
+# A correction's card: which card it was among those shown (prompts._revision_text numbers them)
+REF = (
+    'The "ref" of the card it is among the current cards, whatever the correction rewrote of it (its '
+    "front and back swapped, rephrased, translated, moved to another sub-deck); 0 for a card the "
+    "correction adds. Each ref once: two cards merged, one of their refs; a card split in two, its ref "
+    "on one of them, 0 on the other."
+)
+
+
 @cache
 def ai_schema(
     base: type[BaseModel],
@@ -60,12 +69,14 @@ def ai_schema(
     claude: bool = False,
     tags: bool = True,
     page: bool = True,
+    ref: bool = False,
 ) -> type[BaseModel]:
     """`base` (Extraction, Revision) as the AI fills it: another model, turned back into
     `base` with `base.model_validate(answer.model_dump())`. `claude`: within Claude's limit
     (CLAUDE_REQUIRED). `tags`: the cards' tags in it (see TAGS_ASKED). `page`: the cards'
     photo in it (not for one card corrected: it stays the card's, the photos it sees may be
-    that one alone)."""
+    that one alone). `ref`: each card says which card it was among those shown (a correction's:
+    its identity, so its note in Anki, never guessed from its texts)."""
     left_out = set(SET_BY_NOTOSAURUS)
     left_out |= set() if tags else {"tags"}
     left_out |= set() if page else {"page"}
@@ -73,6 +84,8 @@ def ai_schema(
     left_out |= set() if helps else {"explanation", "mnemonic"}
     # Field name → (annotation, FieldInfo), as create_model takes them
     card_fields: dict[str, Any] = {k: (f.annotation, f) for k, f in Card.model_fields.items() if k not in left_out}
+    if ref:
+        card_fields = {"ref": (int, Field(default=0, description=REF)), **card_fields}
 
     # figure_kind required in the schema the AI is given ("" without a figure): an optional
     # field more would pass Claude's limit; an answer without it still read (its default)
