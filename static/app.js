@@ -403,9 +403,10 @@ document.addEventListener("alpine:init", () => {
         history.replaceState(null, "", location.pathname);
         await this.takeShared();
       }
-      // Anki may be started later: check again when coming back to the app.
+      // Anki may be started later: check again when coming back to the app (and the open
+      // lesson's notes: AnkiDroid emptied meanwhile)
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") this.checkAnki();
+        if (document.visibilityState === "visible") this.checkAnki().then(() => this.checkNotesThere());
       });
       // Follow profile switches in Anki while the page stays open.
       setInterval(() => { if (document.visibilityState === "visible") this.checkAnki(); }, PROFILE_POLL);

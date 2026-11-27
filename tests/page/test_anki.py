@@ -150,6 +150,37 @@ def test_up_to_date_in_anki_until_it_changes(page, anki):
     sync_api.expect(up_to_date).to_be_visible()  # reopened unchanged since
 
 
+def test_sent_but_its_notes_gone_from_anki_to_add_again(page, anki):
+    """A lesson sent, then its notes gone from Anki (AnkiDroid emptied or reinstalled, the
+    notes deleted there): reopened, "Add to Anki", not "Up to date"; also when coming back to
+    the page with the lesson open. Anki unable to tell: as sent."""
+    generate_free(page, FRONT_PROMPT)
+    page.get_by_role("button", name="📥 Ajouter à Anki").click()
+    up_to_date = page.get_by_role("button", name="✓ À jour dans Anki")
+    add = page.get_by_role("button", name="📥 Ajouter à Anki")
+    sync_api.expect(up_to_date).to_be_visible()
+    reopen(page)
+    sync_api.expect(up_to_date).to_be_visible()  # its notes there: still up to date
+
+    anki.notes.clear()  # Anki emptied, the page left open: seen when coming back to it
+    page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+    sync_api.expect(add).to_be_visible()
+    add.click()
+    sync_api.expect(up_to_date).to_be_visible()
+    assert anki.notes  # sent again
+
+    anki.notes.clear()
+    reopen(page)
+    sync_api.expect(add).to_be_visible()
+
+    page.route("**/api/lessons/*/anki-notes", lambda route: route.fulfill(json={"available": False, "count": 0}))
+    add.click()
+    sync_api.expect(up_to_date).to_be_visible()
+    reopen(page)  # Anki can't tell: as sent
+    page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
+    sync_api.expect(up_to_date).to_be_visible()
+
+
 def test_ankidroid_installed_from_the_message(page, anki):
     """The app without AnkiDroid: "Add to Anki" says so, with a button to install it
     (Google Play only opens when asked)."""
