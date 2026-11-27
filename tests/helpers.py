@@ -2,14 +2,18 @@
 image as bytes, a Gemini client that only hears and answers."""
 
 import asyncio
+import contextlib
 import io
 import struct
+import time
 import types as py_types
 import zlib
 from concurrent.futures import ThreadPoolExecutor
 
 from google.genai import types
 from PIL import Image
+
+from app import sounds
 
 
 def run(coroutine):
@@ -48,3 +52,17 @@ class HearingGemini:
         self.calls.append((contents, config))
         candidate = py_types.SimpleNamespace(finish_reason=types.FinishReason.STOP)
         return py_types.SimpleNamespace(usage_metadata=None, candidates=[candidate], text=self.text)
+
+
+def sounds_ahead_gone(timeout: float = 5.0) -> bool:
+    """No sound made ahead left (app/sounds.py): each job cancelled on its own loop, its
+    server's (another thread), and again until none is left, not once: a page's last save,
+    arriving as it closes, starts one after the page's own cancelling (stop_sounds_ahead),
+    whose 5 s of quiet (sounds.DELAY) outlasted a mere wait (2026-11-26, on main and #821)."""
+    deadline = time.monotonic() + timeout
+    while sounds._jobs and time.monotonic() < deadline:
+        for task in list(sounds._jobs.values()):
+            with contextlib.suppress(RuntimeError):  # a server stopped since: its loop closed, so is its job
+                task.get_loop().call_soon_threadsafe(task.cancel)
+        time.sleep(0.05)
+    return not sounds._jobs

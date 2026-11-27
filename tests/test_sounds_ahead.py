@@ -9,6 +9,7 @@ import types
 
 import pytest
 from conftest import SEND, extract_lesson, synthesized
+from helpers import sounds_ahead_gone
 
 from app import lessons, settings, sounds
 from notosaurus_core import tts
@@ -39,6 +40,29 @@ def quiet(monkeypatch) -> threading.Event:
     gated = types.SimpleNamespace(**{**vars(asyncio), "sleep": sleep})
     monkeypatch.setattr(sounds, "asyncio", gated)
     return over
+
+
+def test_a_job_started_after_the_cancelling_is_cancelled_too():
+    """A job started on a server's loop (its thread) after the page test cancelled its jobs (a
+    last save as the page closed): cancelled as well before the next test, within a moment, not
+    left to its 5 s of quiet (the end of a test failed so, on main, 2026-11-26)."""
+    loop = asyncio.new_event_loop()
+    server = threading.Thread(target=loop.run_forever, daemon=True)
+    server.start()
+
+    async def late_save() -> None:
+        sounds.soon("2026-11-26-late", VOICE)
+
+    try:
+        asyncio.run_coroutine_threadsafe(late_save(), loop).result(2)
+        assert "2026-11-26-late" in sounds._jobs
+        started = time.monotonic()
+        assert sounds_ahead_gone(timeout=3)
+        assert time.monotonic() - started < 1  # cancelled, not waited out
+    finally:
+        loop.call_soon_threadsafe(loop.stop)
+        server.join(2)
+        loop.close()
 
 
 def save(client, id: str, backs: list[str], voice: str = VOICE) -> None:
