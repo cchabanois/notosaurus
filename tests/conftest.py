@@ -5,12 +5,12 @@ AnkiConnect (FakeAnki)."""
 import base64
 import json
 import re
-import time
 
 import edge_tts
 import httpx
 import pytest
 from fastapi.testclient import TestClient
+from helpers import sounds_ahead_gone
 
 from app import ankiconnect, lessons, settings, sounds
 from app.attempts import Attempts
@@ -94,11 +94,9 @@ def no_state_left():
     or running once a test is done (each stopped with its server: sounds.stop)."""
     lessons._editing.clear()
     yield
-    # A page test's are cancelled from its thread (stop_sounds_ahead): gone a moment later
-    deadline = time.monotonic() + 5
-    while sounds._jobs and time.monotonic() < deadline:
-        time.sleep(0.05)
-    assert not sounds._jobs, f"sounds made ahead still waiting: {list(sounds._jobs)}"
+    # A page test's are cancelled from its thread (stop_sounds_ahead), and any started after (a
+    # last save as the page closed): gone a moment later
+    assert sounds_ahead_gone(), f"sounds made ahead still waiting: {list(sounds._jobs)}"
 
 
 @pytest.fixture(autouse=True)
