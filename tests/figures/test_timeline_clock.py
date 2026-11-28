@@ -1,5 +1,6 @@
 """The timeline and clock families (our timeline and clock functions)."""
 
+import itertools
 import re
 
 import pytest
@@ -225,3 +226,96 @@ def test_a_timelines_colour_written_otherwise_refused(body, said):
     """A colour written as a word, a stray item: refused saying how an item is written."""
     with pytest.raises(figures_typst.Unusable, match=said):
         figures_typst.compile_svg("timeline", body)
+
+
+def text_runs(svg: str) -> list[tuple[float, float, float]]:
+    """Each text run of a Typst SVG: its left, its right (its last glyph's start plus a glyph's
+    mean advance) and its baseline's y, its groups' moves added."""
+    stack, runs = [(0.0, 0.0)], []
+    for tag in re.findall(r"<g(?:\s[^>]*)?>|</g>|<use\s[^>]*>", svg):
+        if tag.startswith("<use"):
+            if runs and runs[-1][3]:  # a glyph of the run open
+                x = float(re.search(r'\sx="([-\d.e]+)"', tag)[1])
+                runs[-1][2].append(x)
+            continue
+        if tag == "</g>":
+            stack.pop()
+            if runs:
+                runs[-1][3] = False
+            continue
+        x, y = stack[-1]
+        if moved := re.search(r'transform="translate\(([-\d.e]+)(?:[ ,]([-\d.e]+))?\)"', tag):
+            x, y = x + float(moved[1]), y + float(moved[2] or 0)
+        elif text := re.search(r'transform="matrix\(1 0 0 -1 ([-\d.e]+) ([-\d.e]+)\)"', tag):
+            x, y = x + float(text[1]), y + float(text[2])
+            runs.append([x, y, [], True])
+        stack.append((x, y))
+    measured = []
+    for x, y, glyphs, _ in runs:
+        advance = glyphs[-1] / (len(glyphs) - 1) if len(glyphs) > 1 else 6.0
+        measured.append((x, x + glyphs[-1] + advance, y))
+    return measured
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "step"),
+    [(-3500, 2025, 500), (1700, 2025, 10), (-20000, 2000, 1000), (1914, 1918, 1)],
+)
+def test_a_timelines_numbers_never_on_one_another(start, end, step):
+    """The great periods of History from −3500 to 2025, a step of 500: twelve numbers glued
+    together on the line ("−3500−3000−2500…"). The function writes every number that fits,
+    a round multiple of the step when they don't (every 1000): each apart from the next."""
+    svg = figures_typst.compile_svg("timeline", f"#timeline(start: {start}, end: {end}, step: {step})")
+    runs = sorted(text_runs(svg))
+    assert len(runs) >= 3
+    assert len({round(y, 1) for _, _, y in runs}) == 1  # one row, the line's numbers
+    for (_, right, _), (left, _, _) in itertools.pairwise(runs):
+        assert left - right > 3  # pt: a gap between two numbers
+
+
+def test_a_timelines_great_periods_numbers_apart():
+    """The very frise that went wrong: its numbers each apart from the next, written on round
+    multiples of its step (−3000, −2000…: six, not twelve)."""
+    body = (
+        '#set text(lang: "fr")\n#timeline(start: -3500, end: 2025, step: 500,\n'
+        '  events: ((-3000, "Invention de l\'écriture (−3000)"), '
+        "(476, \"Chute de l'Empire romain d'Occident (476)\"), "
+        '(1492, "Découverte de l\'Amérique (1492)"), (1789, "Révolution française (1789)")),\n'
+        '  periods: ((-3500, -3000, "Préhistoire"), (-3000, 476, "Antiquité"), (476, 1492, "Moyen Âge"), '
+        '(1492, 1789, "Temps modernes"), (1789, 2025, "Époque contemporaine")),\n)'
+    )
+    axis = figures_typst.compile_svg("timeline", "#timeline(start: -3500, end: 2025, step: 500)")
+    assert len(text_runs(axis)) == len(range(-3000, 2001, 1000))
+    figures_typst.compile_svg("timeline", body)  # compiles, the periods and events as before
+
+
+def test_a_timelines_period_without_its_start_written_open():
+    """A period the lesson gives no start for (Prehistory before −3000): a start invented,
+    written under its name as a date (−3500 – −3000). Its bound `none`: its bar from the
+    line's start, only its known year written (… – −3000); its other bound refused when both
+    are missing."""
+    line = (
+        "#timeline(start: -3500, end: 500, step: 1000, "
+        'periods: (({}, -3000, "Préhistoire"), (-3000, 476, "Antiquité")))'
+    )
+    open_ = figures_typst.compile_svg("timeline", line.format("none"))
+    closed = figures_typst.compile_svg("timeline", line.format("-3500"))
+    assert closed.count("<use") - open_.count("<use") == len("−3500") - len("…")
+    png = lambda svg: figures.to_png(figures.clean(svg))  # noqa: E731
+    solid, whole = colour_box(png(open_), FIRST), colour_box(png(closed), FIRST)
+    assert solid and whole and solid[2] == pytest.approx(whole[2], abs=2)  # ends at −3000
+    import io
+
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(png(open_))).convert("RGB")
+    middle = (solid[1] + solid[3]) // 2
+    # its fading part from the line's start, where the closed bar starts
+    left = next(x for x in range(image.width) if sum(image.getpixel((x, middle))) < 3 * 250)
+    assert left == pytest.approx(whole[0], abs=3) and left < solid[0] - 5
+    ongoing = figures_typst.compile_svg(
+        "timeline", '#timeline(start: 1780, end: 2025, step: 50, periods: ((1789, none, "Époque contemporaine"),))'
+    )
+    assert ongoing.count("<use") == len("18001850190019502000" + "Époquecontemporaine" + "1789–…")
+    with pytest.raises(figures_typst.Unusable, match="none when not known"):
+        figures_typst.compile_svg("timeline", '#timeline(start: 0, end: 10, periods: ((none, none, "X"),))')
