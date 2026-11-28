@@ -127,6 +127,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A timeline's numbers are never glued together: when they would touch, only round ones are written (every 1000 rather than every 500).
+- A timeline's period whose start or end the lesson doesn't give (Prehistory, the contemporary era) is drawn open, without an invented year written under its name.
 - 📝 The app's first screen says a dictation is heard by the phone's speech recognition, not sent to the Notosaurus service.
 - 🐛 A long formula or chemical equation on a card scrolls across on a phone instead of being cut at the screen's edge (existing note types updated at the next send).
 - Maps of a past year's alliances or blocs: the countries' names short (as the lesson writes them) and no longer stacked over one another.
