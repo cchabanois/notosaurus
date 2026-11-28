@@ -1,6 +1,9 @@
 .card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }
 .info { font-size: 18px; color: #777; margin-top: 12px; }
 .card img { max-width: 100%; height: auto; }
+/* A displayed formula wider than the card (a long equation on a phone): scrolled across in
+   the card, never cut at the screen's edge */
+.card mjx-container[display="true"] { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
 .dictation { font-size: 40px; }
 .notosaurus-help {
   max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;
