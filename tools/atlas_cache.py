@@ -18,6 +18,7 @@ import json
 import os
 import pickle
 import threading
+import time
 import types
 from collections.abc import Callable
 from pathlib import Path
@@ -220,4 +221,12 @@ class Cache:
         # (each thread its own: the steps run side by side, two may make the same one)
         part = file.with_name(f"{file.name}.{os.getpid()}.{threading.get_ident()}.part")
         part.write_bytes(data)
+        # Windows refuses a replace for a moment while another thread replaces the same file
+        # (PermissionError, "Access is denied"; Linux and macOS never do): tried again
+        for wait in (0.05, 0.1, 0.2, 0.4, 0.8):
+            try:
+                part.replace(file)
+                return
+            except PermissionError:
+                time.sleep(wait)
         part.replace(file)
