@@ -127,6 +127,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Maps of a past year's alliances or blocs: the countries' names short (as the lesson writes them) and no longer stacked over one another.
 - 🐛 A correction that rewrites both sides of the cards (front and back swapped, rephrased…) keeps them the same cards: their notes in Anki and the review history stay, shown as changed instead of new and removed.
 - A lesson whose cards are no longer in Anki (AnkiDroid emptied or reinstalled) offers "Add to Anki" again instead of "Up to date in Anki".
 - 🔊 A lesson's sounds no longer go missing when its pictures are drawn at the same time.
