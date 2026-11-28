@@ -17,6 +17,7 @@ import inspect
 import json
 import os
 import pickle
+import threading
 import types
 from collections.abc import Callable
 from pathlib import Path
@@ -216,6 +217,7 @@ class Cache:
     @staticmethod
     def _write(file: Path, data: bytes) -> None:
         """Written whole or not at all (a build stopped halfway leaves no half a result)."""
-        part = file.with_name(f"{file.name}.{os.getpid()}.part")
+        # (each thread its own: the steps run side by side, two may make the same one)
+        part = file.with_name(f"{file.name}.{os.getpid()}.{threading.get_ident()}.part")
         part.write_bytes(data)
         part.replace(file)
