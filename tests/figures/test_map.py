@@ -1034,6 +1034,24 @@ def test_small_regions_named_beside_their_circles_apart():
     assert _apart(labels)
 
 
+def test_grouped_countries_named_short_on_two_lines_if_need_be():
+    """A past year's alliances, their states named (`names: true`): each by the shorter of
+    the description's name and the atlas's ("France", not "Troisième République française",
+    once stacked with the other long official names over central Europe); a name too long for
+    its land on one line on two ("Empire / russe"); none over another."""
+    svg = figures_typst.compile_svg(
+        "map",
+        '#map(year: 1914, names: true, groups: ((name: "Triple-Entente", countries: ("France", "Royaume-Uni",'
+        ' "Empire russe")), (name: "Triple-Alliance", countries: ("Empire allemand", "Autriche-Hongrie", "Italie"))))',
+    )
+    labels = _labels(svg)
+    assert len(labels) == 6
+    assert _apart(labels)
+    assert max(w for _, _, w, _ in labels) < 80  # "Royaume-Uni de Grande-Bretagne et d'Irlande": 162
+    heights = sorted(h for _, _, _, h in labels)
+    assert heights[-1] > 2 * heights[0]  # "Empire russe" on two lines, on Russia
+
+
 @pytest.mark.parametrize(
     ("part", "country"),
     [
