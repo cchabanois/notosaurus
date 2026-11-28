@@ -127,6 +127,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🐛 A long formula or chemical equation on a card scrolls across on a phone instead of being cut at the screen's edge (existing note types updated at the next send).
 - Maps of a past year's alliances or blocs: the countries' names short (as the lesson writes them) and no longer stacked over one another.
 - 🐛 A correction that rewrites both sides of the cards (front and back swapped, rephrased…) keeps them the same cards: their notes in Anki and the review history stay, shown as changed instead of new and removed.
 - A lesson whose cards are no longer in Anki (AnkiDroid emptied or reinstalled) offers "Add to Anki" again instead of "Up to date in Anki".
