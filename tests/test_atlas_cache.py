@@ -196,3 +196,35 @@ def test_a_set_keys_the_same_in_every_run(tmp_path):
         for seed in range(6)
     }
     assert len(keys) == 1
+
+
+def test_the_same_step_written_by_two_threads_at_once(tmp_path, monkeypatch):
+    """Steps run side by side: two threads making the same one each write it whole, neither
+    losing its file to the other (they once shared one, the second replace then failing)."""
+    import threading
+
+    both = threading.Barrier(2, timeout=5)
+    replace = Path.replace
+
+    def together(self, target):
+        both.wait()  # each has written its part: then both replace
+        return replace(self, target)
+
+    monkeypatch.setattr(Path, "replace", together)
+    file = tmp_path / "step.pickle"
+    failed = []
+
+    def write(data):
+        try:
+            atlas_cache.Cache._write(file, data)
+        except OSError as e:
+            failed.append(e)
+
+    threads = [threading.Thread(target=write, args=(b"made",)) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert failed == []
+    assert file.read_bytes() == b"made"
+    assert [p.name for p in tmp_path.iterdir()] == ["step.pickle"]

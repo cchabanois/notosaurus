@@ -170,7 +170,17 @@ def test_sent_but_its_notes_gone_from_anki_to_add_again(page, anki):
     assert anki.notes  # sent again
 
     anki.notes.clear()
+    opened = []
+
+    def slow_second_open(route):  # the click's open of the lesson behind the draft's, as on a busy runner
+        opened.append(1)
+        if len(opened) == 2:
+            page.wait_for_timeout(1000)
+        route.continue_()
+
+    page.route(re.compile(r".*/api/lessons/[^/?]+$"), slow_second_open)
     reopen(page)
+    page.unroute(re.compile(r".*/api/lessons/[^/?]+$"))
     sync_api.expect(add).to_be_visible()
 
     page.route("**/api/lessons/*/anki-notes", lambda route: route.fulfill(json={"available": False, "count": 0}))
