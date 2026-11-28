@@ -414,10 +414,14 @@ def android_settings(page, account):
 
 
 def reopen(page) -> None:
-    """The page loaded again, its lesson opened from the list."""
+    """The page loaded again, its lesson opened from the list, once it is: the page reopens
+    the lesson it had open as it loads (its draft), and the click opens it again; a test that
+    went on as soon as the first had shown met the second over it (a lesson seen sent again,
+    its "Add to Anki" gone: test_sent_but_its_notes_gone_from_anki_to_add_again, on CI)."""
     page.reload()
     page.get_by_role("button", name="Leçons", exact=True).click()
     page.locator(".lesson-list .lesson").first.click()
+    settled(page)
 
 
 def drop(page, target, files: list[tuple[str, str, bytes]]) -> None:
