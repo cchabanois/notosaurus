@@ -226,9 +226,20 @@ def test_the_same_step_written_by_two_threads_at_once(tmp_path, monkeypatch):
 
     both = threading.Barrier(2, timeout=5)
     replace = Path.replace
+    waited = set()
+    one = threading.Lock()
+    refused = []
 
     def together(self, target):
-        both.wait()  # each has written its part: then both replace
+        # Each has written its part: then both replace, at once. Only its first replace waits
+        # for the other: one Windows refused is tried again alone (_write)
+        if threading.get_ident() not in waited:
+            waited.add(threading.get_ident())
+            both.wait()
+            with one:  # one of the two refused, as Windows does (#830's run), on every system
+                if not refused:
+                    refused.append(threading.get_ident())
+                    raise PermissionError(13, "Access is denied")
         return replace(self, target)
 
     monkeypatch.setattr(Path, "replace", together)
@@ -246,6 +257,6 @@ def test_the_same_step_written_by_two_threads_at_once(tmp_path, monkeypatch):
         t.start()
     for t in threads:
         t.join()
-    assert failed == []
+    assert len(refused) == 1 and failed == []  # refused once, tried again
     assert file.read_bytes() == b"made"
     assert [p.name for p in tmp_path.iterdir()] == ["step.pickle"]
