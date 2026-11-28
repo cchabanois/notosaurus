@@ -195,6 +195,11 @@ def test_the_apps_welcome_accepted_once(page):
     welcome = page.get_by_role("dialog", name="Avant de commencer")
     sync_api.expect(welcome).to_be_visible()
     sync_api.expect(welcome).to_contain_text("Gemini de Google")
+    # A dictation heard by the phone's speech recognition (#580), never said to go through the service
+    sync_api.expect(welcome).to_contain_text(
+        "Une dictée (🎤) est entendue par la reconnaissance vocale de votre téléphone"
+    )
+    sync_api.expect(welcome).not_to_contain_text("dictées passent par le service")
     sync_api.expect(welcome.get_by_role("link", name="Politique de confidentialité")).to_have_attribute(
         "href", re.compile(r"/fr/app-privacy/")
     )
