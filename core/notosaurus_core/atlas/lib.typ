@@ -299,7 +299,8 @@
 // colours differently, light enough for a name on them; the sky blue, nearest the sea's, last
 #let palette = ("#e69f00", "#0072b2", "#009e73", "#cc79a7", "#d55e00", "#f0e442", "#56b4e9", "#a6761d").map(rgb)
 
-// Groups as asked, checked: (name, countries: their codes, regions: their names); a past
+// Groups as asked, checked: (name, countries: their codes, names: as written, regions: their
+// names); a past
 // year's `empire`: a state and every land it ruled then (its colonies, protectorates)
 #let read-groups(groups, all: atlas.countries, year: none) = {
   if type(groups) == dictionary { groups = (groups,) }  // a single group without its comma
@@ -349,7 +350,7 @@
       }
       seen.insert(code, g.name)
     }
-    out.push((name: g.name, countries: codes, regions: listed("regions"), ruled: ruled))
+    out.push((name: g.name, countries: codes, names: names, regions: listed("regions"), ruled: ruled))
   }
   out
 }
@@ -1517,8 +1518,10 @@
       codes.map(c => (all.at(c).n.first(), c))
     }).join(default: ())
     if names == true {
-      listed += sets.map(g => g.countries.filter(c => c not in g.ruled and c not in shown)).join(default: ())
-        .map(c => (all.at(c).n.first(), c))
+      // (the shorter of the description's name and the atlas's: "France", not a past year's
+      // official "Troisième République française"; "Tchéquie", not "République tchèque")
+      listed += sets.map(g => g.countries.zip(g.names).filter(((c, _)) => c not in g.ruled and c not in shown)
+        .map(((c, n)) => ((n, all.at(c).n.first(default: n)).sorted(key: m => m.len()).first(), c))).join(default: ())
       listed += zone-sets.map(z => z.countries).join(default: ()).filter(c => c not in shown).map(c => (all.at(c).n.first(), c))
     }
     if names == auto and countries.len() < 2 { () } else { listed.dedup(key: ((_, c)) => c) }
@@ -1531,9 +1534,21 @@
         ((c.f.at(0) + c.f.at(2)) / 2, (c.f.at(1) + c.f.at(3)) / 2)
       }
       let (tl, br) = (page((c.f.at(0), c.f.at(3))), page((c.f.at(2), c.f.at(1))))
-      // (on its land, else beside it with a line: too small for its name)
-      wanted.push((at: page(at), dot: false, optional: true, country: code, within: if pole == none { (..tl, ..br) } else { none },
-        land: if pole == none { c.r } else { none }, body: text(7pt, fill: luma(55), name)))
+      // (on its land, on two lines if one is too long for it, else beside it with a line: too
+      // small for its name)
+      let words = name.split(" ")
+      let bodies = (text(7pt, fill: luma(55), name),)
+      if words.len() > 1 {
+        let cut = range(1, words.len()).sorted(key: i => calc.abs(words.slice(0, i).join(" ").len() - words.slice(i).join(" ").len())).first()
+        bodies.push(text(7pt, fill: luma(55), {
+          set par(leading: 0.3em)
+          align(center, words.slice(0, cut).join(" ") + linebreak() + words.slice(cut).join(" "))
+        }))
+      }
+      for body in bodies {
+        wanted.push((at: page(at), dot: false, optional: true, country: code, within: if pole == none { (..tl, ..br) } else { none },
+          land: if pole == none { c.r } else { none }, body: body))
+      }
       wanted.push((at: page(at), dot: false, country: code, far: true, body: text(7pt, fill: luma(55), name)))
     }
   }
