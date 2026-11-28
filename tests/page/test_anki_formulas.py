@@ -88,3 +88,37 @@ def test_a_fields_formulas_write_no_css_of_their_own_in_anki(browser, server):
 
     drawn = _drawn(browser, server, field_html(CSS_TEXT))
     assert drawn["formulas"] == 3 and drawn["links"] == 0 and not drawn["fixed"] and drawn["own"] == 0, drawn
+
+
+def test_a_formula_wider_than_a_phone_scrolls_in_the_card(browser, server):
+    """A displayed formula wider than the card (a long chemical equation on a phone, 360 px): it
+    scrolls across in the card, nothing of it cut (« 2 H₂O » cut at the screen's edge in
+    AnkiDroid: TYP-21). The note types' own CSS, as Anki shows the card."""
+    from app.note_types.common import CSS
+
+    context = browser.new_context(base_url=server, viewport={"width": 360, "height": 640})
+    try:
+        page = context.new_page()
+        equation = field_html("\\[\\ce{CH4 + 2O2 -> CO2 + 2H2O}\\]")
+        card = CARD.replace(
+            '<div id="card">FIELD</div>', f'<style>{CSS}</style><div class="card" id="card">{equation}</div>'
+        )
+        page.route(f"{server}/anki-card.html", lambda route: route.fulfill(content_type="text/html", body=card))
+        page.goto("/anki-card.html")
+        page.wait_for_function("() => window.MathJax && MathJax.startup && MathJax.startup.promise")
+        page.evaluate("() => MathJax.startup.promise.then(() => MathJax.typesetPromise())")
+        shown = page.evaluate(
+            """() => {
+              const box = document.querySelector('#card mjx-container[display="true"]');
+              const r = box.getBoundingClientRect();
+              return {
+                wider: box.scrollWidth > box.clientWidth, scrolls: getComputedStyle(box).overflowX,
+                inside: r.left >= 0 && r.right <= innerWidth, page: document.documentElement.scrollWidth <= innerWidth,
+              };
+            }"""
+        )
+    finally:
+        context.close()
+    assert shown["wider"]  # the equation is wider than the phone…
+    assert shown["scrolls"] in ("auto", "scroll") and shown["inside"]  # …scrolled across in the card
+    assert shown["page"]  # the card itself never wider than the screen
